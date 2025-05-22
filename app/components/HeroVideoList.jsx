@@ -9,42 +9,42 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 
-const CARD_WIDTH = 220;
+const CARD_WIDTH = 150;
 const CARD_HEIGHT = 280;
 const SPACING = 12;
 
 const videos = [
   {
     id: '1',
-    thumbnail: 'https://cdn.shopify.com/s/files/1/0734/7155/7942/files/Smiles_in_the_Park.png?v=1746440710',
+    thumbnail: 'https://cdn.shopify.com/s/files/1/0734/7155/7942/files/1_1_1e442318-4b63-4e40-b63e-e47351af1fcb.png?v=1747043545',
     url: 'https://cdn.shopify.com/videos/c/o/v/9603ccc053314a139fe15c15f95ea5a8.mp4',
     quote: 'Would rate it 9/10, my baldness got covered',
     name: 'Amit',
   },
   {
     id: '2',
-    thumbnail: 'https://cdn.shopify.com/s/files/1/0734/7155/7942/files/Contemplative_Gaze_Against_Red_Brick_Wall.png?v=1746525897',
+    thumbnail: 'https://cdn.shopify.com/s/files/1/0734/7155/7942/files/3_0b563148-da79-4a3b-95e6-1f5720ab00a7.png?v=1722316842',
     url: 'https://cdn.shopify.com/videos/c/o/v/c1d7b744e7324a5e882bda4cd515780c.mp4',
     quote: 'Results are best, my hair is back on my head',
     name: 'Shashank',
   },
   {
     id: '3',
-    thumbnail: 'https://cdn.shopify.com/s/files/1/0734/7155/7942/files/Mobile_View_3_5b33b084-74db-4ada-b4cc-7b0db3aabc3a.webp?v=1746169747',
+    thumbnail: 'https://cdn.shopify.com/s/files/1/0734/7155/7942/files/6_527d324c-da6b-4954-80f6-8280a0d6c300.png?v=1722316967',
     url: 'https://cdn.shopify.com/videos/c/o/v/3733915a671b4905adf3e87ce18c1a1e.mp4',
     quote: 'Amazing results, would recommend to everyone',
     name: 'Ravi',
   },
   {
     id: '4',
-    thumbnail: 'https://cdn.shopify.com/s/files/1/0734/7155/7942/files/Mobile_View_3_1f6bc52a-c011-4a44-993a-c8a38a9e261a.jpg?v=1746169067',
+    thumbnail: 'https://cdn.shopify.com/s/files/1/0734/7155/7942/files/2_6eb3e3dd-15ad-46ae-af3d-ff4abfdc2de1.png?v=1722316897',
     url: 'https://cdn.shopify.com/videos/c/o/v/1d8505c4968747469d631c46c440daac.mp4',
     quote: 'My confidence is back!',
     name: 'Rakesh',
   },
   {
     id: '5',
-    thumbnail: 'https://cdn.shopify.com/s/files/1/0734/7155/7942/files/image_2025_04_30T13_40_02_784Z.png?v=1746076534',
+    thumbnail: 'https://cdn.shopify.com/s/files/1/0734/7155/7942/files/5_07a9d779-ebd5-4872-8760-13ec2b09f047.png?v=1747043820',
     url: 'https://cdn.shopify.com/videos/c/o/v/1ba69a72ee3b455b8c8cee00a669cae3.mp4',
     quote: 'Never thought I’d see my hair this thick again!',
     name: 'Dev',
@@ -69,7 +69,7 @@ export default function HeroVideoList() {
       <View style={{ position: 'relative' }}>
         <Image
           source={{ uri: item.thumbnail }}
-          style={{ width: '100%', height: 160 }}
+          style={{ width: '100%', height: 260 }}
           resizeMode="cover"
         />
 
@@ -84,24 +84,7 @@ export default function HeroVideoList() {
         }}>
           <Text style={{ color: '#fff', fontSize: 16 }}>▶</Text>
         </View>
-
-        {/* Mini before/after overlay (fake for now) */}
-        <View style={{
-          position: 'absolute',
-          bottom: 6,
-          right: 6,
-          flexDirection: 'row',
-          gap: 4,
-        }}>
-          <Image
-            source={{ uri: item.thumbnail }}
-            style={{ width: 30, height: 30, borderRadius: 6, borderWidth: 1, borderColor: '#fff' }}
-          />
-          <Image
-            source={{ uri: item.thumbnail }}
-            style={{ width: 30, height: 30, borderRadius: 6, borderWidth: 1, borderColor: '#fff' }}
-          />
-        </View>
+         
       </View>
 
       {/* Quote */}
@@ -114,7 +97,7 @@ export default function HeroVideoList() {
 
   return (
     <View className="mt-6">
-      <Text className="text-lg font-semibold px-4 mb-3">Muditam Heroes</Text>
+      <Text className="text-lg font-semibold px-5 mb-3">Muditam Heroes</Text>
       <FlatList
         data={videos}
         keyExtractor={(item) => item.id}
@@ -124,5 +107,5 @@ export default function HeroVideoList() {
         contentContainerStyle={{ paddingHorizontal: 16 }}
       />
     </View>
-  );
+  ); 
 }

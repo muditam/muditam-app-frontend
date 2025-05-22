@@ -30,7 +30,7 @@ export default function ChatWithUsSection() {
         </View>
 
         <Image
-          source={{ uri: 'https://cdn.shopify.com/s/files/1/0734/7155/7942/files/icon-whatsapp.png?v=1720530391' }}
+          source={{ uri: 'https://cdn.shopify.com/s/files/1/0734/7155/7942/files/Mask_group_3.png?v=1747143071' }}
           style={{ width: 50, height: 50, marginLeft: 12 }}
         />
       </View>

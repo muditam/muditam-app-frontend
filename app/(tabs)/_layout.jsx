@@ -1,6 +1,7 @@
 import { Tabs } from 'expo-router';
 import { FontAwesome5, MaterialIcons, Ionicons } from '@expo/vector-icons';
 import { View, Text } from 'react-native';
+import { useFonts } from 'expo-font';
 import '../../global.css'; 
 
 export default function Layout() {
@@ -30,7 +31,7 @@ export default function Layout() {
             label = 'Home';
           } else if (route.name === 'test') {
             icon = <FontAwesome5 name="file-alt" size={25} color={iconColor} />;
-            label = 'Hair Test';
+            label = 'Start Quiz';
           } else if (route.name === 'products') {
             icon = <Ionicons name="cart-outline" size={25} color={iconColor} />;
             label = 'Products';

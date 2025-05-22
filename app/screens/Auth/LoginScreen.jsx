@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, Image, TouchableOpacity, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import LegalModal from '../../components/LegalModal';
 
 export default function LoginScreen() {
@@ -8,59 +9,149 @@ export default function LoginScreen() {
   const [showPrivacy, setShowPrivacy] = useState(false);
   const [showTerms, setShowTerms] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleGetOtp = () => {
-    if (phoneNumber.length === 10) {
-      router.replace('/home'); // Navigate to Home
-    } else {
-      Alert.alert('Invalid Number', 'Please enter a 10-digit mobile number.');
-    }
-  };
+  const handleGetOtp = async () => {
+  if (phoneNumber.length !== 10) {
+    return Alert.alert('Invalid Number', 'Please enter a 10-digit mobile number.');
+  }
+
+  setLoading(true);
+  try {
+    await AsyncStorage.setItem('userPhone', phoneNumber);
+
+    // You can keep your API call for user existence check here or inside OTP screen
+    // But better to do this only once in OTP screen to simplify flow.
+
+    // Just navigate to OTP and pass phone param always
+    router.push({ pathname: '/otp', params: { phone: phoneNumber } });
+  } catch (err) {
+    Alert.alert('Error', 'Something went wrong. Please try again.');
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   const privacyContent = `Welcome to our website/mobile site...`;
   const termsContent = `These Terms of Service (“Terms”)...`;
 
   return (
     <View className="flex-1 bg-white">
+      {/* Header Image */}
       <Image
         source={{
-          uri: 'https://cdn.shopify.com/s/files/1/0734/7155/7942/files/Smiles_in_the_Park.png?v=1746440710',
+          uri: 'https://cdn.shopify.com/s/files/1/0734/7155/7942/files/ChatGPT_Image_Apr_16_2025_11_24_23_AM.png?v=1747119091',
         }}
-        className="w-full h-60"
+        style={{ width: '100%', height: 450 }}
         resizeMode="cover"
       />
 
-      <View className="p-6">
-        <Text className="text-xl font-semibold text-center mb-2">
-          Diabetes Solution Backed by Science
+      {/* Content Card */}
+      <View
+        style={{
+          position: 'absolute',
+          top: 284,
+          left: 24,
+          right: 24,
+          backgroundColor: 'white',
+          paddingTop: 40,
+          paddingBottom: 24,
+          paddingHorizontal: 24,
+          borderRadius: 20,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.1,
+          shadowRadius: 6,
+          elevation: 5,
+        }}
+      >
+        {/* Heading */}
+        <Text
+          style={{
+            fontFamily: 'Poppins',
+            fontWeight: 'bold',
+            fontSize: 22,
+            textAlign: 'left',
+            marginBottom: 20,
+          }}
+        >
+          Kindly fill in the details:
         </Text>
-        <Text className="text-center text-gray-500 mb-6">Log in or Sign up</Text>
 
-        <View className="flex-row items-center border border-gray-300 rounded-md px-3 py-2 mb-4">
-          <Text className="text-gray-600 mr-2">+91</Text>
+        {/* Phone Input */}
+        <View
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            borderWidth: 1,
+            borderColor: 'black',
+            borderRadius: 15,
+            paddingHorizontal: 12,
+            paddingVertical: 3,
+            marginBottom: 20,
+          }}
+        >
+          <Text style={{ color: 'gray', marginRight: 8 }}>+91</Text>
           <TextInput
-            className="flex-1 text-base"
+            style={{ flex: 1, fontSize: 16 }}
             keyboardType="phone-pad"
-            placeholder="Mobile number"
+            placeholder="Enter your number"
             maxLength={10}
             value={phoneNumber}
             onChangeText={setPhoneNumber}
           />
         </View>
 
+        {/* Get OTP Button */}
         <TouchableOpacity
-          className={`py-3 rounded-md ${
-            phoneNumber.length === 10 ? 'bg-blue-600' : 'bg-gray-300'
-          }`}
+          style={{
+            backgroundColor: phoneNumber.length === 10 ? '#A855F7' : '#D1D5DB',
+            paddingVertical: 14,
+            borderRadius: 15,
+            alignItems: 'center',
+          }}
           onPress={handleGetOtp}
+          disabled={loading}
         >
-          <Text className="text-center text-white font-semibold">Get OTP</Text>
+          <Text style={{ color: 'white', fontWeight: '600' }}>
+            {loading ? 'Please wait...' : 'Get OTP'}
+          </Text>
         </TouchableOpacity>
 
-        <Text className="text-xs text-center text-gray-400 mt-4">
-          By proceeding, you consent to share your information with Muditam and agree to Muditam’s{' '}
-          <Text className="underline text-blue-600" onPress={() => setShowPrivacy(true)}>Privacy Policy</Text> and{' '}
-          <Text className="underline text-blue-600" onPress={() => setShowTerms(true)}>Terms of Service</Text>.
+        {/* Gradient Line */}
+        <View
+          style={{
+            flexDirection: 'row',
+            height: 1,
+            marginTop: 50,
+            marginBottom: 50,
+            borderRadius: 1,
+          }}
+        >
+          <View style={{ flex: 1, backgroundColor: '#ffffff' }} />
+          <View style={{ flex: 1, backgroundColor: '#b5b5b5' }} />
+          <View style={{ flex: 1, backgroundColor: '#ffffff' }} />
+        </View>
+
+        {/* Terms Text */}
+        <Text style={{ fontSize: 14, color: '#9CA3AF', textAlign: 'center' }}>
+          By Signing in, I accept the
+        </Text>
+        <Text style={{ fontSize: 15, textAlign: 'center', marginTop: 2, marginBottom: 40 }}>
+          <Text
+            style={{ fontWeight: 'bold', color: '#000000' }}
+            onPress={() => setShowTerms(true)}
+          >
+            Terms & Conditions
+          </Text>{' '}
+          and{' '}
+          <Text
+            style={{ fontWeight: 'bold', color: '#000000' }}
+            onPress={() => setShowPrivacy(true)}
+          >
+            Privacy Policy
+          </Text>
         </Text>
       </View>
 

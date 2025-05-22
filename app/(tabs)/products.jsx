@@ -22,7 +22,7 @@ const popupAnim = useRef(new Animated.Value(100)).current;
   const { addToCart, cartItems } = useCart();
 
   useEffect(() => {
-    fetch('http://192.168.1.17:5000/api/shopify/products')
+    fetch('http://192.168.1.9:3001/api/shopify/products')
       .then((res) => res.json())
       .then((data) => setProducts(data))
       .catch((err) => {
