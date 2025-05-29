@@ -1,39 +1,62 @@
-import React from 'react';
-import { View, Text, Image, TouchableOpacity, Linking } from 'react-native';
+import React from "react";
+import { View, Text, Image, TouchableOpacity, Linking } from "react-native";
+import FontAwesome from "@expo/vector-icons/FontAwesome";
+
 
 export default function ChatWithUsSection() {
-  const whatsappNumber = '8989174741';
+  const whatsappNumber = "8989174741";
   const openWhatsApp = () => {
     const url = `https://wa.me/91${whatsappNumber}`;
     Linking.openURL(url);
   };
 
+
   return (
     <View className="px-4 mt-4 mb-4">
       <Text className="text-xl font-semibold mb-3">Chat With Us</Text>
 
-      <View className="bg-white border border-gray-300 rounded-xl p-4 flex-row justify-between items-center">
-        <View style={{ flex: 1 }}>
-          <Text className="font-semibold text-base mb-1">Talk to a Hair Coach Now</Text>
-          <Text className="text-sm text-gray-500">Get all your queries resolved in 15 minutes</Text>
 
-          <TouchableOpacity
-            onPress={openWhatsApp}
-            className="mt-3 bg-[#d4edc9] px-4 py-2 rounded-lg flex-row items-center justify-center"
-          >
-            <Image
-              source={{ uri: 'https://cdn.shopify.com/s/files/1/0734/7155/7942/files/icon-whatsapp.png?v=1720530391' }}
-              style={{ width: 18, height: 18, marginRight: 8 }}
-            />
-            <Text className="font-semibold text-sm text-black">Chat Now</Text>
-          </TouchableOpacity>
+      <View className="bg-white border border-[#D0D5DD] rounded-xl p-4">
+        <View className="flex-row justify-between items-center">
+          <View className="flex-1 pr-2">
+            <Text className="font-semibold text-xl text-base mb-1">
+              Chat with a Diabetic Expert
+            </Text>
+            <Text className="text-md text-[#667085]">
+              Get all your queries resolved in{" "}
+            </Text>
+            <Text className="text-md text-[#667085]">15 mins or less</Text>
+          </View>
+
+
+          <Image
+            source={{
+              uri: "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/Mask_group_3.png?v=1747143071",
+            }}
+            style={{ width: 64, height: 64, borderRadius: 34 }}
+          />
         </View>
 
-        <Image
-          source={{ uri: 'https://cdn.shopify.com/s/files/1/0734/7155/7942/files/Mask_group_3.png?v=1747143071' }}
-          style={{ width: 50, height: 50, marginLeft: 12 }}
-        />
+
+        <TouchableOpacity
+        style={{ backgroundColor: '#E4D0FF' }}
+          onPress={openWhatsApp}
+          className="mt-3 px-4 py-2 rounded-lg flex-row items-center justify-center"
+        >
+          <FontAwesome
+            name="whatsapp"
+            size={22}
+            color="black"
+            style={{ marginRight: 8 }}
+          />
+
+
+          <Text className="font-semibold text-md text-black">Chat With Us</Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
 }
+
+
+

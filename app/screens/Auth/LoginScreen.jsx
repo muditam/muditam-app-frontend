@@ -1,175 +1,216 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, Image, TouchableOpacity, Alert } from 'react-native';
-import { useRouter } from 'expo-router';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import LegalModal from '../../components/LegalModal';
+import React, { useState } from "react";
+import {
+  View,
+  Text,
+  TextInput,
+  Image,
+  TouchableOpacity,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useRouter } from "expo-router";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import LegalModal from "../../components/LegalModal";
+import { LinearGradient } from "expo-linear-gradient";
 
 export default function LoginScreen() {
   const router = useRouter();
   const [showPrivacy, setShowPrivacy] = useState(false);
   const [showTerms, setShowTerms] = useState(false);
-  const [phoneNumber, setPhoneNumber] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleGetOtp = async () => {
-  if (phoneNumber.length !== 10) {
-    return Alert.alert('Invalid Number', 'Please enter a 10-digit mobile number.');
-  }
+    if (phoneNumber.length !== 10) {
+      return Alert.alert(
+        "Invalid Number",
+        "Please enter a 10-digit mobile number."
+      );
+    }
 
-  setLoading(true);
-  try {
-    await AsyncStorage.setItem('userPhone', phoneNumber);
-
-    // You can keep your API call for user existence check here or inside OTP screen
-    // But better to do this only once in OTP screen to simplify flow.
-
-    // Just navigate to OTP and pass phone param always
-    router.push({ pathname: '/otp', params: { phone: phoneNumber } });
-  } catch (err) {
-    Alert.alert('Error', 'Something went wrong. Please try again.');
-  } finally {
-    setLoading(false);
-  }
-};
-
+    setLoading(true);
+    try {
+      await AsyncStorage.setItem("userPhone", phoneNumber);
+      router.push({ pathname: "/otp", params: { phone: phoneNumber } });
+    } catch (err) {
+      Alert.alert("Error", "Something went wrong. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const privacyContent = `Welcome to our website/mobile site...`;
   const termsContent = `These Terms of Service (“Terms”)...`;
 
   return (
-    <View className="flex-1 bg-white">
-      {/* Header Image */}
-      <Image
-        source={{
-          uri: 'https://cdn.shopify.com/s/files/1/0734/7155/7942/files/ChatGPT_Image_Apr_16_2025_11_24_23_AM.png?v=1747119091',
-        }}
-        style={{ width: '100%', height: 450 }}
-        resizeMode="cover"
-      />
-
-      {/* Content Card */}
-      <View
-        style={{
-          position: 'absolute',
-          top: 284,
-          left: 24,
-          right: 24,
-          backgroundColor: 'white',
-          paddingTop: 40,
-          paddingBottom: 24,
-          paddingHorizontal: 24,
-          borderRadius: 20,
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.1,
-          shadowRadius: 6,
-          elevation: 5,
-        }}
+    <SafeAreaView style={{ flex: 1, backgroundColor: "white" }}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        style={{ flex: 1 }}
       >
-        {/* Heading */}
-        <Text
-          style={{
-            fontFamily: 'Poppins',
-            fontWeight: 'bold',
-            fontSize: 22,
-            textAlign: 'left',
-            marginBottom: 20,
-          }}
-        >
-          Kindly fill in the details:
-        </Text>
-
-        {/* Phone Input */}
-        <View
-          style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            borderWidth: 1,
-            borderColor: 'black',
-            borderRadius: 15,
-            paddingHorizontal: 12,
-            paddingVertical: 3,
-            marginBottom: 20,
-          }}
-        >
-          <Text style={{ color: 'gray', marginRight: 8 }}>+91</Text>
-          <TextInput
-            style={{ flex: 1, fontSize: 16 }}
-            keyboardType="phone-pad"
-            placeholder="Enter your number"
-            maxLength={10}
-            value={phoneNumber}
-            onChangeText={setPhoneNumber}
+        <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+          {/* Header Image */}
+          <Image
+            source={{
+              uri: "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/ChatGPT_Image_Apr_16_2025_11_24_23_AM.png?v=1747119091",
+            }}
+            style={{ width: "100%", height: 460 }}
+            resizeMode="cover"
           />
-        </View>
 
-        {/* Get OTP Button */}
-        <TouchableOpacity
-          style={{
-            backgroundColor: phoneNumber.length === 10 ? '#A855F7' : '#D1D5DB',
-            paddingVertical: 14,
-            borderRadius: 15,
-            alignItems: 'center',
-          }}
-          onPress={handleGetOtp}
-          disabled={loading}
-        >
-          <Text style={{ color: 'white', fontWeight: '600' }}>
-            {loading ? 'Please wait...' : 'Get OTP'}
-          </Text>
-        </TouchableOpacity>
-
-        {/* Gradient Line */}
-        <View
-          style={{
-            flexDirection: 'row',
-            height: 1,
-            marginTop: 50,
-            marginBottom: 50,
-            borderRadius: 1,
-          }}
-        >
-          <View style={{ flex: 1, backgroundColor: '#ffffff' }} />
-          <View style={{ flex: 1, backgroundColor: '#b5b5b5' }} />
-          <View style={{ flex: 1, backgroundColor: '#ffffff' }} />
-        </View>
-
-        {/* Terms Text */}
-        <Text style={{ fontSize: 14, color: '#9CA3AF', textAlign: 'center' }}>
-          By Signing in, I accept the
-        </Text>
-        <Text style={{ fontSize: 15, textAlign: 'center', marginTop: 2, marginBottom: 40 }}>
-          <Text
-            style={{ fontWeight: 'bold', color: '#000000' }}
-            onPress={() => setShowTerms(true)}
+          {/* Content Card */}
+          <View
+            style={{
+              marginTop: -180, // pulls it up slightly into the image
+              marginHorizontal: 16,
+              backgroundColor: "white",
+              paddingTop: 40,
+              paddingHorizontal: 16,
+              borderRadius: 20,
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.1,
+              shadowRadius: 6,
+              elevation: 1.3,
+            }}
           >
-            Terms & Conditions
-          </Text>{' '}
-          and{' '}
-          <Text
-            style={{ fontWeight: 'bold', color: '#000000' }}
-            onPress={() => setShowPrivacy(true)}
-          >
-            Privacy Policy
-          </Text>
-        </Text>
-      </View>
+            {/* Heading */}
+            <Text
+              style={{
+                fontFamily: "Poppins",
+                fontWeight: "bold",
+                fontSize: 26,
+                textAlign: "left",
+                marginBottom: 30,
+              }}
+            >
+              Kindly fill in the details:
+            </Text>
 
-      {/* Modals */}
-      <LegalModal
-        visible={showPrivacy}
-        onClose={() => setShowPrivacy(false)}
-        title="Privacy Policy"
-        lastUpdated="August 18, 2023"
-        content={privacyContent}
-      />
-      <LegalModal
-        visible={showTerms}
-        onClose={() => setShowTerms(false)}
-        title="Terms of Service"
-        lastUpdated="August 18, 2023"
-        content={termsContent}
-      />
-    </View>
+            {/* Phone Input */}
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                borderWidth: 1,
+                borderColor: "black",
+                borderRadius: 10,
+                paddingHorizontal: 12,
+                height: 53,
+                marginBottom: 20,
+              }}
+            >
+              <Text style={{ marginRight: 10, fontSize: 17 }}>+91</Text>
+              <TextInput
+                style={{ flex: 1, fontSize: 17 }}
+                keyboardType="number-pad" // safer for just digits
+                placeholder="Enter your number"
+                maxLength={10}
+                value={phoneNumber}
+                onChangeText={setPhoneNumber}
+              />
+            </View>
+
+            {/* Get OTP Button */}
+            <TouchableOpacity
+              style={{
+                backgroundColor:
+                  phoneNumber.length === 10 ? "#9D57FF" : "#D1D5DB",
+                paddingVertical: 14,
+                borderRadius: 10,
+                alignItems: "center",
+              }}
+              onPress={handleGetOtp}
+              disabled={loading}
+            >
+              <Text
+                style={{ color: "white", fontWeight: "600", fontSize: 18 }}
+              >
+                {loading ? "Please wait..." : "Get OTP"}
+              </Text>
+            </TouchableOpacity>
+
+            {/* Gradient Line */}
+            <View
+              style={{
+                flexDirection: "row",
+                height: 1,
+                marginTop: 40,
+                marginBottom: 50,
+                borderRadius: 1,
+              }}
+            >
+              <LinearGradient
+                colors={["transparent", "#666666", "transparent"]}
+                start={{ x: 0, y: 0.5 }}
+                end={{ x: 1, y: 0.5 }}
+                style={{
+                  width: "95%",
+                  height: 0.5,
+                }}
+              />
+            </View>
+
+            {/* Terms Text */}
+            <Text style={{ fontSize: 16, color: "#B5B5B5", textAlign: "center" }}>
+              By Signing in, I accept the
+            </Text>
+            <Text
+              style={{
+                fontSize: 15,
+                textAlign: "center",
+                color: "#B5B5B5",
+                marginTop: 2,
+              }}
+            >
+              <Text
+                style={{
+                  fontSize: 17,
+                  textDecorationLine: "underline",
+                  textDecorationColor: "#000000",
+                  fontWeight: "regular",
+                  color: "#000000",
+                }}
+                onPress={() => setShowTerms(true)}
+              >
+                Terms & Conditions
+              </Text>{" "}
+              and{" "}
+              <Text
+                style={{
+                  fontSize: 17,
+                  fontWeight: "regular",
+                  color: "#000000",
+                  textDecorationLine: "underline",
+                  textDecorationColor: "#000000",
+                }}
+                onPress={() => setShowPrivacy(true)}
+              >
+                Privacy Policy
+              </Text>
+            </Text>
+          </View>
+        </ScrollView>
+
+        {/* Modals */}
+        <LegalModal
+          visible={showPrivacy}
+          onClose={() => setShowPrivacy(false)}
+          title="Privacy Policy"
+          lastUpdated="August 18, 2023"
+          content={privacyContent}
+        />
+        <LegalModal
+          visible={showTerms}
+          onClose={() => setShowTerms(false)}
+          title="Terms of Service"
+          lastUpdated="August 18, 2023"
+          content={termsContent}
+        />
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }

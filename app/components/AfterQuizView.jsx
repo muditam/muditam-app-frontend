@@ -8,17 +8,24 @@ import {
     TouchableOpacity,
     Dimensions,
     Pressable,
+    ActivityIndicator,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import HbA1cProgressView from './AfterView/HbA1cProgressView';  
-import AfterProductList from './AfterView/AfterProductList';  
-import Result from './AfterView/Result'; 
-import FeaturesComparison from './AfterView/FeaturesComparison'; 
-import ReviewsRatings from './AfterView/ReviewsRatings'; 
-import ReviewsSection from './AfterView/ReviewsSection'; 
+import HbA1cProgressView from './AfterView/HbA1cProgressView';
+import AfterProductList from './AfterView/AfterProductList';
+import Result from './AfterView/Result';
+import FeaturesComparison from './AfterView/FeaturesComparison';
+import ReviewsRatings from './AfterView/ReviewsRatings';
+import ReviewsSection from './AfterView/ReviewsSection';
+import RetakeQuizBox from './AfterView/RetakeQuizBox';
+import PlansInclude from './AfterView/PlansInclude';
+import StepsSection from '../components/StepsSection';
+import ExpertsPanelCard from '../components/ExpertsPanelCard';
+import RealJourneysSlider from '../components/RealJourneysSlider';
+import NeedHelpSection from '../components/NeedHelpSection';
 
 export default function AfterQuizView() {
-    const [name, setName] = useState('User');
+    const [name, setName] = useState('User'); 
 
     const [selectedCause, setSelectedCause] = useState('Heart');
 
@@ -163,11 +170,61 @@ export default function AfterQuizView() {
 
                 <FeaturesComparison />
 
+                <PlansInclude />
+
+                <StepsSection />
+
+                <RetakeQuizBox />
+
+                <RealJourneysSlider />
+
+                <ExpertsPanelCard />
+
+                <NeedHelpSection />
+
                 <ReviewsRatings />
 
                 <ReviewsSection />
 
-            </ScrollView>
+                {(() => {
+                    const [imageHeight, setImageHeight] = useState(0);
+                    const imageUrl = 'https://cdn.shopify.com/s/files/1/0734/7155/7942/files/image.png?v=1747056675';
+                    const sideMargin = 20; // 20px left + right
+
+                    useEffect(() => {
+                        Image.getSize(
+                            imageUrl,
+                            (width, height) => {
+                                const calculatedWidth = Dimensions.get('window').width - sideMargin * 2;
+                                const calculatedHeight = (height / width) * calculatedWidth;
+                                setImageHeight(calculatedHeight);
+                            },
+                            (error) => {
+                                console.error('Failed to get image size:', error);
+                            }
+                        );
+                    }, []);
+
+                    if (!imageHeight) {
+                        return (
+                            <View style={{ height: 200, alignItems: 'center', justifyContent: 'center', marginTop: 10, marginBottom: 40, marginHorizontal: sideMargin }}>
+                                <ActivityIndicator size="large" color="#543287" />
+                            </View>
+                        );
+                    }
+
+                    return (
+                        <View style={{ marginTop: -50, marginBottom: 80, marginHorizontal: sideMargin }}>
+                            <Image
+                                source={{ uri: imageUrl }}
+                                style={{ width: Dimensions.get('window').width - sideMargin * 2, height: imageHeight }}
+                                resizeMode="contain"
+                            />
+                        </View>
+                    );
+                })()}
+
+            </ScrollView> 
 
             {/* Price & CTA floating at bottom */}
             <View style={styles.priceContainer}>
@@ -185,7 +242,7 @@ export default function AfterQuizView() {
 
 const styles = StyleSheet.create({
     container: {
-        paddingBottom: 120,
+        paddingBottom: 10,
         backgroundColor: '#fff',
     },
     banner: {
@@ -340,53 +397,53 @@ const styles = StyleSheet.create({
         fontFamily: 'Poppins',
     },
     impactSection: {
-  marginTop: 20,
-  marginHorizontal: 16,
-},
-impactTitle: {
-  fontSize: 16,
-  fontWeight: '600',
-  fontFamily: 'Poppins',
-  marginBottom: 12,
-  color: '#000',
-},
-impactIcons: {
-  flexDirection: 'row',
-  justifyContent: 'space-between',
-  marginBottom: 12,
-},
-causeBox: {
-  alignItems: 'center',
-  width: '23%',
-  paddingVertical: 10,
-  borderRadius: 8,
-  backgroundColor: '#fff',
-  borderWidth: 1,
-  borderColor: '#eee',
-},
-causeBoxActive: {
-  backgroundColor: '#e8d9fb',
-},
-causeLabel: {
-  fontSize: 12,
-  color: '#333',
-  textAlign: 'center',
-  fontFamily: 'Poppins',
-},
-causeLabelActive: {
-  color: '#9D57FF',
-  fontWeight: '600',
-},
-dynamicBox: {
-  backgroundColor: '#f3e9ff',
-  padding: 12,
-  borderRadius: 8,
-},
-dynamicText: {
-  fontSize: 13,
-  color: '#333',
-  fontFamily: 'Poppins',
-  lineHeight: 18,
-},
+        marginTop: 20,
+        marginHorizontal: 16,
+    },
+    impactTitle: {
+        fontSize: 16,
+        fontWeight: '600',
+        fontFamily: 'Poppins',
+        marginBottom: 12,
+        color: '#000',
+    },
+    impactIcons: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginBottom: 12,
+    },
+    causeBox: {
+        alignItems: 'center',
+        width: '23%',
+        paddingVertical: 10,
+        borderRadius: 8,
+        backgroundColor: '#fff',
+        borderWidth: 1,
+        borderColor: '#eee',
+    },
+    causeBoxActive: {
+        backgroundColor: '#e8d9fb',
+    },
+    causeLabel: {
+        fontSize: 12,
+        color: '#333',
+        textAlign: 'center',
+        fontFamily: 'Poppins',
+    },
+    causeLabelActive: {
+        color: '#9D57FF',
+        fontWeight: '600',
+    },
+    dynamicBox: {
+        backgroundColor: '#f3e9ff',
+        padding: 12,
+        borderRadius: 8,
+    },
+    dynamicText: {
+        fontSize: 13,
+        color: '#333',
+        fontFamily: 'Poppins',
+        lineHeight: 18,
+    },
 
 });

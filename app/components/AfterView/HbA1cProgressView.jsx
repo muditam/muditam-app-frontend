@@ -59,7 +59,7 @@ export default function HbA1cProgressView() {
       const phone = JSON.parse(user || '{}')?.phone;
       if (!phone) return;
 
-      const response = await fetch(`http://192.168.1.9:3001/api/quiz/${phone}`);
+      const response = await fetch(`http://192.168.1.6:3001/api/quiz/${phone}`);
       const data = await response.json();
 
       if (response.ok && data.hba1c) {

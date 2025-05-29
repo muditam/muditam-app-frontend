@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, Image, Alert, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Modal } from 'react-native';
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons, FontAwesome5, Entypo } from '@expo/vector-icons';
+import LinearGradient from 'react-native-linear-gradient';
 
 export default function MeScreen() {
   const router = useRouter();
   const [user, setUser] = useState(null);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   useEffect(() => {
     const loadUser = async () => {
@@ -22,39 +24,38 @@ export default function MeScreen() {
     loadUser();
   }, []);
 
-  const handleLogout = async () => {
-  try {
-    await AsyncStorage.removeItem('userDetails');
-    // If you want to preserve quiz status, DO NOT remove 'quizCompleted'
-    router.replace('/login');
-  } catch (error) {
-    console.error("Logout failed", error);
-  }
-};
-
+  const handleLogoutConfirm = async () => {
+    try {
+      await AsyncStorage.removeItem('userDetails');
+      setShowLogoutModal(false);
+      router.replace('/login');
+    } catch (error) {
+      console.error("Logout failed", error);
+    }
+  };
 
   return (
     <ScrollView style={styles.container}>
-      {/* Top: Profile */}
-      <TouchableOpacity style={styles.profileRow}>
+      {/* Profile block */}
+      <TouchableOpacity
+        style={styles.profileBlock}
+        onPress={() => router.push('/myprofile')}
+      >
         <View style={styles.profileAvatar} />
-        <Text style={styles.profileName}>
-          {user?.name || 'Guest'}
-        </Text>
+        <Text style={styles.profileName}>{user?.name || 'Guest'}</Text>
+        <Entypo name="chevron-right" size={22} color="black" />
       </TouchableOpacity>
 
-      {/* Box: Buy Kit */}
+      {/* Buy Kit Box */}
       <View style={styles.buyKitBox}>
-        <View style={styles.buyKitHeader}>
-          <Ionicons name="cart-outline" size={24} color="white" />
-          <Text style={styles.buyKitHeaderText}>Once you buy your kit</Text>
-        </View>
+        <Ionicons name="cart-outline" size={28} color="white" style={{ marginBottom: 8 }} />
+        <Text style={styles.buyKitHeaderText}>Once you buy your kit</Text>
         <Text style={styles.buyKitDescription}>
-          Muditam Experts will approve your plan and build a detailed prescription.
+          Muditam Exerts will approve your plan and build a detailed prescription.
         </Text>
         <TouchableOpacity
           style={styles.buyNowButton}
-          onPress={() => Alert.alert("Buy Now clicked")}
+          onPress={() => console.log("Buy Now clicked")}
         >
           <Text style={styles.buyNowText}>Buy Now</Text>
         </TouchableOpacity>
@@ -88,15 +89,50 @@ export default function MeScreen() {
           style={styles.linkRow}
         >
           <Text style={styles.linkText}>{item.title}</Text>
-          <Entypo name="chevron-right" size={20} color="gray" />
+          <Entypo name="chevron-right" size={20} color="black" />
         </TouchableOpacity>
       ))}
 
       {/* Logout */}
-      <TouchableOpacity onPress={handleLogout} style={styles.logoutRow}>
-        <Text style={styles.logoutText}>Logout</Text>
-        <Entypo name="chevron-right" size={20} color="gray" />
+      <TouchableOpacity onPress={() => setShowLogoutModal(true)} style={styles.linkRow}>
+        <Text style={styles.linkText}>Logout</Text>
+        <Entypo name="chevron-right" size={20} color="black" />
       </TouchableOpacity>
+
+      {/* Logout Confirmation Modal */}
+      <Modal
+        visible={showLogoutModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowLogoutModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalBox}>
+            <TouchableOpacity
+              onPress={() => setShowLogoutModal(false)}
+              style={styles.modalClose}
+            >
+              <Entypo name="cross" size={22} color="gray" />
+            </TouchableOpacity>
+            <Text style={styles.modalTitle}>Logout?</Text>
+            <Text style={styles.modalMessage}>Are you sure you want to log out?</Text>
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={styles.modalCancelButton}
+                onPress={() => setShowLogoutModal(false)}
+              >
+                <Text style={styles.modalCancelText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.modalLogoutButton}
+                onPress={handleLogoutConfirm}
+              >
+                <Text style={styles.modalLogoutText}>Logout</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </ScrollView>
   );
 }
@@ -108,53 +144,57 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 24,
   },
-  profileRow: {
+  profileBlock: {
     flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: '#F7F0FF', 
+    padding: 16,
     marginBottom: 24,
+    marginHorizontal: -16,
   },
   profileAvatar: {
-    width: 48,
-    height: 48,
-    backgroundColor: '#A78BFA', // purple-300
-    borderRadius: 24,
+    width: 40,
+    height: 40,
+    backgroundColor: '#A78BFA',
+    borderRadius: 20,
+    marginRight: 12,
   },
   profileName: {
-    fontSize: 20,
+    fontSize: 16,
     fontWeight: '600',
-    marginLeft: 16,
+    color: '#333',
+    flex: 1,
   },
   buyKitBox: {
-    backgroundColor: '#6B21A8', // purple-700
+    backgroundColor: '#7C3AED',
     borderRadius: 16,
     padding: 16,
-    marginBottom: 16,
-  },
-  buyKitHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 24,
+    alignItems: 'left',
   },
   buyKitHeaderText: {
     color: 'white',
     fontSize: 16,
     fontWeight: '600',
-    marginLeft: 8,
+    marginBottom: 6,
   },
   buyKitDescription: {
     color: 'white',
-    fontSize: 14,
+    fontSize: 12,
+    textAlign: 'left',
     marginBottom: 12,
   },
   buyNowButton: {
-    backgroundColor: '#DDD6FE', // purple-200
+    backgroundColor: '#DDD6FE',
     borderRadius: 8,
     paddingVertical: 8,
+    paddingHorizontal: 24,
   },
   buyNowText: {
-    color: '#5B21B6', // purple-900
+    color: '#5B21B6',
     fontWeight: '600',
     textAlign: 'center',
+    fontSize: 14,
   },
   buttonsRow: {
     flexDirection: 'row',
@@ -164,14 +204,14 @@ const styles = StyleSheet.create({
   buttonItem: {
     flex: 1,
     alignItems: 'center',
-    backgroundColor: '#EDE9FE', // purple-100
+    backgroundColor: '#E4D0FF',
     paddingVertical: 12,
-    borderRadius: 12,
+    borderRadius: 8,
     marginHorizontal: 4,
   },
   buttonText: {
     marginTop: 6,
-    fontSize: 14,
+    fontSize: 12,
     color: '#543087',
   },
   linkRow: {
@@ -179,22 +219,71 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingVertical: 16,
-    borderBottomColor: '#E5E7EB', // gray-200
+    borderBottomColor: '#E5E7EB',
     borderBottomWidth: 1,
   },
   linkText: {
-    fontSize: 16,
+    fontSize: 14,
+    color: '#111827',
   },
-  logoutRow: {
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalBox: {
+    backgroundColor: 'white',
+    width: '80%',
+    borderRadius: 12,
+    padding: 20,
+    alignItems: 'center',
+    position: 'relative',
+  },
+  modalClose: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+  },
+  modalTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    marginBottom: 8,
+    marginTop: 12,
+  },
+  modalMessage: {
+    fontSize: 13,
+    color: '#555',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  modalButtons: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 16,
-    marginTop: 16,
+    width: '100%',
   },
-  logoutText: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#DC2626',  
+  modalCancelButton: {
+    flex: 1,
+    backgroundColor: '#A78BFA',
+    paddingVertical: 10,
+    borderRadius: 8,
+    marginRight: 8,
+  },
+  modalCancelText: {
+    textAlign: 'center',
+    color: 'white',
+    fontWeight: '600',
+  },
+  modalLogoutButton: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: '#A78BFA',
+    paddingVertical: 10,
+    borderRadius: 8,
+  },
+  modalLogoutText: {
+    textAlign: 'center',
+    color: '#A78BFA',
+    fontWeight: '600',
   },
 });

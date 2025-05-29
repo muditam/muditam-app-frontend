@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Modal,
   View,
@@ -7,7 +7,6 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
-  FlatList,
   Dimensions,
 } from 'react-native';
 
@@ -21,9 +20,9 @@ function AutoSizedImage({ uri }) {
     Image.getSize(
       uri,
       (w, h) => {
-        const scaleFactor = screenWidth * 0.90 / w;
-        const imageHeight = h * scaleFactor;
-        setDimensions({ width: screenWidth * 0.90, height: imageHeight });
+        const scaleFactor = screenWidth;
+        const imageHeight = (h / w) * scaleFactor;
+        setDimensions({ width: scaleFactor, height: imageHeight });
       },
       (err) => console.warn('Failed to get image size:', err)
     );
@@ -32,24 +31,19 @@ function AutoSizedImage({ uri }) {
   if (!dimensions.height) return null;
 
   return (
-    <View style={{ alignItems: 'center', marginBottom: 12 }}>
-      <Image
-        source={{ uri }}
-        style={{
-          width: dimensions.width,
-          height: dimensions.height,
-          borderRadius: 12,
-        }}
-        resizeMode="contain"
-      />
-    </View>
+    <Image
+      source={{ uri }}
+      style={{
+        width: dimensions.width,
+        height: dimensions.height,
+        resizeMode: 'contain',
+      }}
+    />
   );
 }
 
-
 export default function ProductModal({ visible, onClose, product }) {
   const [currentSlide, setCurrentSlide] = useState(0);
-  const flatListRef = useRef(null);
 
   if (!product) return null;
 
@@ -100,7 +94,7 @@ export default function ProductModal({ visible, onClose, product }) {
   const highlights = getHighlights();
   const bottomImages = getBottomImages();
 
-  const onScroll = (e) => {
+  const handleScroll = (e) => {
     const slide = Math.round(e.nativeEvent.contentOffset.x / screenWidth);
     setCurrentSlide(slide);
   };
@@ -113,33 +107,36 @@ export default function ProductModal({ visible, onClose, product }) {
             <Text style={styles.closeText}>✕</Text>
           </TouchableOpacity>
 
-          <FlatList
-            ref={flatListRef}
-            data={images}
-            horizontal
-            pagingEnabled
-            showsHorizontalScrollIndicator={false}
-            keyExtractor={(_, i) => i.toString()}
-            onScroll={onScroll}
-            renderItem={({ item }) => (
-              <View style={styles.carouselContainer}>
-                <Image source={{ uri: item }} style={styles.carouselImage} />
-              </View>
-            )}
-          />
-          <View style={styles.dotsContainer}>
-            {images.map((_, index) => (
-              <View
-                key={index}
-                style={[
-                  styles.dot,
-                  { opacity: currentSlide === index ? 1 : 0.3 },
-                ]}
-              />
-            ))}
-          </View>
-
           <ScrollView>
+            {/* Carousel */}
+            <ScrollView
+              horizontal
+              pagingEnabled
+              showsHorizontalScrollIndicator={false}
+              onScroll={handleScroll}
+              scrollEventThrottle={16}
+            >
+              {images.map((img, i) => (
+                <View key={i} style={{ width: screenWidth }}>
+                  <AutoSizedImage uri={img} />
+                </View>
+              ))}
+            </ScrollView>
+
+            {/* Dots */}
+            <View style={styles.dotsContainer}>
+              {images.map((_, index) => (
+                <View
+                  key={index}
+                  style={[
+                    styles.dot,
+                    { opacity: currentSlide === index ? 1 : 0.3 },
+                  ]}
+                />
+              ))}
+            </View>
+
+            {/* Product Details */}
             <Text style={styles.title}>{product.title}</Text>
             <Text style={styles.price}>₹{product.price}</Text>
 
@@ -175,12 +172,12 @@ export default function ProductModal({ visible, onClose, product }) {
               </View>
             ))}
 
-            {/* Bottom images */}
+            {/* Bottom Images */}
             <View style={styles.bottomImagesRow}>
-                {bottomImages.map((img, i) => (
-                    <AutoSizedImage key={i} uri={img} />
-                ))}
-                </View>
+              {bottomImages.map((img, i) => (
+                <AutoSizedImage key={i} uri={img} />
+              ))}
+            </View>
           </ScrollView>
         </View>
       </View>
@@ -196,10 +193,9 @@ const styles = StyleSheet.create({
   },
   drawer: {
     backgroundColor: '#fff',
-    maxHeight: screenHeight * 0.75,
+    height: screenHeight * 0.85, // allow nearly full height to scroll
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
-    paddingBottom: 20,
   },
   closeBtn: {
     alignSelf: 'flex-end',
@@ -208,18 +204,6 @@ const styles = StyleSheet.create({
   closeText: {
     fontSize: 22,
   },
-  carouselContainer: {
-  width: screenWidth,
-  height: 450,
-  justifyContent: 'center',
-  alignItems: 'center',
-  overflow: 'hidden',
-},
-carouselImage: {
-  width: screenWidth * 0.9,
-  height: '100%',
-  resizeMode: 'contain',
-},
   dotsContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
@@ -237,8 +221,8 @@ carouselImage: {
     fontWeight: '700',
     marginTop: 16,
     paddingHorizontal: 20,
-    },
-    price: {
+  },
+  price: {
     fontSize: 16,
     fontWeight: '600',
     color: '#333',
@@ -284,13 +268,6 @@ carouselImage: {
     color: '#333',
   },
   bottomImagesRow: {
-  marginTop: 20,
-},
-bottomImage: {
-  width: screenWidth,
-  height: undefined,
-  aspectRatio: 1,
-  resizeMode: 'cover',
-  marginBottom: 10,
-},
+    marginTop: 20,
+  },
 });

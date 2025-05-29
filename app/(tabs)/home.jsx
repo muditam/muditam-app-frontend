@@ -6,7 +6,6 @@ import HeroVideoList from '../components/HeroVideoList';
 import ChatWithUsSection from '../components/ChatWithUsSection'; 
 import ReviewsSection from '../components/ReviewsSection';
 import RealJourneysSlider from '../components/RealJourneysSlider';
-import ExpertsPanelCard from '../components/ExpertsPanelCard';
 import FAQ from '../components/FAQ';
 import AfterQuizView from '../components/AfterQuizView';
 
@@ -114,8 +113,7 @@ export default function HomeScreen() {
       {/* Other Sections */}
       <HeroVideoList />
       <RealJourneysSlider />
-      <ChatWithUsSection />
-      <ExpertsPanelCard />
+      <ChatWithUsSection /> 
       <ReviewsSection />
       <FAQ />
     </ScrollView>

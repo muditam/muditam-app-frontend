@@ -24,7 +24,7 @@ export default function AfterProductList() {
         const stored = await AsyncStorage.getItem('hba1c');
         const hba1c = stored ? JSON.parse(stored) : null;
 
-        const res = await fetch('http://192.168.1.9:3001/api/shopify/products');
+        const res = await fetch('http://192.168.1.6:3001/api/shopify/products');
         const data = await res.json();
 
         let titlesToShow = [];
