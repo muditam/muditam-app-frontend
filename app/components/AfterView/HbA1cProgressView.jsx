@@ -4,9 +4,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { RadioButton } from 'react-native-paper';
 
 const barImages = {
-  supplements: 'https://cdn.shopify.com/s/files/1/0734/7155/7942/files/Group_915.webp?v=1745650473',
+  supplements: 'https://cdn.shopify.com/s/files/1/0734/7155/7942/files/Group_917.webp?v=1745650473',
   diet: 'https://cdn.shopify.com/s/files/1/0734/7155/7942/files/Group_916.webp?v=1745650473',
-  lifestyle: 'https://cdn.shopify.com/s/files/1/0734/7155/7942/files/Group_917.webp?v=1745650473',
+  lifestyle: 'https://cdn.shopify.com/s/files/1/0734/7155/7942/files/Group_915.webp?v=1745650473',
 };
 
 export default function HbA1cProgressView() {
@@ -19,7 +19,7 @@ export default function HbA1cProgressView() {
       day: '2-digit',
       month: 'long',
       year: 'numeric',
-    });
+    }); 
   };
 
   const getGoalDateFormatted = () => {
@@ -59,7 +59,7 @@ export default function HbA1cProgressView() {
       const phone = JSON.parse(user || '{}')?.phone;
       if (!phone) return;
 
-      const response = await fetch(`http://192.168.1.6:3001/api/quiz/${phone}`);
+      const response = await fetch(`http://192.168.1.15:3001/api/quiz/${phone}`);
       const data = await response.json();
 
       if (response.ok && data.hba1c) {
@@ -86,11 +86,11 @@ export default function HbA1cProgressView() {
         />
         <Text style={styles.goalLabel}>
           {getGoalDateFormatted()} Goal{' '}
-          <Text style={{ color: '#28A745', fontWeight: 'bold' }}>{getTargetHbA1c()}%</Text>
+          <Text style={{ color: '#03AD31', fontWeight: 'bold', fontSize:30 }}>{getTargetHbA1c()}%</Text>
         </Text>
         <Text style={styles.currentLabel}>
           {getCurrentDateFormatted()}{' '}
-          <Text style={{ color: '#D83A3A', fontWeight: 'bold' }}>{hba1cValue}%</Text>
+          <Text style={{ color: '#E60000', fontWeight: 'bold', fontSize:30 }}>{hba1cValue}%</Text>
         </Text>
       </View>
 
@@ -115,7 +115,7 @@ export default function HbA1cProgressView() {
               value={item.key}
               status={selected === item.key ? 'checked' : 'unchecked'}
               onPress={() => setSelected(item.key)}
-              color="#9D57FF"
+              color="#543087"
             />
             <Text
               style={[
@@ -134,21 +134,19 @@ export default function HbA1cProgressView() {
 
 const styles = StyleSheet.create({
   container: {
-    padding: 14,
-    backgroundColor: '#fff',
+    padding: 16,
+    backgroundColor:"#fff",
   },
   title: {
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: 20,
+    fontWeight: '700',
     fontFamily: 'Poppins',
-    marginBottom: 12,
-    color: '#000',
-    fontWeight: 'bold',
+    marginBottom: 16,
   },
   imageSection: {
     alignItems: 'center',
     position: 'relative',
-    marginBottom: 10,
+    marginVertical: 10,
   },
   barImage: {
     width: '100%',
@@ -158,7 +156,7 @@ const styles = StyleSheet.create({
   },
   goalLabel: {
     position: 'absolute',
-    top: 0,
+    top: -16,
     left: 100,
     fontSize: 12,
     fontFamily: 'Poppins',
@@ -166,7 +164,7 @@ const styles = StyleSheet.create({
   },
   currentLabel: {
     position: 'absolute',
-    bottom: 5,
+    bottom: -10,
     right: 10,
     fontSize: 12,
     fontFamily: 'Poppins',
@@ -174,23 +172,21 @@ const styles = StyleSheet.create({
   },
   optionsCard: {
     marginTop: 24,
-    backgroundColor: '#F8F6FD',
+    backgroundColor: '#F6F6F6',
     padding: 12,
     borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#E5DFF6',
+    paddingBottom:20,
   },
   optionsTitle: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: 18,
+    fontWeight: '700',
     fontFamily: 'Poppins',
-    marginBottom: 12,
     color: '#000',
   },
   radioItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 14,
+    marginTop: 16,
     paddingHorizontal: 4,
     paddingVertical: 10,
     borderRadius: 10,
@@ -199,15 +195,16 @@ const styles = StyleSheet.create({
     borderColor: '#E6E6E6',
   },
   radioItemActive: {
-    borderColor: '#9D57FF',
+    borderColor: '#543087',
     backgroundColor: '#FAF6FF',
+    borderWidth:0.25,
   },
   radioText: {
-    fontSize: 13,
+    fontSize: 16,
     fontFamily: 'Poppins',
-    color: '#333',
-  },
-  radioTextActive: {
-    fontWeight: '700', 
+        width:"90%"
+
   },
 });
+
+

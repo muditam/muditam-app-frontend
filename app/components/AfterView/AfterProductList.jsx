@@ -11,12 +11,11 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import ProductModal from './ProductModal';
 
-export default function AfterProductList() {
+export default function AfterProductList({ setTotalPrice, totalPrice }) {
   const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [totalPrice, setTotalPrice] = useState(0);
+  const [loading, setLoading] = useState(true); 
   const [selectedProduct, setSelectedProduct] = useState(null);
-  const [modalVisible, setModalVisible] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false); 
 
   useEffect(() => {
     const loadData = async () => {
@@ -24,7 +23,7 @@ export default function AfterProductList() {
         const stored = await AsyncStorage.getItem('hba1c');
         const hba1c = stored ? JSON.parse(stored) : null;
 
-        const res = await fetch('http://192.168.1.6:3001/api/shopify/products');
+        const res = await fetch('http://192.168.1.15:3001/api/shopify/products');
         const data = await res.json();
 
         let titlesToShow = [];
@@ -98,7 +97,7 @@ export default function AfterProductList() {
       <Text style={styles.heading}>Your 1st Month Kit – ({products.length} products)</Text>
 
       {loading ? (
-        <ActivityIndicator size="small" />
+        <ActivityIndicator size="small" /> 
       ) : (
         <FlatList
           data={products}

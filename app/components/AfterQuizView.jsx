@@ -26,7 +26,7 @@ import NeedHelpSection from '../components/NeedHelpSection';
 
 export default function AfterQuizView() {
     const [name, setName] = useState('User'); 
-
+    const [totalPrice, setTotalPrice] = useState(0);
     const [selectedCause, setSelectedCause] = useState('Heart');
 
     const causeDescriptions = {
@@ -35,7 +35,6 @@ export default function AfterQuizView() {
         Nerve: 'Nerve damage due to sugar is serious. Re-take the quiz to adjust your answers anytime.',
         Foot: 'Foot complications may arise from diabetes. Update your test if something was missed.',
     };
-
 
     useEffect(() => {
         const loadName = async () => {
@@ -164,7 +163,7 @@ export default function AfterQuizView() {
 
                 <HbA1cProgressView />
 
-                <AfterProductList />
+                <AfterProductList setTotalPrice={setTotalPrice} totalPrice={totalPrice} />
 
                 <Result />
 
@@ -229,7 +228,7 @@ export default function AfterQuizView() {
             {/* Price & CTA floating at bottom */}
             <View style={styles.priceContainer}>
                 <View>
-                    <Text style={styles.price}>₹2514</Text>
+                    <Text style={styles.price}>₹{totalPrice.toFixed(0)}</Text>
                     <Text style={styles.tax}>Inclusive of all taxes</Text>
                 </View>
                 <TouchableOpacity style={styles.buyButton}>

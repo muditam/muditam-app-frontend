@@ -8,6 +8,7 @@ import ReviewsSection from '../components/ReviewsSection';
 import RealJourneysSlider from '../components/RealJourneysSlider';
 import FAQ from '../components/FAQ';
 import AfterQuizView from '../components/AfterQuizView';
+import { checkQuizStatus } from '../utils/checkQuizFromServer';
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -15,21 +16,14 @@ export default function HomeScreen() {
   const [quizCompleted, setQuizCompleted] = useState(false);
 
   useEffect(() => {
-  const checkQuizStatus = async () => {
-    const storedUser = await AsyncStorage.getItem('userDetails');
-    if (!storedUser) return setLoading(false);
+    const fetchStatus = async () => {
+      const isCompleted = await checkQuizStatus(); // ✅ centralized server check
+      setQuizCompleted(isCompleted);
+      setLoading(false);
+    };
+    fetchStatus();
+  }, []);
 
-    const user = JSON.parse(storedUser);
-    const phone = user?.phone;
-    if (!phone) return setLoading(false);
-
-    const quizStatus = await AsyncStorage.getItem(`quizCompleted_${phone}`);
-    setQuizCompleted(quizStatus === 'true');
-    setLoading(false);
-  };
-
-  checkQuizStatus();
-}, []);
 
 
   if (loading) {

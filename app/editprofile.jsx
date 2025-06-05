@@ -29,7 +29,7 @@ export default function EditProfile() {
 
   const handleUpdate = async () => {
   try {
-    const response = await fetch('http://192.168.1.6:3001/api/user/update', {
+    const response = await fetch('http://192.168.1.15:3001/api/user/update', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(user),

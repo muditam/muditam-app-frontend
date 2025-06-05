@@ -65,7 +65,7 @@ export default function UserProfileForm() {
     }
     try {
       setLoadingSubmit(true);
-      const res = await fetch("http://192.168.1.6:3001/api/user", {
+      const res = await fetch("http://192.168.1.15:3001/api/user", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

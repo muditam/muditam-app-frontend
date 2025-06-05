@@ -1,9 +1,17 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Modal } from 'react-native';
+import {
+  SafeAreaView,
+  View,
+  Text,
+  TouchableOpacity,
+  ScrollView,
+  StyleSheet,
+  Modal,
+  Platform,
+} from 'react-native';
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons, FontAwesome5, Entypo } from '@expo/vector-icons';
-import LinearGradient from 'react-native-linear-gradient';
 
 export default function MeScreen() {
   const router = useRouter();
@@ -35,109 +43,119 @@ export default function MeScreen() {
   };
 
   return (
-    <ScrollView style={styles.container}>
-      {/* Profile block */}
-      <TouchableOpacity
-        style={styles.profileBlock}
-        onPress={() => router.push('/myprofile')}
-      >
-        <View style={styles.profileAvatar} />
-        <Text style={styles.profileName}>{user?.name || 'Guest'}</Text>
-        <Entypo name="chevron-right" size={22} color="black" />
-      </TouchableOpacity>
-
-      {/* Buy Kit Box */}
-      <View style={styles.buyKitBox}>
-        <Ionicons name="cart-outline" size={28} color="white" style={{ marginBottom: 8 }} />
-        <Text style={styles.buyKitHeaderText}>Once you buy your kit</Text>
-        <Text style={styles.buyKitDescription}>
-          Muditam Exerts will approve your plan and build a detailed prescription.
-        </Text>
+    <SafeAreaView style={styles.safeArea}>
+      <ScrollView style={styles.container}>
+        {/* Profile block */}
         <TouchableOpacity
-          style={styles.buyNowButton}
-          onPress={() => console.log("Buy Now clicked")}
+          style={styles.profileBlock}
+          onPress={() => router.push('/myprofile')}
         >
-          <Text style={styles.buyNowText}>Buy Now</Text>
+          <View style={styles.profileAvatar} />
+          <Text style={styles.profileName}>{user?.name || 'Guest'}</Text>
+          <Entypo name="chevron-right" size={22} color="black" />
         </TouchableOpacity>
-      </View>
 
-      {/* Buttons Row */}
-      <View style={styles.buttonsRow}>
-        <TouchableOpacity style={styles.buttonItem}>
-          <FontAwesome5 name="tint" size={20} color="#543087" />
-          <Text style={styles.buttonText}>Sugar Drop</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.buttonItem}>
-          <Ionicons name="help-circle-outline" size={22} color="#543087" />
-          <Text style={styles.buttonText}>Help & Support</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.buttonItem}>
-          <FontAwesome5 name="whatsapp" size={20} color="#543087" />
-          <Text style={styles.buttonText}>Chat With Us</Text>
-        </TouchableOpacity>
-      </View>
+        {/* Buy Kit Box */}
+        <View style={styles.buyKitBox}>
+          <Ionicons name="cart-outline" size={28} color="white" style={{ marginBottom: 8 }} />
+          <Text style={styles.buyKitHeaderText}>Once you buy your kit</Text>
+          <Text style={styles.buyKitDescription}>
+            Muditam Exerts will approve your plan and build a detailed prescription.
+          </Text>
+          <TouchableOpacity
+            style={styles.buyNowButton}
+            onPress={() => console.log("Buy Now clicked")}
+          >
+            <Text style={styles.buyNowText}>Buy Now</Text>
+          </TouchableOpacity>
+        </View>
 
-      {/* Links */}
-      {[
-        { title: 'All Products', route: '/products' },
-        { title: 'Terms & Policies', route: '/terms' },
-        { title: 'Read More', route: '/read-more' },
-      ].map((item, i) => (
-        <TouchableOpacity
-          key={i}
-          onPress={() => router.push(item.route)}
-          style={styles.linkRow}
-        >
-          <Text style={styles.linkText}>{item.title}</Text>
+        {/* Buttons Row */}
+        <View style={styles.buttonsRow}>
+          <TouchableOpacity
+            style={styles.buttonItem}
+            onPress={() => router.push('/sugardrop')} // navigate to Sugar Drop page
+          >
+            <FontAwesome5 name="tint" size={20} color="#543087" />
+            <Text style={styles.buttonText}>Sugar Drop</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.buttonItem}>
+            <Ionicons name="help-circle-outline" size={22} color="#543087" />
+            <Text style={styles.buttonText}>Help & Support</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.buttonItem}>
+            <FontAwesome5 name="whatsapp" size={20} color="#543087" />
+            <Text style={styles.buttonText}>Chat With Us</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Links */}
+        {[
+          { title: 'All Products', route: '/products' },
+          { title: 'Terms & Policies', route: '/terms' },
+          { title: 'Read More', route: '/read-more' },
+        ].map((item, i) => (
+          <TouchableOpacity
+            key={i}
+            onPress={() => router.push(item.route)}
+            style={styles.linkRow}
+          >
+            <Text style={styles.linkText}>{item.title}</Text>
+            <Entypo name="chevron-right" size={20} color="black" />
+          </TouchableOpacity>
+        ))}
+
+        {/* Logout */}
+        <TouchableOpacity onPress={() => setShowLogoutModal(true)} style={styles.linkRow}>
+          <Text style={styles.linkText}>Logout</Text>
           <Entypo name="chevron-right" size={20} color="black" />
         </TouchableOpacity>
-      ))}
 
-      {/* Logout */}
-      <TouchableOpacity onPress={() => setShowLogoutModal(true)} style={styles.linkRow}>
-        <Text style={styles.linkText}>Logout</Text>
-        <Entypo name="chevron-right" size={20} color="black" />
-      </TouchableOpacity>
-
-      {/* Logout Confirmation Modal */}
-      <Modal
-        visible={showLogoutModal}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setShowLogoutModal(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalBox}>
-            <TouchableOpacity
-              onPress={() => setShowLogoutModal(false)}
-              style={styles.modalClose}
-            >
-              <Entypo name="cross" size={22} color="gray" />
-            </TouchableOpacity>
-            <Text style={styles.modalTitle}>Logout?</Text>
-            <Text style={styles.modalMessage}>Are you sure you want to log out?</Text>
-            <View style={styles.modalButtons}>
+        {/* Logout Confirmation Modal */}
+        <Modal
+          visible={showLogoutModal}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setShowLogoutModal(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalBox}>
               <TouchableOpacity
-                style={styles.modalCancelButton}
                 onPress={() => setShowLogoutModal(false)}
+                style={styles.modalClose}
               >
-                <Text style={styles.modalCancelText}>Cancel</Text>
+                <Entypo name="cross" size={22} color="gray" />
               </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.modalLogoutButton}
-                onPress={handleLogoutConfirm}
-              >
-                <Text style={styles.modalLogoutText}>Logout</Text>
-              </TouchableOpacity>
+              <Text style={styles.modalTitle}>Logout?</Text>
+              <Text style={styles.modalMessage}>Are you sure you want to log out?</Text>
+              <View style={styles.modalButtons}>
+                <TouchableOpacity
+                  style={styles.modalCancelButton}
+                  onPress={() => setShowLogoutModal(false)}
+                >
+                  <Text style={styles.modalCancelText}>Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.modalLogoutButton}
+                  onPress={handleLogoutConfirm}
+                >
+                  <Text style={styles.modalLogoutText}>Logout</Text>
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
-        </View>
-      </Modal>
-    </ScrollView>
+        </Modal>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: 'white',
+    paddingTop: Platform.OS === 'android' ? 25 : 0, // handle Android status bar
+  },
   container: {
     flex: 1,
     backgroundColor: 'white',
@@ -147,7 +165,7 @@ const styles = StyleSheet.create({
   profileBlock: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F7F0FF', 
+    backgroundColor: '#F7F0FF',
     padding: 16,
     marginBottom: 24,
     marginHorizontal: -16,
@@ -170,7 +188,6 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 16,
     marginBottom: 24,
-    alignItems: 'left',
   },
   buyKitHeaderText: {
     color: 'white',
@@ -189,6 +206,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingVertical: 8,
     paddingHorizontal: 24,
+    alignSelf: 'flex-start',
   },
   buyNowText: {
     color: '#5B21B6',

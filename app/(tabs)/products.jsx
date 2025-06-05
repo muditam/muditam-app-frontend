@@ -15,7 +15,7 @@ import { useRouter } from "expo-router";
 import { useCart } from "../contexts/CartContext";
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { Ionicons } from "@expo/vector-icons"; // for cart icon
+import { FontAwesomeIcon, Ionicons } from "@expo/vector-icons"; // for cart icon
 import { Feather } from "@expo/vector-icons";
 import { Modal } from "react-native";
 
@@ -29,20 +29,30 @@ export default function Products() {
   const { addToCart, cartItems, incrementItem, decrementItem } = useCart();
 
 
-  const categories = ["All", "Diabetes", "Liver", "Gut", "Sleep"]; // your categories
+  const categories = ["All", "Diabetes", "Liver", "Gut", "Sleep"];
   const [selectedCategory, setSelectedCategory] = useState("All");
+
+
+  const categoryToProductsMap = {
+    diabetes: ["karela jamun fizz", "sugar defend pro", "vasant kusmakar ras"],
+    liver: ["liver fix", "heart defend pro"],
+    gut: ["power gut"],
+    sleep: ["stress and sleep"],
+  };
 
 
   const filteredProducts =
     selectedCategory === "All"
       ? products
       : products.filter((p) =>
-          p.tags?.includes(selectedCategory.toLowerCase())
-        );
+        categoryToProductsMap[selectedCategory.toLowerCase()]?.includes(
+          p.title.toLowerCase()
+        )
+      );
 
 
   useEffect(() => {
-    fetch("http://192.168.1.6:3001/api/shopify/products")
+    fetch("http://192.168.1.15:3001/api/shopify/products")
       .then((res) => res.json())
       .then((data) => setProducts(data))
       .catch((err) => {
@@ -98,10 +108,9 @@ export default function Products() {
 
 
   const getItemQuantity = (productId) => {
-    const item = cartItems.find((cartItem) => cartItem.id === productId);
-    return item?.quantity || 0;
-  };
-
+  const item = cartItems.find((cartItem) => String(cartItem.id) === String(productId));
+  return item?.quantity || 0;
+};
 
   const handleViewCart = () => {
     router.push("/cart");
@@ -118,7 +127,7 @@ export default function Products() {
 
 
   return (
-    <View style={{ flex: 1 }}>
+    <View style={{ flex: 1, backgroundColor: "#F7F2FF" }}>
       <View style={styles.headerContainer}>
         <TouchableOpacity
           onPress={() => router.back()}
@@ -133,7 +142,7 @@ export default function Products() {
           onPress={handleViewCart}
           style={styles.cartIconContainer}
         >
-          <Ionicons name="cart-outline" size={26} color="#000" />
+          <Ionicons name="cart-outline" size={24} color="#000" />
           {cartItems.length > 0 && (
             <View style={styles.cartBadge}>
               <Text style={styles.cartBadgeText}>{cartItems.length}</Text>
@@ -180,7 +189,6 @@ export default function Products() {
 
 
       <FlatList
-        // data={products}
         data={filteredProducts}
         numColumns={2}
         keyExtractor={(item) => item.id.toString()}
@@ -190,16 +198,18 @@ export default function Products() {
           const quantity = getItemQuantity(item.id);
           return (
             <View style={styles.productCard}>
-               <TouchableOpacity onPress={() => handlePress(item)}>
-              <Image source={{ uri: item.image }} style={styles.productImage} />
-              <Text style={styles.productTitle}>{item.title}</Text>
-              <View style={styles.priceRow}>
-                <Text style={styles.productPrice}>₹&nbsp;{item.price}</Text>
-              </View>
-            </TouchableOpacity>
+              <TouchableOpacity onPress={() => handlePress(item)}>
+                <Image
+                  source={{ uri: item.image }}
+                  style={styles.productImage}
+                />
+                <Text style={styles.productTitle}>{item.title}</Text>
+                <View style={styles.priceRow}>
+                  <Text style={styles.productPrice}>₹&nbsp;{item.price}</Text>
+                </View>
+              </TouchableOpacity>
 
-
-              {quantity > 0 ? (
+              {cartItems.some((c) => String(c.id) === String(item.id)) ? (
                 <View style={styles.counterContainer}>
                   <TouchableOpacity onPress={() => handleDecrement(item)}>
                     <Text style={styles.counterButton}>
@@ -237,30 +247,28 @@ export default function Products() {
 
 
       {showPopup && (
-  <Animated.View
-    style={[
-      styles.popupContainer,
-      {
-        transform: [{ translateY: popupAnim }],
-        position: "absolute",
-        bottom: 0,
-        left: 0,
-        right: 0,
-        marginHorizontal: 16,
-        borderRadius: 8,
-      },
-    ]}
-  >
-    <Text style={styles.popupText}>
-      {cartItems.length} Product(s) Added
-    </Text>
-    <TouchableOpacity onPress={handleViewCart}>
-      <Text style={styles.viewCartBtn}>View Cart</Text>
-    </TouchableOpacity>
-  </Animated.View>
-)}
-
-
+        <Animated.View
+          style={[
+            styles.popupContainer,
+            {
+              transform: [{ translateY: popupAnim }],
+              position: "absolute",
+              bottom: 0,
+              left: 0,
+              right: 0,
+              marginHorizontal: 16,
+              borderRadius: 8,
+            },
+          ]}
+        >
+          <Text style={styles.popupText}>
+            {cartItems.length} Product(s) Added
+          </Text>
+          <TouchableOpacity onPress={handleViewCart}>
+            <Text style={styles.viewCartBtn}>View Cart</Text>
+          </TouchableOpacity>
+        </Animated.View>
+      )}
     </View>
   );
 }
@@ -278,6 +286,7 @@ const styles = StyleSheet.create({
   listContainer: {
     padding: 16,
   },
+
   productCard: {
     width: cardWidth,
     marginBottom: 16,
@@ -337,9 +346,9 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   counterButton: {
-    fontSize: 18,
     color: "#9D57FF",
     fontWeight: "bold",
+    paddingHorizontal: 4,
   },
   counterValue: {
     fontSize: 14,
@@ -347,7 +356,8 @@ const styles = StyleSheet.create({
     color: "#000",
     marginHorizontal: 10,
   },
- 
+
+
   viewCartBtn: {
     backgroundColor: "#E4D0FF",
     paddingVertical: 8,
@@ -442,7 +452,7 @@ const styles = StyleSheet.create({
   },
 
 
-   popupContainer: {
+  popupContainer: {
     backgroundColor: "#fff",
     flexDirection: "row",
     justifyContent: "space-between",
@@ -454,7 +464,8 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 8,
   },
- 
+
+
   popupText: {
     fontSize: 14,
     color: "#000",

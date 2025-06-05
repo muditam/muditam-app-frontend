@@ -4,26 +4,17 @@ import { View, Text } from 'react-native';
 import { useEffect, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import '../../global.css';
+import { checkQuizStatus } from '../utils/checkQuizFromServer';
 
 export default function Layout() {
   const [quizCompleted, setQuizCompleted] = useState(false);
 
   useEffect(() => {
-    const checkQuizStatus = async () => {
-      try {
-        const userDetails = await AsyncStorage.getItem('userDetails');
-        const phone = JSON.parse(userDetails || '{}')?.phone;
-
-        if (phone) {
-          const completed = await AsyncStorage.getItem(`quizCompleted_${phone}`);
-          setQuizCompleted(completed === 'true');
-        }
-      } catch (error) {
-        console.error('Failed to check quiz status:', error);
-      }
+    const fetchQuizStatus = async () => {
+      const isCompleted = await checkQuizStatus();  
+      setQuizCompleted(isCompleted);
     };
-
-    checkQuizStatus();
+    fetchQuizStatus();
   }, []);
 
   return (
