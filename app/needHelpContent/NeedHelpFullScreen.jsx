@@ -25,7 +25,7 @@ export default function NeedHelpFullScreen() {
 
 
   const BOXES = [
-    { title: "FAQs", iconType: MaterialIcons, iconName: "help-outline" },
+    { title: "FAQs", iconType: MaterialIcons, iconName: "help-outline" }, 
     { title: "Diabetes Test", iconType: FontAwesome5, iconName: "vial" },
     { title: "Diabetes Expert", iconType: Ionicons, iconName: "person-circle-outline" },
     { title: "Diet Plan", iconType: MaterialIcons, iconName: "restaurant-menu" },

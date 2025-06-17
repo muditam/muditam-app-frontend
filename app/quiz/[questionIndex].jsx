@@ -243,7 +243,7 @@ export default function QuestionScreen() {
     const hba1cValue = await AsyncStorage.getItem("hba1c");
     const hba1c = hba1cValue ? JSON.parse(hba1cValue) : null;
 
-    const response = await fetch("http://192.168.1.15:3001/api/quiz/submit", {
+    const response = await fetch("http://192.168.1.32:3001/api/quiz/submit", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ answers: finalAnswers, height, weight, hba1c, phone }),

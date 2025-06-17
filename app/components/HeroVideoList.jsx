@@ -87,17 +87,12 @@ export default function HeroVideoList() {
          
       </View>
 
-      {/* Quote */}
-      <View style={{ padding: 10 }}>
-        <Text numberOfLines={2} style={{ fontSize: 13, color: '#000' }}>{item.quote}</Text>
-        <Text style={{ fontSize: 12, marginTop: 4, color: '#555' }}>– {item.name}</Text>
-      </View>
     </TouchableOpacity>
   );
 
   return (
     <View className="mt-6">
-      <Text className="text-lg font-semibold px-5 mb-3">Muditam Heroes</Text>
+      <Text className="text-2xl font-semibold px-5 mb-6">Results that Speaks</Text>
       <FlatList
         data={videos}
         keyExtractor={(item) => item.id}

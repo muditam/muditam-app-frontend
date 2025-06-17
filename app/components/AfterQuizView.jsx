@@ -9,6 +9,7 @@ import {
     Dimensions,
     Pressable,
     ActivityIndicator,
+    Alert,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import HbA1cProgressView from './AfterView/HbA1cProgressView';
@@ -24,10 +25,12 @@ import ExpertsPanelCard from '../components/ExpertsPanelCard';
 import RealJourneysSlider from '../components/RealJourneysSlider';
 import NeedHelpSection from '../components/NeedHelpSection';
 
+
 export default function AfterQuizView() {
-    const [name, setName] = useState('User'); 
+    const [name, setName] = useState('User');
     const [totalPrice, setTotalPrice] = useState(0);
     const [selectedCause, setSelectedCause] = useState('Heart');
+    const [selectedProducts, setSelectedProducts] = useState([]);
 
     const causeDescriptions = {
         Heart: 'If you’ve left something or want to update a response on the diabetes test, simply re-take it.',
@@ -35,6 +38,7 @@ export default function AfterQuizView() {
         Nerve: 'Nerve damage due to sugar is serious. Re-take the quiz to adjust your answers anytime.',
         Foot: 'Foot complications may arise from diabetes. Update your test if something was missed.',
     };
+
 
     useEffect(() => {
         const loadName = async () => {
@@ -44,6 +48,7 @@ export default function AfterQuizView() {
         };
         loadName();
     }, []);
+
 
     return (
         <View style={{ flex: 1 }}>
@@ -57,6 +62,7 @@ export default function AfterQuizView() {
                     resizeMode="contain"
                 />
 
+
                 {/* Report Card */}
                 <View style={styles.reportCard}>
                     <Text style={styles.nameText}>Hi {name}</Text>
@@ -64,10 +70,12 @@ export default function AfterQuizView() {
                         Here’s what your diabetes analysis report says:
                     </Text>
 
+
                     <View style={styles.rowHeader}>
                         <Text style={styles.reportHeading}>Your Diabetes Root Causes</Text>
                         <View style={styles.line} />
                     </View>
+
 
                     <View style={styles.rootCauses}>
                         {[
@@ -96,6 +104,7 @@ export default function AfterQuizView() {
                     </View>
                 </View>
 
+
                 {/* HbA1c Drop Bar */}
                 <View style={styles.hba1cContainer}>
                     <View style={styles.hba1cBarBg}>
@@ -105,14 +114,18 @@ export default function AfterQuizView() {
                     </View>
                 </View>
 
+
                 {/* Note */}
                 <Text style={styles.noteText}>
                     *Based on 23,235 customers of Muditam Ayurveda that match this profile.
                 </Text>
 
 
+
+
                 <View style={styles.impactSection}>
                     <Text style={styles.impactTitle}>Impact of High Sugar</Text>
+
 
                     <View style={styles.impactIcons}>
                         {[
@@ -154,6 +167,7 @@ export default function AfterQuizView() {
                         ))}
                     </View>
 
+
                     <View style={styles.dynamicBox}>
                         <Text style={styles.dynamicText}>
                             {causeDescriptions[selectedCause]}
@@ -161,34 +175,48 @@ export default function AfterQuizView() {
                     </View>
                 </View>
 
+
                 <HbA1cProgressView />
 
-                <AfterProductList setTotalPrice={setTotalPrice} totalPrice={totalPrice} />
+
+                <AfterProductList setTotalPrice={setTotalPrice} totalPrice={totalPrice} setSelectedProducts={setSelectedProducts} />
+
 
                 <Result />
 
+
                 <FeaturesComparison />
+
 
                 <PlansInclude />
 
+
                 <StepsSection />
+
 
                 <RetakeQuizBox />
 
+
                 <RealJourneysSlider />
+
 
                 <ExpertsPanelCard />
 
+
                 <NeedHelpSection />
+
 
                 <ReviewsRatings />
 
+
                 <ReviewsSection />
+
 
                 {(() => {
                     const [imageHeight, setImageHeight] = useState(0);
                     const imageUrl = 'https://cdn.shopify.com/s/files/1/0734/7155/7942/files/image.png?v=1747056675';
                     const sideMargin = 20; // 20px left + right
+
 
                     useEffect(() => {
                         Image.getSize(
@@ -204,6 +232,7 @@ export default function AfterQuizView() {
                         );
                     }, []);
 
+
                     if (!imageHeight) {
                         return (
                             <View style={{ height: 200, alignItems: 'center', justifyContent: 'center', marginTop: 10, marginBottom: 40, marginHorizontal: sideMargin }}>
@@ -211,6 +240,7 @@ export default function AfterQuizView() {
                             </View>
                         );
                     }
+
 
                     return (
                         <View style={{ marginTop: -50, marginBottom: 80, marginHorizontal: sideMargin }}>
@@ -223,25 +253,68 @@ export default function AfterQuizView() {
                     );
                 })()}
 
-            </ScrollView> 
+
+            </ScrollView>
+
 
             {/* Price & CTA floating at bottom */}
-            <View style={styles.priceContainer}>
+            <View style={styles.priceContainer}> 
                 <View>
                     <Text style={styles.price}>₹{totalPrice.toFixed(0)}</Text>
                     <Text style={styles.tax}>Inclusive of all taxes</Text>
                 </View>
-                <TouchableOpacity style={styles.buyButton}>
-                    <Text style={styles.buyText}>Buy Now</Text>
-                </TouchableOpacity>
+                <TouchableOpacity
+  style={styles.buyButton}
+  onPress={async () => {
+    try {
+      const validItems = selectedProducts.filter(
+        (item) => item.first_variant_id && item.quantity > 0
+      );
+
+      if (validItems.length === 0) {
+        Alert.alert("No products selected", "Please add products to continue.");
+        return;
+      }
+
+      const response = await fetch('http://192.168.1.32:3001/api/shopify/create-cart', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ items: validItems }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.cartId) {
+        Alert.alert("Checkout Failed", "Unable to create cart. Try again.");
+        return;
+      }
+
+      const cartToken = data.cartId.split('/').pop();
+
+      // Navigate to GoKwikCheckout
+      const { router } = require("expo-router");
+      router.push({
+        pathname: '/GoKwikCheckout',
+        params: { cartId: cartToken, total: totalPrice },
+      });
+    } catch (err) {
+      console.error("Error launching checkout:", err);
+      Alert.alert("Error", "Something went wrong. Please try again.");
+    }
+  }}
+>
+  <Text style={styles.buyText}>Buy Now</Text>
+</TouchableOpacity>
+
             </View>
         </View>
     );
 }
 
+
 const styles = StyleSheet.create({
     container: {
-        paddingBottom: 10,
+        paddingBottom: 120,
         backgroundColor: '#fff',
     },
     banner: {
@@ -254,20 +327,20 @@ const styles = StyleSheet.create({
         marginTop: -100,
         padding: 16,
         borderRadius: 12,
-        elevation: 5,
+        elevation: 3,
         shadowColor: '#000',
         shadowOpacity: 0.1,
         shadowRadius: 5,
     },
     nameText: {
-        fontSize: 16,
+        fontSize: 18,
         fontWeight: '600',
         marginBottom: 4,
         fontFamily: 'Poppins',
     },
     reportIntro: {
-        fontSize: 13,
-        color: '#444',
+        fontSize: 14,
+        color: '#404040',
         marginBottom: 10,
         fontFamily: 'Poppins',
     },
@@ -278,14 +351,14 @@ const styles = StyleSheet.create({
         marginBottom: 10,
     },
     reportHeading: {
-        fontSize: 16,
+        fontSize: 18,
         fontWeight: '600',
         fontFamily: 'Poppins',
     },
     line: {
         flex: 1,
-        height: 1.5,
-        backgroundColor: '#E0E0E0',
+        height: 2,
+        backgroundColor: '#878787',
         marginLeft: 10,
         marginTop: 5,
     },
@@ -309,7 +382,7 @@ const styles = StyleSheet.create({
     },
     causeLabel: {
         fontSize: 12,
-        color: '#333',
+        color: '#404040',
         textAlign: 'center',
         fontFamily: 'Poppins',
     },
@@ -320,7 +393,7 @@ const styles = StyleSheet.create({
     },
     hba1cBarBg: {
         width: '100%',
-        height: 34,
+        height: 30,
         backgroundColor: '#F3E9FF',
         borderRadius: 999,
         overflow: 'hidden',
@@ -340,12 +413,12 @@ const styles = StyleSheet.create({
     hba1cText: {
         color: 'white',
         fontWeight: '600',
-        fontSize: 13,
+        fontSize: 12,
         fontFamily: 'Poppins',
     },
     noteText: {
         fontSize: 11,
-        color: '#666',
+        color: '#404040',
         textAlign: 'center',
         marginTop: 12,
         marginHorizontal: 16,
@@ -353,7 +426,7 @@ const styles = StyleSheet.create({
     },
     noteTexted: {
         fontSize: 15,
-        fontWeight: 'bold',
+        fontWeight: '600',
         marginTop: 12,
         marginHorizontal: 16,
         fontFamily: 'Poppins',
@@ -363,15 +436,22 @@ const styles = StyleSheet.create({
         bottom: '0%',
         left: 0,
         right: 0,
-        backgroundColor: '#f3e7ff',
+        backgroundColor: '#F3E9FF',
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        paddingVertical: 14,
-        paddingHorizontal: 16,
+        paddingVertical: 8,
+        paddingRight: 16,
+        paddingLeft:34,
         borderRadius: 0,
         elevation: 5,
+
+
+
+
+   
     },
+ 
     price: {
         fontSize: 20,
         fontWeight: '700',
@@ -379,70 +459,68 @@ const styles = StyleSheet.create({
         color: '#000',
     },
     tax: {
-        fontSize: 12,
-        color: '#666',
+        fontSize: 14,
         fontFamily: 'Poppins',
     },
     buyButton: {
-        backgroundColor: '#B264F7',
-        paddingVertical: 10,
-        paddingHorizontal: 28,
-        borderRadius: 5,
+        backgroundColor: '#9D57FF',
+        paddingVertical: 6,
+        paddingHorizontal: 40,
+        borderRadius: 4,
     },
     buyText: {
         color: '#fff',
         fontWeight: '700',
-        fontSize: 15,
+        fontSize: 16,
         fontFamily: 'Poppins',
     },
     impactSection: {
-        marginTop: 20,
-        marginHorizontal: 16,
-    },
-    impactTitle: {
-        fontSize: 16,
-        fontWeight: '600',
-        fontFamily: 'Poppins',
-        marginBottom: 12,
-        color: '#000',
-    },
-    impactIcons: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        marginBottom: 12,
-    },
-    causeBox: {
-        alignItems: 'center',
-        width: '23%',
-        paddingVertical: 10,
-        borderRadius: 8,
-        backgroundColor: '#fff',
-        borderWidth: 1,
-        borderColor: '#eee',
-    },
-    causeBoxActive: {
-        backgroundColor: '#e8d9fb',
-    },
-    causeLabel: {
-        fontSize: 12,
-        color: '#333',
-        textAlign: 'center',
-        fontFamily: 'Poppins',
-    },
-    causeLabelActive: {
-        color: '#9D57FF',
-        fontWeight: '600',
-    },
-    dynamicBox: {
-        backgroundColor: '#f3e9ff',
-        padding: 12,
-        borderRadius: 8,
-    },
-    dynamicText: {
-        fontSize: 13,
-        color: '#333',
-        fontFamily: 'Poppins',
-        lineHeight: 18,
-    },
+  marginTop: 20,
+  marginHorizontal: 16,
+},
+impactTitle: {
+  fontSize: 16,
+  fontWeight: '600',
+  fontFamily: 'Poppins',
+  marginBottom: 12,
+  color: '#000',
+},
+impactIcons: {
+  flexDirection: 'row',
+  justifyContent: 'space-between',
+  marginBottom: 12,
+},
+causeBox: {
+  alignItems: 'center',
+  width: '23%',
+  paddingVertical: 10,
+  borderRadius: 4,
+  backgroundColor: '#fff',
+  borderWidth: 0.5,
+  borderColor: '#8F8F8F',
+},
+causeBoxActive: {
+  backgroundColor: '#EBDBFF',
+},
+causeLabel: {
+  fontSize: 12,
+  color: '#333',
+  textAlign: 'center',
+  fontFamily: 'Poppins',
+},
+causeLabelActive: {
+  fontWeight: '600',
+},
+dynamicBox: {
+  backgroundColor: '#EBDBFF',
+  padding: 14,
+  borderRadius: 4,
+  paddingVertical:20
+},
+dynamicText: {
+  fontSize: 13,
+  fontFamily: 'Poppins',
+  lineHeight: 20,
+},
 
 });

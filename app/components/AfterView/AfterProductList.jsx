@@ -10,12 +10,19 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import ProductModal from './ProductModal';
+import { FontAwesome } from '@expo/vector-icons';
 
-export default function AfterProductList({ setTotalPrice, totalPrice }) {
+
+
+
+
+
+export default function AfterProductList({ setTotalPrice, totalPrice, setSelectedProducts }) {
   const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true); 
+  const [loading, setLoading] = useState(true);
   const [selectedProduct, setSelectedProduct] = useState(null);
-  const [modalVisible, setModalVisible] = useState(false); 
+  const [modalVisible, setModalVisible] = useState(false);
+
 
   useEffect(() => {
     const loadData = async () => {
@@ -23,8 +30,10 @@ export default function AfterProductList({ setTotalPrice, totalPrice }) {
         const stored = await AsyncStorage.getItem('hba1c');
         const hba1c = stored ? JSON.parse(stored) : null;
 
-        const res = await fetch('http://192.168.1.15:3001/api/shopify/products');
+
+        const res = await fetch('http://192.168.1.32:3001/api/shopify/products');
         const data = await res.json();
+
 
         let titlesToShow = [];
         if (hba1c <= 6.0) {
@@ -35,8 +44,18 @@ export default function AfterProductList({ setTotalPrice, totalPrice }) {
           titlesToShow = ['Sugar Defend Pro', 'Vasant Kusmakar Ras'];
         }
 
+
         const filtered = data.filter((p) => titlesToShow.includes(p.title));
         setProducts(filtered);
+
+        const enriched = filtered.map((p) => ({
+          ...p,
+          quantity: 1,
+          first_variant_id: p.first_variant_id || p.variants?.[0]?.id, // fallback to first variant
+        }));
+
+        setProducts(enriched);
+        setSelectedProducts(enriched);
 
         // Calculate total price
         const total = filtered.reduce((acc, curr) => acc + parseFloat(curr.price), 0);
@@ -48,11 +67,14 @@ export default function AfterProductList({ setTotalPrice, totalPrice }) {
       }
     };
 
+
     loadData();
   }, []);
 
+
   const renderItem = ({ item }) => {
   let subtitleText = 'Control blood sugar levels';
+
 
   if (item.title === 'Sugar Defend Pro') {
     subtitleText = 'Helps manage post-meal sugar spikes';
@@ -60,9 +82,11 @@ export default function AfterProductList({ setTotalPrice, totalPrice }) {
     subtitleText = 'Supports natural insulin response';
   }
 
+
   return (
     <View style={styles.productCard}>
       <Image source={{ uri: item.image }} style={styles.productImage} />
+
 
       {/* Text block */}
       <View style={{ flex: 1, paddingHorizontal: 10 }}>
@@ -75,6 +99,7 @@ export default function AfterProductList({ setTotalPrice, totalPrice }) {
         </View>
       </View>
 
+
       {/* Arrow on far right */}
      <TouchableOpacity onPress={() => { setSelectedProduct(item); setModalVisible(true); }}>
       <Image
@@ -82,6 +107,7 @@ export default function AfterProductList({ setTotalPrice, totalPrice }) {
         style={styles.arrowIconRight}
       />
 </TouchableOpacity>
+
 
 <ProductModal
   visible={modalVisible}
@@ -92,39 +118,65 @@ export default function AfterProductList({ setTotalPrice, totalPrice }) {
   );
 };
 
+
   return (
     <View style={styles.container}>
       <Text style={styles.heading}>Your 1st Month Kit – ({products.length} products)</Text>
 
+
       {loading ? (
-        <ActivityIndicator size="small" /> 
+        <ActivityIndicator size="small" />
       ) : (
         <FlatList
           data={products}
           renderItem={renderItem}
           keyExtractor={(item) => item.id.toString()}
+
+
         />
       )}
 
+
       <View style={styles.summaryBox}>
         <Text style={styles.summaryTitle}>What you get for ₹{totalPrice.toFixed(0)}</Text>
+                <View style={styles.line1} />
+
+
         <View style={styles.row}>
-          <Text>1-Month Customised Kit</Text>
-          <Text>₹{totalPrice.toFixed(0)}</Text>
-        </View>
-        <View style={styles.row}>
-          <Text>✅ Diabetic Coach Support</Text>
-          <Text style={styles.free}>Free</Text>
-        </View>
-        <View style={styles.row}>
-          <Text>✅ Doctor Prescription</Text>
-          <Text style={styles.free}>Free</Text>
-        </View>
-        <View style={styles.row}>
-          <Text>✅ Ayurvedic Diet Plan</Text>
-          <Text style={styles.free}>Free</Text>
-        </View>
+  <Text style={styles.itemText}>1-Month Customised Kit</Text>
+  <Text style={styles.priceText}>₹{totalPrice.toFixed(0)}</Text>
+</View>
+
+
+<View style={styles.row}>
+  <View style={styles.leftContent}>
+    <View style={styles.check} />
+    <Text style={styles.itemText}>Diabetic Coach Support</Text>
+  </View>
+  <Text style={styles.free}>Free</Text>
+</View>
+
+
+<View style={styles.row}>
+  <View style={styles.leftContent}>
+    <View style={styles.check} />
+    <Text style={styles.itemText}>Doctor Prescription</Text>
+  </View>
+  <Text style={styles.free}>Free</Text>
+</View>
+
+
+<View style={styles.row}>
+  <View style={styles.leftContent}>
+    <View style={styles.check} />
+    <Text style={styles.itemText}>Ayurvedic Diet Plan</Text>
+  </View>
+  <Text style={styles.free}>Free</Text>
+</View>
+
+
       </View>
+
 
       <View style={styles.giftSection}>
         <Text style={styles.giftHeading}>Free Gift’s For You</Text>
@@ -140,37 +192,53 @@ export default function AfterProductList({ setTotalPrice, totalPrice }) {
   );
 }
 
+
 const styles = StyleSheet.create({
-  container: { margin: 16 },
+  container: {
+    // margin: 16
+  },
   heading: {
-    fontSize: 16,
+    fontSize: 20,
     fontWeight: '600',
     fontFamily: 'Poppins',
-    marginBottom: 10,
+    marginBottom: 12,
+    marginHorizontal:16,
   },
   productCard: {
     backgroundColor: '#fff',
-    borderRadius: 0,
+    borderRadius:4,
     padding: 10,
     flexDirection: 'row',
     alignItems: 'center',
     elevation: 2,
+     marginVertical: 8,
     marginBottom: 12,
+    marginHorizontal:16,
+    elevation: 3,
+
+
+
+
+  // iOS shadow
+  shadowColor: '#000',
+  shadowOffset: { width: 0, height: 2 },
+  shadowOpacity: 0.2,
+  shadowRadius: 2,
+
+
   },
   productImage: {
     width: 60,
     height: 120,
-    resizeMode: 'contain',
-    marginRight: 8,
+    resizeMode: 'cover',
   },
   title: {
-    fontWeight: '600',
-    fontSize: 14,
+    fontWeight: '700',
+    fontSize: 18,
     fontFamily: 'Poppins',
   },
   subtitle: {
-    fontSize: 12,
-    color: '#777',
+    fontSize: 14,
     marginTop: 2,
   },
   bottomRow: {
@@ -180,17 +248,18 @@ const styles = StyleSheet.create({
   gap: 8,
 },
   line: {
-    height: 1,
-    backgroundColor: '#ddd',
-    marginVertical: 6,
+    height: 0.75,
+    backgroundColor: '#C0C0C0',
+    marginVertical: 10,
     width: '100%',
   },
   tag: {
     fontSize: 10,
-    backgroundColor: '#eee',
+    fontWeight:500,
+    backgroundColor: '#F4F4F4',
     paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
+    paddingVertical: 3,
+    borderRadius: 2,
     alignSelf: 'flex-start',
     color: '#333',
   },
@@ -198,11 +267,12 @@ const styles = StyleSheet.create({
   width: 20,
   height: 20,
   marginLeft: 8,
+  marginRight:10,
   alignSelf: 'center',
 },
   price: {
     fontWeight: '600',
-    fontSize: 14,
+    fontSize: 16,
     fontFamily: 'Poppins',
   },
   arrowIcon: {
@@ -211,41 +281,77 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   summaryBox: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    padding: 14,
+    borderWidth: 0.5,
+    paddingHorizontal: 30,
+    paddingVertical:15,
     borderRadius: 12,
-    marginTop: 16,
+    marginHorizontal:16,
+    marginTop:16,
     backgroundColor: '#fff',
   },
   summaryTitle: {
-    fontSize: 14,
+    fontSize: 20,
     fontWeight: '600',
-    marginBottom: 10,
     fontFamily: 'Poppins',
   },
-  row: {
+ row: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingVertical: 6,
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  leftContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexShrink: 1,
+  },
+  check: {
+    height: 14,
+    width: 7,
+    borderBottomWidth: 2,
+    borderRightWidth: 2,
+    borderColor: '#03AD31',
+    transform: [{ rotate: '45deg' }],
+    marginRight: 8,
+  },
+  itemText: {
+    fontSize: 16,
+    color: '#000',
+  },
+  priceText: {
+    fontSize: 16,
+    color: '#000',
   },
   free: {
-    color: '#28A745',
-    fontWeight: '600',
+    fontSize: 16,
+    color: '#03AD31',
   },
+  line1: {
+    height: 1,
+    backgroundColor: '#000',
+    marginVertical: 10,
+    width: '100%',
+  },
+
+
   giftSection: {
-    backgroundColor: '#F9F9F9',
-    marginTop: 24,
+    backgroundColor: '#F4F4F4',
+    marginVertical: 16,
   },
   giftHeading: {
-    fontSize: 14,
+    fontSize: 20,
     fontWeight: '600',
-    marginBottom: 10,
     fontFamily: 'Poppins',
+    padding:16,
   },
   giftImage: {
     width: '100%',
     height: 100,
     borderRadius: 8,
+    marginRight:16,
+    marginBottom:16,
   },
 });
+
+
+

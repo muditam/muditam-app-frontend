@@ -15,13 +15,14 @@ import { Picker } from "@react-native-picker/picker";
 import { Feather } from "@expo/vector-icons";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 
 export default function UserProfileForm() {
   const router = useRouter();
   const { phone: phoneParam } = useLocalSearchParams();
   const [phone, setPhone] = useState(phoneParam || "");
-  const [loadingPhone, setLoadingPhone] = useState(!phoneParam); // loading if no param
+  const [loadingPhone, setLoadingPhone] = useState(!phoneParam); 
   const [name, setName] = useState("");
   const [yearOfBirth, setYearOfBirth] = useState("");
   const [gender, setGender] = useState("");
@@ -65,7 +66,7 @@ export default function UserProfileForm() {
     }
     try {
       setLoadingSubmit(true);
-      const res = await fetch("http://192.168.1.15:3001/api/user", {
+      const res = await fetch("http://192.168.1.32:3001/api/user", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -107,11 +108,12 @@ export default function UserProfileForm() {
 
 
   return (
+    <SafeAreaView style={{ flex: 1 }}>
     <ScrollView contentContainerStyle={styles.container}>
       <View style={styles.card}>
         <TouchableOpacity
           onPress={() => router.back()}
-          style={{ paddingTop: 5, marginLeft: -5 }}
+          style={{ paddingTop: 5, marginLeft: -5, marginBottom: -9, }}
         >
           <Image
             source={{
@@ -203,6 +205,7 @@ export default function UserProfileForm() {
         </TouchableOpacity>
       </View>
     </ScrollView>
+    </SafeAreaView>
   );
 }
 
@@ -211,6 +214,7 @@ const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
     padding: 16,
+    paddingTop: 0,
   },
   card: {
     borderRadius: 12,
@@ -218,9 +222,8 @@ const styles = StyleSheet.create({
   },
   backArrow: {
     fontSize: 24,
-    marginBottom: 8,
+    marginBottom: 0,
   },
-
 
   label: {
     fontWeight: "600",

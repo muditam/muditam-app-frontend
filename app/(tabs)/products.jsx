@@ -10,6 +10,10 @@ import {
   Dimensions,
   Animated,
   ScrollView,
+  SafeAreaView, 
+  useWindowDimensions, 
+  Platform,
+  StatusBar,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { useCart } from "../contexts/CartContext";
@@ -45,14 +49,14 @@ export default function Products() {
     selectedCategory === "All"
       ? products
       : products.filter((p) =>
-        categoryToProductsMap[selectedCategory.toLowerCase()]?.includes(
-          p.title.toLowerCase()
-        )
-      );
+          categoryToProductsMap[selectedCategory.toLowerCase()]?.includes(
+            p.title.toLowerCase()
+          )
+        );
 
 
   useEffect(() => {
-    fetch("http://192.168.1.15:3001/api/shopify/products")
+    fetch("http://192.168.1.32:3001/api/shopify/products")
       .then((res) => res.json())
       .then((data) => setProducts(data))
       .catch((err) => {
@@ -106,11 +110,15 @@ export default function Products() {
     }
   };
 
+  const { width } = useWindowDimensions();
+  const cardWidth = (width - 48) / 2;
+
 
   const getItemQuantity = (productId) => {
-  const item = cartItems.find((cartItem) => String(cartItem.id) === String(productId));
-  return item?.quantity || 0;
-};
+    const item = cartItems.find((cartItem) => cartItem.id === productId);
+    return item?.quantity || 0;
+  };
+
 
   const handleViewCart = () => {
     router.push("/cart");
@@ -127,8 +135,8 @@ export default function Products() {
 
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#F7F2FF" }}>
-      <View style={styles.headerContainer}>
+    <SafeAreaView style={styles.safeArea}> 
+      <View style={[styles.headerContainer, styles.safeHeader]}>
         <TouchableOpacity
           onPress={() => router.back()}
           style={styles.backArrow}
@@ -191,13 +199,17 @@ export default function Products() {
       <FlatList
         data={filteredProducts}
         numColumns={2}
-        keyExtractor={(item) => item.id.toString()}
-        contentContainerStyle={styles.listContainer}
-        columnWrapperStyle={{ justifyContent: "space-between" }}
+        keyExtractor={(item) => item.id.toString()} 
+        contentContainerStyle={{ 
+          paddingHorizontal: 16, 
+          paddingBottom: 10,
+        }}
+        style={{ flexGrow: 1 }} 
+        columnWrapperStyle={{ justifyContent: "space-between", }}
         renderItem={({ item }) => {
           const quantity = getItemQuantity(item.id);
           return (
-            <View style={styles.productCard}>
+            <View style={[styles.productCard, { width: cardWidth }]}>
               <TouchableOpacity onPress={() => handlePress(item)}>
                 <Image
                   source={{ uri: item.image }}
@@ -209,7 +221,8 @@ export default function Products() {
                 </View>
               </TouchableOpacity>
 
-              {cartItems.some((c) => String(c.id) === String(item.id)) ? (
+
+              {quantity > 0 ? (
                 <View style={styles.counterContainer}>
                   <TouchableOpacity onPress={() => handleDecrement(item)}>
                     <Text style={styles.counterButton}>
@@ -269,7 +282,7 @@ export default function Products() {
           </TouchableOpacity>
         </Animated.View>
       )}
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -278,6 +291,14 @@ const cardWidth = (Dimensions.get("window").width - 48) / 2;
 
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: "#F7F2FF",
+    paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
+  },
+  safeHeader: {
+    marginTop: Platform.OS === "android" ? 0 : 0, 
+  },
   loaderContainer: {
     flex: 1,
     justifyContent: "center",
@@ -286,14 +307,14 @@ const styles = StyleSheet.create({
   listContainer: {
     padding: 16,
   },
-
+ 
   productCard: {
     width: cardWidth,
     marginBottom: 16,
     backgroundColor: "#fff",
     borderRadius: 8,
     paddingHorizontal: 16,
-    paddingVertical: 10,
+    paddingVertical: 16,
     shadowColor: "#000",
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -453,18 +474,18 @@ const styles = StyleSheet.create({
 
 
   popupContainer: {
-    backgroundColor: "#fff",
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingVertical: 18,
-    paddingHorizontal: 18,
-    elevation: 8,
-    shadowColor: "#000",
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-  },
-
+  backgroundColor: "#fff",
+  flexDirection: "row",
+  justifyContent: "space-between",
+  alignItems: "center",
+  paddingVertical: 18,
+  paddingHorizontal: 18,
+  elevation: 8,
+  shadowColor: "#000",
+  shadowOpacity: 0.1,
+  shadowRadius: 8,
+  paddingBottom: Platform.OS === "ios" ? 24 : 18,
+},
 
   popupText: {
     fontSize: 14,
@@ -472,8 +493,6 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
 });
-
-
 
 
 

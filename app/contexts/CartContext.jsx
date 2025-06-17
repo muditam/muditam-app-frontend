@@ -7,33 +7,48 @@ export const CartProvider = ({ children }) => {
   const [cartItems, setCartItems] = useState([]);
   const [userPhone, setUserPhone] = useState(null);
 
-  // ✅ Load phone and cart on mount
+  // ✅ Helper: Validate product before adding
+  const isValidProduct = (product) => {
+    return (
+      product &&
+      typeof product.id !== 'undefined' &&
+      typeof product.first_variant_id !== 'undefined' &&
+      product.first_variant_id !== null &&
+      product.first_variant_id !== 0
+    );
+  };
+
+  // ✅ Load cart + user phone from AsyncStorage or backend
   useEffect(() => {
     const loadCart = async () => {
       try {
-        const storedUser = await AsyncStorage.getItem('userDetails');
-        const storedCart = await AsyncStorage.getItem('cartItems');
+        const [storedUser, storedCart] = await Promise.all([
+          AsyncStorage.getItem('userDetails'),
+          AsyncStorage.getItem('cartItems'),
+        ]);
+
         const phone = JSON.parse(storedUser || '{}')?.phone;
+        if (phone) setUserPhone(phone);
+
+        let parsedCart = [];
+        if (storedCart) {
+          parsedCart = JSON.parse(storedCart).filter(isValidProduct);
+        }
 
         if (!phone) {
-          console.warn('Phone number not found in AsyncStorage. Set userDetails properly.');
-          if (storedCart) {
-            setCartItems(JSON.parse(storedCart));
-          }
+          console.warn('Phone number not found in AsyncStorage.');
+          setCartItems(parsedCart);
           return;
         }
 
-        setUserPhone(phone);
-
-        const res = await fetch(`http://192.168.1.15:3001/api/cart/${phone}`);
+        const res = await fetch(`http://192.168.1.32:3001/api/cart/${phone}`);
         const data = await res.json();
 
         if (res.ok && Array.isArray(data.items)) {
-          setCartItems(data.items);
-        } else if (storedCart) {
-          setCartItems(JSON.parse(storedCart));
+          const filtered = data.items.filter(isValidProduct);
+          setCartItems(filtered);
         } else {
-          setCartItems([]);
+          setCartItems(parsedCart);
         }
       } catch (err) {
         console.error('Error loading cart:', err);
@@ -43,31 +58,38 @@ export const CartProvider = ({ children }) => {
     loadCart();
   }, []);
 
-  // ✅ Sync to backend + AsyncStorage when cart or phone changes
+  // ✅ Sync cart to backend + AsyncStorage when changed
   useEffect(() => {
-    AsyncStorage.setItem('cartItems', JSON.stringify(cartItems));
-    const syncCart = async () => {
-      if (!userPhone) return;
+    if (!userPhone || cartItems.length === 0) return;
 
+    const syncCart = async () => {
       try {
-        await fetch(`http://192.168.1.15:3001/api/cart/save`, {
+        const validItems = cartItems.filter(isValidProduct);
+
+        await fetch(`http://192.168.1.32:3001/api/cart/save`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ phone: userPhone, items: cartItems }),
+          body: JSON.stringify({ phone: userPhone, items: validItems }),
         });
+
+        await AsyncStorage.setItem('cartItems', JSON.stringify(validItems));
       } catch (e) {
         console.error('Error syncing cart to backend:', e);
       }
     };
 
-    if (cartItems.length > 0) {
-      syncCart();
-    }
+    syncCart();
   }, [cartItems, userPhone]);
 
-  // ✅ Add to Cart
+  // ✅ Add product to cart
   const addToCart = (product) => {
+    if (!isValidProduct(product)) {
+      console.warn('Invalid product cannot be added to cart:', product);
+      return;
+    }
+
     const exists = cartItems.find((item) => String(item.id) === String(product.id));
+
     if (exists) {
       setCartItems((prev) =>
         prev.map((item) =>
@@ -92,7 +114,7 @@ export const CartProvider = ({ children }) => {
     );
   };
 
-  // ✅ Decrement quantity or remove
+  // ✅ Decrement or remove item
   const decrementItem = (productId, forceRemove = false) => {
     setCartItems((prev) =>
       forceRemove
@@ -107,7 +129,13 @@ export const CartProvider = ({ children }) => {
 
   return (
     <CartContext.Provider
-      value={{ cartItems, addToCart, incrementItem, decrementItem, setCartItems }}
+      value={{
+        cartItems,
+        addToCart,
+        incrementItem,
+        decrementItem,
+        setCartItems,
+      }}
     >
       {children}
     </CartContext.Provider>

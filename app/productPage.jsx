@@ -56,13 +56,13 @@ export default function ProductPage() {
 
   useEffect(() => {
     if (productId) {
-      fetch(`http://192.168.1.15:3001/api/shopify/product/${productId}`)
+      fetch(`http://192.168.1.32:3001/api/shopify/product/${productId}`)
         .then(res => res.json())
         .then(data => setProductData(data))
         .catch(err => {
           console.error('Failed to load product:', err);
         });
-    }
+    }  
   }, [productId]);
 
   const handleScroll = (event) => {
@@ -180,7 +180,7 @@ export default function ProductPage() {
           </Text>
         </View>
 
-        {/* Variant Picker */}
+        {/* Variant Picker */} 
         <View style={styles.variantsContainer}>
           {variants.map((variant) => {
             const packText = variant.metafields?.custom?.pack_usage || variant.title;

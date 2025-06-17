@@ -59,7 +59,7 @@ export default function Cart() {
 
 
    useEffect(() => {
-    fetch("http://192.168.1.15:3001/api/shopify/products")  // your API endpoint
+    fetch("http://192.168.1.32:3001/api/shopify/products")   
       .then((res) => res.json())
       .then((data) => setProducts(data))
       .catch((err) => console.error("Error fetching products:", err));
@@ -77,8 +77,6 @@ export default function Cart() {
   }
 }
 
-
-
   const handlePress = (item) => {
     router.push({
       pathname: "/productPage",
@@ -93,19 +91,44 @@ export default function Cart() {
   );
 
   const handleProceedToPay = async () => {
-  const rawCartData = await fetch('https://muditam.myshopify.com/cart.js').then(res => res.json());
-  const token = rawCartData.token;
+  try {
+    const validItems = cartItems.filter(
+      (item) => item.first_variant_id && item.quantity > 0
+    );
 
-  if (!token) {
-    Alert.alert("Error", "Failed to get Shopify cart token. Please try again.");
-    return;
+    if (validItems.length === 0) {
+      Alert.alert("Cart is empty", "Add products to continue.");
+      return;
+    }
+
+    const response = await fetch(
+      "http://192.168.1.32:3001/api/shopify/create-cart",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ items: validItems }),
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok || !data.cartId) {
+      Alert.alert("Error", "Unable to create Shopify cart. Try again.");
+      return;
+    }
+
+    const cartId = data.cartId.split("/").pop(); // extract token
+    router.push({
+      pathname: "/GoKwikCheckout",
+      params: { cartId, total },
+    });
+  } catch (err) {
+    console.error("Cart creation failed:", err);
+    Alert.alert("Error", "Something went wrong creating your cart.");
   }
-
-  router.push({
-    pathname: "/GoKwikCheckout",
-    params: { cartId: token, total: total }, // send just raw token
-  });
 };
+
+
 
 
 
@@ -432,7 +455,6 @@ const styles = StyleSheet.create({
     fontWeight: "500",
     fontSize: 14,
   },
- 
 });
 
  

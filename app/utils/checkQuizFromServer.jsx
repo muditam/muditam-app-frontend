@@ -7,9 +7,9 @@ export const checkQuizStatus = async () => {
 
     if (!phone) return false;
 
-    const res = await fetch(`http://192.168.1.15:3001/api/quiz/${phone}`);
+    const res = await fetch(`http://192.168.1.32:3001/api/quiz/${phone}`);
     if (res.ok) {
-      await AsyncStorage.setItem(`quizCompleted_${phone}`, 'true'); // optional
+      await AsyncStorage.setItem(`quizCompleted_${phone}`, 'true');  
       return true;
     }
 

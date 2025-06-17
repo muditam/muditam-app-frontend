@@ -254,7 +254,7 @@ export default function ProductModal({ visible, onClose, product }) {
               {Array(5)
                 .fill()
                 .map((_, i) => (
-                  <MaterialIcons name="star-rate" size={20} color="#F5C518" />
+                  <MaterialIcons name="star-rate" size={18} color="#F5C518" />
                 ))}
               <Text style={styles.reviewText}>
                 Excellent 4.8/5 based on 1200+ Reviews
@@ -380,7 +380,7 @@ const styles = StyleSheet.create({
     marginRight: 2,
   },
   reviewText: {
-    fontSize: 14,
+    fontSize: 13,
     marginLeft: 8,
   },
   divider: {

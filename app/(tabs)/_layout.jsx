@@ -3,112 +3,126 @@ import { FontAwesome5, MaterialIcons, Ionicons } from '@expo/vector-icons';
 import { View, Text } from 'react-native';
 import { useEffect, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import '../../global.css';
+
 import { checkQuizStatus } from '../utils/checkQuizFromServer';
+import { checkPurchaseStatus } from '../utils/checkPurchaseStatus';
 
 export default function Layout() {
   const [quizCompleted, setQuizCompleted] = useState(false);
+  const [hasPurchased, setHasPurchased] = useState(false);
+  const [loading, setLoading] = useState(true); // Delay rendering until data is ready
 
   useEffect(() => {
-    const fetchQuizStatus = async () => {
-      const isCompleted = await checkQuizStatus();  
-      setQuizCompleted(isCompleted);
+    const fetchStatus = async () => {
+      try {
+        const isCompleted = await checkQuizStatus();
+        const purchased = await checkPurchaseStatus(); // ✅ fetch from backend
+
+        setQuizCompleted(isCompleted);
+        setHasPurchased(purchased);
+
+        // Optional: cache locally for fast load next time
+        await AsyncStorage.setItem('hasPurchased', purchased ? 'true' : 'false');
+      } catch (err) {
+        console.error('Tab logic load error:', err);
+      } finally {
+        setLoading(false);
+      }
     };
-    fetchQuizStatus();
+    fetchStatus();
   }, []);
 
+  // Delay rendering tabs until status is known
+  if (loading) return null;
+
   return (
-    <Tabs
-      screenOptions={({ route }) => ({
-        headerShown: false,
-        tabBarStyle: {
-          height: 70,
-          backgroundColor: '#fff',
-          borderTopWidth: 0.5,
-          borderTopColor: '#e0e0e0',
-          flexDirection: 'row',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-        },
-        tabBarShowLabel: false,
-        tabBarIcon: ({ focused }) => {
-          const iconColor = focused ? '#543287' : '#666';
-          const bgColor = focused ? '#f1ecff' : 'transparent';
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }} edges={['bottom', 'left', 'right']}>
+      <Tabs
+        screenOptions={({ route }) => ({
+          headerShown: false,
+          tabBarStyle: {
+            height: 60,
+            backgroundColor: '#fff',
+            borderTopWidth: 0.5,
+            borderTopColor: '#e0e0e0',
+            paddingTop: 10,
+          },
+          tabBarShowLabel: false,
+          tabBarIcon: ({ focused }) => {
+            const iconColor = focused ? '#543287' : '#666';
+            let icon, label;
 
-          let icon;
-          let label;
+            switch (route.name) {
+              case 'home':
+                icon = <Ionicons name="home-outline" size={25} color={iconColor} />;
+                label = 'Home';
+                break;
+              case 'buykit':
+                icon = <Ionicons name="cart-outline" size={25} color={iconColor} />;
+                label = 'Buy Kit';
+                break;
+              case 'test':
+                icon = <FontAwesome5 name="file-alt" size={25} color={iconColor} />;
+                label = 'Start Quiz';
+                break;
+              case 'products':
+                icon = <Ionicons name="bag-handle-outline" size={25} color={iconColor} />;
+                label = 'Products';
+                break;
+              case 'videos':
+                icon = <Ionicons name="videocam-outline" size={25} color={iconColor} />;
+                label = 'Videos';
+                break;
+              case 'me':
+                icon = <MaterialIcons name="person-outline" size={25} color={iconColor} />;
+                label = 'You';
+                break;
+            }
 
-          if (route.name === 'home') {
-            icon = <Ionicons name="home-outline" size={25} color={iconColor} />;
-            label = 'Home';
-          } else if (route.name === 'buykit') {
-            icon = <Ionicons name="cart-outline" size={25} color={iconColor} />;
-            label = 'Buy Kit';
-          } else if (route.name === 'test') {
-            icon = <FontAwesome5 name="file-alt" size={25} color={iconColor} />;
-            label = 'Start Quiz';
-          } else if (route.name === 'products') {
-            icon = <Ionicons name="bag-handle-outline" size={25} color={iconColor} />;
-            label = 'Products';
-          } else if (route.name === 'videos') {
-            icon = <Ionicons name="videocam-outline" size={25} color={iconColor} />;
-            label = 'Videos';
-          } else if (route.name === 'me') {
-            icon = <MaterialIcons name="person-outline" size={25} color={iconColor} />;
-            label = 'You';
-          }
-
-          return (
-            <View
-              style={{
-                width: 70,
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <View
-                style={{
-                  backgroundColor: bgColor,
-                  padding: 2,
-                  borderRadius: 50,
-                  marginBottom: 0,
-                }}
-              >
-                {icon}
+            return (
+              <View style={{ width: 70, alignItems: 'center', justifyContent: 'center' }}>
+                <View style={{ padding: 2, borderRadius: 50, marginBottom: 0 }}>{icon}</View>
+                <Text
+                  style={{
+                    fontSize: 10,
+                    color: iconColor,
+                    fontWeight: focused ? '600' : '400',
+                    textAlign: 'center',
+                    flexWrap: 'nowrap',
+                  }}
+                  numberOfLines={1}
+                >
+                  {label}
+                </Text>
               </View>
-              <Text
-                style={{
-                  fontSize: 10,
-                  color: iconColor,
-                  fontWeight: focused ? '600' : '400',
-                  textAlign: 'center',
-                  flexWrap: 'nowrap',
-                }}
-                numberOfLines={1}
-              >
-                {label}
-              </Text>
-            </View>
-          );
-        },
-      })}
-    >
-      <Tabs.Screen name="home" />
-      <Tabs.Screen
-        name="buykit"
-        options={{
-          href: quizCompleted ? undefined : null, // hide route if not completed
-        }}
-      />
-      <Tabs.Screen
-        name="test"
-        options={{
-          href: quizCompleted ? null : undefined, // hide route if completed
-        }}
-      />
-      <Tabs.Screen name="products" />
-      <Tabs.Screen name="videos" />
-      <Tabs.Screen name="me" />
-    </Tabs>
+            );
+          },
+        })}
+      >
+        <Tabs.Screen
+          name="home"
+          options={{
+            redirect: () => (hasPurchased ? '/AfterPurchase' : undefined),
+          }}
+        />
+        <Tabs.Screen
+          name="buykit"
+          options={{
+            href: quizCompleted ? undefined : null, // Hide tab if quiz not done
+          }}
+        />
+        <Tabs.Screen
+          name="test"
+          options={{
+            href: quizCompleted ? null : undefined, // Hide tab if quiz done
+          }}
+        />
+        <Tabs.Screen name="products" />
+        <Tabs.Screen name="videos" />
+        <Tabs.Screen name="me" />
+      </Tabs>
+    </SafeAreaView>
   );
 }

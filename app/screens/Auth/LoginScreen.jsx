@@ -18,7 +18,7 @@ import { LinearGradient } from "expo-linear-gradient";
 
 export default function LoginScreen() {
   const router = useRouter();
-  const [showPrivacy, setShowPrivacy] = useState(false);
+  const [showPrivacy, setShowPrivacy] = useState(false); 
   const [showTerms, setShowTerms] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState("");
   const [loading, setLoading] = useState(false);

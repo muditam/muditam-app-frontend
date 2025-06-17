@@ -48,7 +48,7 @@ export default function OtpScreen() {
       return;
     }
     try {
-      const response = await fetch(`http://192.168.1.15:3001/api/user/${phone}`);
+      const response = await fetch(`http://192.168.1.32:3001/api/user/${phone}`);
       console.log("Fetch status:", response.status);
       const text = await response.text();
       console.log("Response text:", text);
