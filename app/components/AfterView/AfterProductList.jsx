@@ -13,16 +13,11 @@ import ProductModal from './ProductModal';
 import { FontAwesome } from '@expo/vector-icons';
 
 
-
-
-
-
 export default function AfterProductList({ setTotalPrice, totalPrice, setSelectedProducts }) {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
-
 
   useEffect(() => {
     const loadData = async () => {
@@ -30,10 +25,8 @@ export default function AfterProductList({ setTotalPrice, totalPrice, setSelecte
         const stored = await AsyncStorage.getItem('hba1c');
         const hba1c = stored ? JSON.parse(stored) : null;
 
-
         const res = await fetch('http://192.168.1.32:3001/api/shopify/products');
         const data = await res.json();
-
 
         let titlesToShow = [];
         if (hba1c <= 6.0) {
@@ -43,7 +36,6 @@ export default function AfterProductList({ setTotalPrice, totalPrice, setSelecte
         } else {
           titlesToShow = ['Sugar Defend Pro', 'Vasant Kusmakar Ras'];
         }
-
 
         const filtered = data.filter((p) => titlesToShow.includes(p.title));
         setProducts(filtered);
@@ -66,63 +58,55 @@ export default function AfterProductList({ setTotalPrice, totalPrice, setSelecte
         setLoading(false);
       }
     };
-
-
     loadData();
   }, []);
 
 
   const renderItem = ({ item }) => {
-  let subtitleText = 'Control blood sugar levels';
+    let subtitleText = 'Control blood sugar levels';
 
+    if (item.title === 'Sugar Defend Pro') {
+      subtitleText = 'Helps manage post-meal sugar spikes';
+    } else if (item.title === 'Vasant Kusmakar Ras') {
+      subtitleText = 'Supports natural insulin response';
+    }
 
-  if (item.title === 'Sugar Defend Pro') {
-    subtitleText = 'Helps manage post-meal sugar spikes';
-  } else if (item.title === 'Vasant Kusmakar Ras') {
-    subtitleText = 'Supports natural insulin response';
-  }
+    return (
+      <View style={styles.productCard}>
+        <Image source={{ uri: item.image }} style={styles.productImage} />
 
-
-  return (
-    <View style={styles.productCard}>
-      <Image source={{ uri: item.image }} style={styles.productImage} />
-
-
-      {/* Text block */}
-      <View style={{ flex: 1, paddingHorizontal: 10 }}>
-        <Text style={styles.title}>{item.title}</Text>
-        <Text style={styles.subtitle}>{subtitleText}</Text>
-        <View style={styles.line} />
-        <View style={styles.bottomRow}>
-          <Text style={styles.tag}>DIABETES CARE</Text>
-          <Text style={styles.price}>₹{item.price}</Text>
+        {/* Text block */}
+        <View style={{ flex: 1, paddingHorizontal: 10 }}>
+          <Text style={styles.title}>{item.title}</Text>
+          <Text style={styles.subtitle}>{subtitleText}</Text>
+          <View style={styles.line} />
+          <View style={styles.bottomRow}>
+            <Text style={styles.tag}>DIABETES CARE</Text>
+            <Text style={styles.price}>₹{item.price}</Text>
+          </View>
         </View>
+
+        {/* Arrow on far right */}
+        <TouchableOpacity onPress={() => { setSelectedProduct(item); setModalVisible(true); }}>
+          <Image
+            source={{ uri: 'https://cdn.shopify.com/s/files/1/0734/7155/7942/files/image_130_2.png?v=1746007801' }}
+            style={styles.arrowIconRight}
+          />
+        </TouchableOpacity>
+
+        <ProductModal
+          visible={modalVisible}
+          onClose={() => setModalVisible(false)}
+          product={selectedProduct}
+        />
       </View>
-
-
-      {/* Arrow on far right */}
-     <TouchableOpacity onPress={() => { setSelectedProduct(item); setModalVisible(true); }}>
-      <Image
-        source={{ uri: 'https://cdn.shopify.com/s/files/1/0734/7155/7942/files/image_130_2.png?v=1746007801' }}
-        style={styles.arrowIconRight}
-      />
-</TouchableOpacity>
-
-
-<ProductModal
-  visible={modalVisible}
-  onClose={() => setModalVisible(false)}
-  product={selectedProduct}
-/>
-    </View>
-  );
-};
+    );
+  };
 
 
   return (
     <View style={styles.container}>
       <Text style={styles.heading}>Your 1st Month Kit – ({products.length} products)</Text>
-
 
       {loading ? (
         <ActivityIndicator size="small" />
@@ -131,54 +115,48 @@ export default function AfterProductList({ setTotalPrice, totalPrice, setSelecte
           data={products}
           renderItem={renderItem}
           keyExtractor={(item) => item.id.toString()}
-
-
         />
       )}
 
-
       <View style={styles.summaryBox}>
         <Text style={styles.summaryTitle}>What you get for ₹{totalPrice.toFixed(0)}</Text>
-                <View style={styles.line1} />
-
+        <View style={styles.line1} />
 
         <View style={styles.row}>
-  <Text style={styles.itemText}>1-Month Customised Kit</Text>
-  <Text style={styles.priceText}>₹{totalPrice.toFixed(0)}</Text>
+          <Text style={styles.itemText}>1-Month Customised Kit</Text>
+          <Text style={styles.priceText}>₹{totalPrice.toFixed(2)}</Text>
+        </View>
+
+        <View style={styles.row}>
+          <View style={styles.leftContent}>
+            <Text style={styles.itemText}>Diabetic Coach Support</Text>
+          </View>
+          <Text style={styles.free}>Free</Text>
+        </View>
+
+        <View style={styles.row}>
+          <View style={styles.leftContent}>
+            <Text style={styles.itemText}>Doctor Prescription</Text>
+          </View>
+          <Text style={styles.free}>Free</Text>
+        </View>
+
+        <View style={styles.row}>
+          <View style={styles.leftContent}>
+            <Text style={styles.itemText}>Ayurvedic Diet Plan</Text>
+          </View>
+          <Text style={styles.free}>Free</Text>
+        </View>
+
+        <View style={styles.line1} />
+        <View style={styles.row}>
+  <Text style={styles.summaryTitlee}>Total Payment</Text>
+  <Text style={styles.summaryTitlee}>₹{totalPrice.toFixed(2)}</Text>
 </View>
-
-
-<View style={styles.row}>
-  <View style={styles.leftContent}>
-    <View style={styles.check} />
-    <Text style={styles.itemText}>Diabetic Coach Support</Text>
-  </View>
-  <Text style={styles.free}>Free</Text>
-</View>
-
-
-<View style={styles.row}>
-  <View style={styles.leftContent}>
-    <View style={styles.check} />
-    <Text style={styles.itemText}>Doctor Prescription</Text>
-  </View>
-  <Text style={styles.free}>Free</Text>
-</View>
-
-
-<View style={styles.row}>
-  <View style={styles.leftContent}>
-    <View style={styles.check} />
-    <Text style={styles.itemText}>Ayurvedic Diet Plan</Text>
-  </View>
-  <Text style={styles.free}>Free</Text>
-</View>
-
-
       </View>
 
-
       <View style={styles.giftSection}>
+        <View style={styles.line2} />
         <Text style={styles.giftHeading}>Free Gift’s For You</Text>
         <Image
           source={{
@@ -188,6 +166,7 @@ export default function AfterProductList({ setTotalPrice, totalPrice, setSelecte
           resizeMode="contain"
         />
       </View>
+      <View style={styles.line2} />
     </View>
   );
 }
@@ -202,30 +181,21 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     fontFamily: 'Poppins',
     marginBottom: 12,
-    marginHorizontal:16,
+    marginHorizontal: 16,
   },
   productCard: {
     backgroundColor: '#fff',
-    borderRadius:4,
+    borderRadius: 4,
     padding: 10,
     flexDirection: 'row',
     alignItems: 'center',
     elevation: 2,
-     marginVertical: 8,
+    marginVertical: 8,
     marginBottom: 12,
-    marginHorizontal:16,
-    elevation: 3,
-
-
-
-
-  // iOS shadow
-  shadowColor: '#000',
-  shadowOffset: { width: 0, height: 2 },
-  shadowOpacity: 0.2,
-  shadowRadius: 2,
-
-
+    marginHorizontal: 16,
+    borderWidth: 1,
+    borderColor: '#A3A3A3',
+    borderRadius: 10,
   },
   productImage: {
     width: 60,
@@ -242,20 +212,20 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   bottomRow: {
-  flexDirection: 'row',
-  alignItems: 'center',
-  justifyContent: 'flex-start',
-  gap: 8,
-},
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+    gap: 8,
+  },
   line: {
     height: 0.75,
-    backgroundColor: '#C0C0C0',
+    backgroundColor: '#E9E9E9',
     marginVertical: 10,
     width: '100%',
   },
   tag: {
     fontSize: 10,
-    fontWeight:500,
+    fontWeight: 500,
     backgroundColor: '#F4F4F4',
     paddingHorizontal: 6,
     paddingVertical: 3,
@@ -264,12 +234,12 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   arrowIconRight: {
-  width: 20,
-  height: 20,
-  marginLeft: 8,
-  marginRight:10,
-  alignSelf: 'center',
-},
+    width: 20,
+    height: 20,
+    marginLeft: 8,
+    marginRight: 10,
+    alignSelf: 'center',
+  },
   price: {
     fontWeight: '600',
     fontSize: 16,
@@ -283,10 +253,10 @@ const styles = StyleSheet.create({
   summaryBox: {
     borderWidth: 0.5,
     paddingHorizontal: 30,
-    paddingVertical:15,
+    paddingVertical: 15,
     borderRadius: 12,
-    marginHorizontal:16,
-    marginTop:16,
+    marginHorizontal: 16,
+    marginTop: 16,
     backgroundColor: '#fff',
   },
   summaryTitle: {
@@ -294,7 +264,12 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     fontFamily: 'Poppins',
   },
- row: {
+  summaryTitlee: {
+    fontSize: 20,
+    fontWeight: '600',
+    fontFamily: 'Poppins',
+  },
+  row: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -327,29 +302,32 @@ const styles = StyleSheet.create({
     color: '#03AD31',
   },
   line1: {
-    height: 1,
-    backgroundColor: '#000',
+    height: 2,
+    backgroundColor: '#E9E9E9',
     marginVertical: 10,
     width: '100%',
   },
-
-
-  giftSection: {
+  line2: {
+    height: 5,
     backgroundColor: '#F4F4F4',
+    marginVertical: 10,
+    width: '100%',
+  },
+  giftSection: { 
     marginVertical: 16,
   },
   giftHeading: {
     fontSize: 20,
     fontWeight: '600',
     fontFamily: 'Poppins',
-    padding:16,
+    padding: 16,
   },
   giftImage: {
     width: '100%',
     height: 100,
     borderRadius: 8,
-    marginRight:16,
-    marginBottom:16,
+    marginRight: 16,
+    marginBottom: 16,
   },
 });
 

@@ -1,182 +1,121 @@
 import React from "react";
-import { View, Text, StyleSheet, ScrollView } from "react-native";
-import { FontAwesome5 } from "@expo/vector-icons";
+import { View, Text, StyleSheet } from "react-native";
+import { FontAwesome5 } from "@expo/vector-icons"; // You can change to other icon packs
 
-
-const icons = [
+const data = [
   {
-    name: "rocket",
     month: "Month 1",
-    description: "Get instant\naccess to get\nthe",
+    description: "Improve digestion & cleanse body",
+    icon: "leaf",
   },
   {
-    name: "heartbeat",
     month: "Month 2",
-    description: "Track sugar\nlevels & improve",
+    description: "Boost energy & control sugar dips",
+    icon: "bolt",
   },
   {
-    name: "apple-alt",
     month: "Month 3",
-    description: "Diet & lifestyle\nrefinements",
+    description: "Begin sugar control & insulin support",
+    icon: "medkit",
   },
   {
-    name: "smile",
     month: "Month 4",
-    description: "Feel more\nenergized daily",
+    description: "Support liver & enhance insulin function",
+    icon: "flask",
   },
-  { name: "leaf", month: "Month 5", description: "Herbs show\nvisible impact" },
   {
-    name: "check-circle",
+    month: "Month 5",
+    description: "Improve HbA1c & repair internally",
+    icon: "heartbeat",
+  },
+  {
     month: "Month 6",
-    description: "Long-term\nstability achieved",
+    description: "Maintain sugar balance & protect organs",
+    icon: "shield-alt",
   },
 ];
 
-
-const ITEM_WIDTH = 130;
-const DOT_SIZE = 10;
-
-
 export default function Result() {
   return (
-    <View style={styles.container}>
-      <Text style={styles.heading}>Start seeing results from 1st month</Text>
-
-
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContainer}
-      >
-        <View style={styles.timelineContainer}>
-          <View style={styles.iconRow}>
-            {icons.map((item, index) => (
-              <View key={index} style={styles.iconWrapper}>
-                <View style={styles.circle}>
-                  <FontAwesome5 name={item.name} size={20} color="#000" />
-                </View>
-              </View>
-            ))}
-          </View>
-
-
-          <View style={styles.lineContainer}>
-            <View
-              style={[
-                styles.line,
-                {
-                  width: ITEM_WIDTH * (icons.length - 1),
-                  left: ITEM_WIDTH / 2,
-                },
-              ]}
-            />
-            {icons.map((_, index) => (
-              <View
-                key={index}
-                style={[
-                  styles.dot,
-                  { left: index * ITEM_WIDTH + ITEM_WIDTH / 2 - DOT_SIZE / 2 },
-                ]}
-              />
-            ))}
-          </View>
-
-
-          <View style={{ flexDirection: "start" }}>
-            <View style={styles.labelRow}>
-              {icons.map((item, index) => (
-                <View key={index} style={styles.labelWrapper}>
-                  <Text style={styles.monthText}>{item.month}</Text>
-                  <Text style={styles.descriptionText}>{item.description}</Text>
-                </View>
-              ))}
+    <View style={styles.card}>
+      <Text style={styles.title}>Start Seeing Results From 1st Month</Text>
+      <View style={styles.timeline}>
+        {data.map((item, index) => (
+          <View key={index} style={styles.stepContainer}>
+            <View style={styles.circle}>
+              <FontAwesome5 name={item.icon} size={12} color="#000" />
             </View>
+            <View style={styles.textContainer}>
+              <Text style={styles.month}>{item.month}</Text>
+              <Text style={styles.description}>{item.description}</Text>
+            </View>
+            {index !== data.length - 1 && <View style={styles.arrowLine} />}
           </View>
-        </View>
-      </ScrollView>
+        ))}
+      </View>
     </View>
   );
 }
 
-
 const styles = StyleSheet.create({
-  container: {
-    backgroundColor: "#FAF6FF",
-    paddingTop: 30,
-    flex: 1,
+  card: {
+    backgroundColor: "#fff",
+    margin: 16,
+    padding: 20,
+    borderRadius: 12,
+    elevation: 2,
   },
-  heading: {
-    fontSize: 20,
-    fontWeight: "500",
+  title: {
+    fontSize: 18,
+    fontWeight: "600",
     marginBottom: 20,
-    paddingLeft: 16,
     color: "#000",
+    fontFamily: "Poppins",
   },
-  timelineContainer: {
-    position: "relative",
+  timeline: {
     flexDirection: "column",
-    width: ITEM_WIDTH * icons.length,
+    alignItems: "flex-start",
   },
-  iconRow: {
+  stepContainer: {
     flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 10,
-  },
-  iconWrapper: {
-    alignItems: "center",
-    width: ITEM_WIDTH,
+    alignItems: "flex-start",
+    marginBottom: 30,
+    position: "relative",
   },
   circle: {
-    width: 47,
-    height: 47,
-    borderRadius: 47 / 2,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: "#000",
+    backgroundColor: "#fff",
+    marginRight: 16,
     justifyContent: "center",
     alignItems: "center",
-    borderColor: "black",
-    borderWidth: 1,
+    marginTop: 4,
   },
-  lineContainer: {
-    position: "relative",
-    height: 20,
-    marginBottom: 20,
-    width: "100%",
-    justifyContent: "center",
+  textContainer: {
+    flex: 1,
   },
-  line: {
-    height: 1,
-    backgroundColor: "#543087",
-    position: "absolute",
-    top: 14,
-  },
-  dot: {
-    position: "absolute",
-    top: 10,
-    width: DOT_SIZE,
-    height: DOT_SIZE,
-    borderRadius: DOT_SIZE / 2,
-    backgroundColor: "#543087",
-  },
-  labelRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
-  labelWrapper: {
-    width: ITEM_WIDTH,
-    paddingLeft: 40,
-  },
-  monthText: {
-    fontWeight: "500",
+  month: {
     fontSize: 16,
+    fontWeight: "600",
     color: "#000",
     marginBottom: 4,
+    fontFamily: "Poppins",
   },
-  descriptionText: {
-    fontSize: 12,
-    color: "#000000",
-    lineHeight: 16,
-    marginBottom: 20,
+  description: {
+    fontSize: 14,
+    color: "#000",
+    lineHeight: 20,
+    fontFamily: "Poppins",
+  },
+  arrowLine: {
+    position: "absolute",
+    top: 32,
+    left: 13,
+    width: 2,
+    height: 30,
+    backgroundColor: "#000",
   },
 });
-
-
-

@@ -12,10 +12,7 @@ export default function ChatWithUsSection() {
 
 
   return (
-    <View className="px-4 mt-4 mb-4">
-      <Text className="text-xl font-semibold mb-3">Chat With Us</Text>
-
-
+    <View className="px-4 mt-4">
       <View className="bg-white border border-[#D0D5DD] rounded-xl p-4">
         <View className="flex-row justify-between items-center">
           <View className="flex-1 pr-2">

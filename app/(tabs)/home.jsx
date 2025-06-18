@@ -11,7 +11,6 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
 import HeroVideoList from '../components/HeroVideoList';
 import RealJourneysSlider from '../components/RealJourneysSlider';
 import ExpertsPanelCard from '../components/ExpertsPanelCard';

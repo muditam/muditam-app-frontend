@@ -13,7 +13,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import ChatWithUsSection from '../components/ChatWithUsSection';
+import SupportCard from '../components/SupportCard';
 import NeedHelpSection from '../components/NeedHelpSection';
 import KitProgressSection from '../components/KitProgressSection';
 import { fetchKitProgress } from '../utils/fetchKitProgress';
@@ -23,12 +23,14 @@ export default function AfterPurchase() {
   const [name, setName] = useState('User');
   const [kitProgress, setKitProgress] = useState({ currentKit: 1, completedKits: [] });
   const [loadingProgress, setLoadingProgress] = useState(true);
+  const [gender, setGender] = useState('');
 
   useEffect(() => {
     const loadName = async () => {
       const userData = await AsyncStorage.getItem('userDetails');
       const parsed = JSON.parse(userData || '{}');
       if (parsed?.name) setName(parsed.name);
+      if (parsed?.gender) setGender(parsed.gender);
     };
     loadName();
   }, []);
@@ -50,6 +52,12 @@ export default function AfterPurchase() {
   return (
     <SafeAreaView style={styles.safeArea}>
       {/* Top Header */}
+      <LinearGradient
+          colors={['#9C4DF4', '#7C4DFF']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.greetingBox1}
+        >
       <View style={styles.header}>
         <Image
           source={{
@@ -59,10 +67,11 @@ export default function AfterPurchase() {
           resizeMode="contain"
         />
         <TouchableOpacity style={styles.profileIcon}>
-          <Ionicons name="person-outline" size={24} color="white" />
+          <Ionicons name="person-outline" size={20} color="white" />
           <Text style={styles.profileText}>You</Text>
         </TouchableOpacity>
       </View>
+      </LinearGradient>
 
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         {/* Gradient Greeting */}
@@ -72,32 +81,41 @@ export default function AfterPurchase() {
           end={{ x: 1, y: 1 }}
           style={styles.greetingBox}
         >
-          <Text style={styles.userName}>{name} 👋</Text>
-          <Text style={styles.userSubtitle}>
-            Every day you're a step closer to healthier hair!
-          </Text>
-
-          <Text style={styles.sectionLabel}>My Tasks</Text>
-          <View style={styles.taskCard}>
-            <Text style={styles.taskText}>Buy your next kit</Text>
-            <Ionicons name="chevron-forward" size={20} color="black" />
+          <View style={styles.userRow}>
+            <View style={styles.profileRow}>
+  <Image
+    source={{
+      uri: gender === 'Male'
+        ? 'https://cdn.shopify.com/s/files/1/0734/7155/7942/files/Male.png?v=1750153759'
+        : 'https://cdn.shopify.com/s/files/1/0734/7155/7942/files/Female_8b0512eb-3582-4d53-9609-4924bd169c3a.png?v=1750153759',
+    }}
+    style={styles.profileImage}
+  />
+  <View>
+    <Text style={styles.userName}>Hi {name}</Text>
+    <Text style={styles.userSubtitle}>Every day you’re a step closer to,{'\n'}healthier hair!</Text>
+  </View>
+</View>
           </View>
         </LinearGradient>
+
+        {/* My Tasks */}
+        <View style={styles.sectionBlock}>
+          <Text style={styles.sectionLabel}>My Tasks</Text>
+          <TouchableOpacity style={styles.taskCard}>
+            <View style={styles.taskHighlight} />
+            <Text style={styles.taskText}>Buy your next kit</Text>
+            <Ionicons name="chevron-forward" size={20} color="black" />
+          </TouchableOpacity>
+        </View>
 
         {/* Reorder Section */}
         <View style={styles.reorderWrapper}>
           <Text style={styles.reorderTitle}>Reorder Your Kit</Text>
-
           <View style={styles.reorderCard}>
-            <Text style={styles.reorderHeading}>Want To See Results In Time?</Text>
-            <Text style={styles.reorderSubtext}>
-              Gaps can delay results.{"\n"}Order your kit now.
-            </Text>
-
-            <TouchableOpacity
-              onPress={() => router.push('/products')}
-              style={styles.orderBtn}
-            >
+            <Text style={styles.reorderHeading}>Want To See Results In{'\n'}Time?</Text>
+            <Text style={styles.reorderSubtext}>Gaps can delay results.{'\n'}Order your kit now.</Text>
+            <TouchableOpacity onPress={() => router.push('/products')} style={styles.orderBtn}>
               <Text style={styles.orderBtnText}>Order Now</Text>
             </TouchableOpacity>
           </View>
@@ -105,38 +123,35 @@ export default function AfterPurchase() {
 
         {/* Chat Section */}
         <View style={{ marginTop: 10 }}>
-          <ChatWithUsSection />
-
-          < NeedHelpSection />
+          <SupportCard />
+          <NeedHelpSection />
         </View>
 
+        {/* Diet Plan */}
         <View style={{ paddingHorizontal: 16, marginTop: 32 }}>
-  <Text style={styles.sectionTitle}>Diet Plan</Text>
-  <View style={styles.dietCard}>
-    <Text style={styles.dietText}>
-      Drinking 8 glasses of{"\n"}water daily will improve{"\n"}your skin overnight
-    </Text>
-    <TouchableOpacity style={styles.planBtn}>
-  <Text style={styles.planBtnText}>View My Plan</Text>
-</TouchableOpacity>
+          <Text style={styles.sectionTitle}>Diet Plan</Text>
+          <View style={styles.dietCard}>
+            <Text style={styles.dietText}>
+              Drinking 8 glasses of{'\n'}water daily will improve your skin overnight
+            </Text>
+            <TouchableOpacity style={styles.planBtn}>
+              <Text style={styles.planBtnText}>View My Plan</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
 
-  </View>
-</View>
+        {/* Digital Prescription Section */}
+        <View style={{ paddingHorizontal: 16, marginTop: 32 }}>
+          <Text style={styles.sectionTitle}>Your Digital Prescription</Text>
+          <View style={styles.prescriptionBox}>
+            <Text style={styles.prescriptionText}>Your doctor recommended\ntreatment plan</Text>
+            <TouchableOpacity onPress={() => router.push('/my-plan')}>
+              <Text style={styles.prescriptionLink}>View Prescription</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
 
-{/* Digital Prescription Section */}
-<View style={{ paddingHorizontal: 16, marginTop: 32 }}>
-  <Text style={styles.sectionTitle}>Your Digital Prescription</Text>
-  <View style={styles.prescriptionBox}>
-    <Text style={styles.prescriptionText}>
-      Your doctor recommended{"\n"}treatment plan
-    </Text>
-    <TouchableOpacity onPress={() => router.push('/my-plan')} >
-      <Text style={styles.prescriptionLink}>View Prescription</Text>
-    </TouchableOpacity>
-  </View>
-</View>
-
-{loadingProgress ? (
+        {loadingProgress ? (
           <ActivityIndicator size="large" color="#9C4DF4" style={{ marginTop: 16 }} />
         ) : (
           <KitProgressSection
@@ -144,9 +159,7 @@ export default function AfterPurchase() {
             completedKits={kitProgress.completedKits}
           />
         )}
-
       </ScrollView>
-     
     </SafeAreaView>
   );
 }
@@ -156,8 +169,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
   },
-  header: {
-    backgroundColor: '#543287',
+  header: { 
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -180,52 +192,77 @@ const styles = StyleSheet.create({
   scrollContainer: {
     paddingBottom: 30,
   },
+  greetingBox1: {
+    padding: 1, 
+  },
   greetingBox: {
-    padding: 16,
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
+    padding: 16, 
+  },
+  userRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingBottom: 40,
+  },
+  profilePic: {
+    width: 75,
+    height: 75,
+    borderRadius: 30,
+    backgroundColor: 'white',
+    marginRight: 12,
   },
   userName: {
-    fontSize: 20,
-    fontWeight: '600',
+    fontSize: 18,
+    fontWeight: '700',
     color: '#fff',
     fontFamily: 'Poppins',
   },
   userSubtitle: {
     color: '#fff',
     fontSize: 14,
-    marginTop: 4,
     fontFamily: 'Poppins',
+  },
+  sectionBlock: {
+    paddingHorizontal: 16,
+    paddingVertical: 20,
+    marginTop: -35,
+    borderRadius: 25,
+    backgroundColor: 'white',
   },
   sectionLabel: {
-    marginTop: 20,
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: 18,
+    fontWeight: '700',
+    marginBottom: 12,
     fontFamily: 'Poppins',
-    marginBottom: 8,
   },
   taskCard: {
-    backgroundColor: '#E0BBFF',
-    padding: 16,
-    borderRadius: 12,
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    backgroundColor: 'white',
+    borderRadius: 10,
+    borderColor: '#A3A3A3',
+    borderWidth: 1, 
+  },
+  taskHighlight: {
+    width: 90,
+    height: '100%',
+    backgroundColor: '#E0BBFF',
+    borderBottomLeftRadius: 8,
+    borderTopLeftRadius: 8,
+    marginRight: 12,
   },
   taskText: {
     fontSize: 16,
     fontFamily: 'Poppins',
-    fontWeight: '500',
-    color: '#000',
+    flex: 1,
+    paddingVertical: 25,
   },
   reorderWrapper: {
     paddingHorizontal: 16,
-    marginTop: 28,
+    marginTop: 8,
   },
   reorderTitle: {
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: 19,
+    fontWeight: '700',
     fontFamily: 'Poppins',
     marginBottom: 12,
   },
@@ -260,60 +297,65 @@ const styles = StyleSheet.create({
     fontFamily: 'Poppins',
   },
   sectionTitle: {
-  fontSize: 18,
-  fontWeight: '600',
-  fontFamily: 'Poppins',
-  marginBottom: 12,
-  color: '#000',
-},
-
-dietCard: {
-  borderWidth: 1,
-  borderColor: '#D9D9D9',
-  borderRadius: 10,
-  padding: 16,
-},
-
-dietText: {
-  fontSize: 16,
-  fontFamily: 'Poppins',
-  color: '#000',
+    fontSize: 18,
+    fontWeight: '600',
+    fontFamily: 'Poppins',
+    marginBottom: 12,
+    color: '#000',
+  },
+  dietCard: {
+    borderWidth: 1,
+    borderColor: '#D9D9D9',
+    borderRadius: 10,
+    padding: 16,
+  },
+  dietText: {
+    fontSize: 16,
+    fontFamily: 'Poppins',
+    color: '#000',
+    marginBottom: 16,
+  },
+  planBtn: {
+    backgroundColor: '#9D57FF',
+    paddingVertical: 15,
+    borderRadius: 8,
+    alignItems: 'center',
+    width: 150,
+  },
+  planBtnText: {
+    color: '#fff',
+    fontSize: 15,
+    fontWeight: '600',
+    fontFamily: 'Poppins',
+  },
+  prescriptionBox: {
+    backgroundColor: '#F6F0FF',
+    padding: 16,
+    borderRadius: 12,
+  },
+  prescriptionText: {
+    fontSize: 14,
+    fontFamily: 'Poppins',
+    color: '#000',
+    marginBottom: 8,
+  },
+  prescriptionLink: {
+    color: '#543287',
+    fontSize: 14,
+    fontWeight: '600',
+    textDecorationLine: 'underline',
+    fontFamily: 'Poppins',
+  },
+  profileRow: {
+  flexDirection: 'row',
+  alignItems: 'center',
   marginBottom: 16,
 },
-
-planBtn: {
-  backgroundColor: '#9D57FF',
-  paddingVertical: 15,
-  borderRadius: 8,
-  alignItems: 'center',
-  width: 150,
-},
-
-planBtnText: {
-  color: '#fff',
-  fontSize: 15,
-  fontWeight: '600',
-  fontFamily: 'Poppins',
-},
-
-prescriptionBox: {
-  backgroundColor: '#F6F0FF',
-  padding: 16,
-  borderRadius: 12,
-},
-
-prescriptionText: {
-  fontSize: 14,
-  fontFamily: 'Poppins',
-  color: '#000',
-  marginBottom: 8,
-},
-
-prescriptionLink: {
-  color: '#543287',
-  fontSize: 14,
-  fontWeight: '600',
-  textDecorationLine: 'underline',
-  fontFamily: 'Poppins',
+profileImage: {
+  width: 60,
+  height: 60,
+  borderRadius: 30,
+  marginRight: 12,
+  backgroundColor: '#fff',
 },
 });

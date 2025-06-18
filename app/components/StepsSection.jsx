@@ -15,16 +15,19 @@ const STEP_WIDTH = 379 + 16;
 
 const stepData = [
   {
-    title: "Connect with a \ndiabetes coach",
-    subtitle: "Get instant access to a free diabetes coach who will guide you on how to start the treatment",
+    title: "Connect with a diabetes coach",
+    subtitle:
+      "Get instant access to a free diabetes coach who will guide you on how to start the treatment",
   },
   {
-    title: "Get a personalized \ntreatment plan",
-    subtitle: "Our expert will create a treatment plan tailored to your health goals and current condition",
+    title: "Get a personalized treatment plan",
+    subtitle:
+      "Our expert will create a treatment plan tailored to your health goals and current condition",
   },
   {
-    title: "Start your journey \ntowards better health",
-    subtitle: "Follow your coach’s guidance, track your progress, and achieve sustainable results",
+    title: "Start your journey towards better health",
+    subtitle:
+      "Follow your coach’s guidance, track your progress, and achieve sustainable results",
   },
 ];
 
@@ -96,47 +99,64 @@ export default Steps;
 
 const styles = StyleSheet.create({
   container: {
-    paddingVertical: 20,
-    marginTop: -50, 
+    paddingVertical:16,
   },
   headerText: {
     fontSize: 22,
     fontWeight: "500",
     marginLeft: 16,
-    paddingVertical: 20,
   },
   box: {
     width: 379,
-    height: 175,
+    height: 165,
     borderRadius: 8,
     borderWidth: 0.5,
     paddingHorizontal: 20,
     marginLeft: 16,
     backgroundColor: "#fff",
+    marginBottom: 35,
+    top: 30,
   },
   rowOne: {
     flexDirection: "row",
   },
+
+
   number: {
-    fontSize: 100,
-    lineHeight: 100,
-    fontWeight: "600",
-    color: "#03AD31",
-    textAlign: "right",
-    paddingTop: 5,
-  },
+  position: "absolute",
+  top: -30,
+  left: "40%",
+  width: 70,
+  height: 70,
+  borderRadius: 35,
+  borderWidth: 1,
+  borderColor: "gray",
+  backgroundColor: "#fff",
+  textAlign: "center",
+  lineHeight: 70,
+  fontSize: 50,
+  fontWeight: "500",
+  color: "#03AD31",
+  zIndex: 10,
+},
+
+
+
+
   title: {
-    fontSize: 30,
-    lineHeight: 40,
-    fontWeight: "400",
+    fontSize: 22,
+    marginTop: 50,
+    fontWeight: "500",
     color: "#000000",
-    paddingVertical: 16,
     marginLeft: 5,
+    textAlign: "center",
   },
   subtitle: {
     fontSize: 14,
     lineHeight: 20,
     color: "#000000",
+    textAlign: "center",
+    paddingTop: 10,
   },
   dotsContainer: {
     flexDirection: "row",
@@ -150,3 +170,6 @@ const styles = StyleSheet.create({
     marginHorizontal: 4,
   },
 });
+
+
+

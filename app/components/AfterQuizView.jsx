@@ -20,6 +20,8 @@ import ReviewsRatings from './AfterView/ReviewsRatings';
 import ReviewsSection from './AfterView/ReviewsSection';
 import RetakeQuizBox from './AfterView/RetakeQuizBox';
 import PlansInclude from './AfterView/PlansInclude';
+import HeroVideoList from '../components/HeroVideoList';
+import ChatWithUsSection from '../components/ChatWithUsSection';
 import StepsSection from '../components/StepsSection';
 import ExpertsPanelCard from '../components/ExpertsPanelCard';
 import RealJourneysSlider from '../components/RealJourneysSlider';
@@ -31,6 +33,7 @@ export default function AfterQuizView() {
     const [totalPrice, setTotalPrice] = useState(0);
     const [selectedCause, setSelectedCause] = useState('Heart');
     const [selectedProducts, setSelectedProducts] = useState([]);
+    const [gender, setGender] = useState('');
 
     const causeDescriptions = {
         Heart: 'If you’ve left something or want to update a response on the diabetes test, simply re-take it.',
@@ -39,133 +42,131 @@ export default function AfterQuizView() {
         Foot: 'Foot complications may arise from diabetes. Update your test if something was missed.',
     };
 
-
     useEffect(() => {
         const loadName = async () => {
             const userData = await AsyncStorage.getItem('userDetails');
             const parsed = JSON.parse(userData || '{}');
             if (parsed?.name) setName(parsed.name);
+            if (parsed?.gender) setGender(parsed.gender);
         };
         loadName();
     }, []);
 
-
     return (
         <View style={{ flex: 1 }}>
             <ScrollView contentContainerStyle={styles.container}>
-                {/* Banner Image */}
-                <Image
-                    source={{
-                        uri: 'https://cdn.shopify.com/s/files/1/0734/7155/7942/files/Artboard_1_f2f232d4-6b66-4a29-812f-9e13bdab2724.png?v=1747311860',
-                    }}
-                    style={styles.banner}
-                    resizeMode="contain"
-                />
-
-
                 {/* Report Card */}
                 <View style={styles.reportCard}>
-                    <Text style={styles.nameText}>Hi {name}</Text>
-                    <Text style={styles.reportIntro}>
-                        Here’s what your diabetes analysis report says:
-                    </Text>
+    <View style={styles.profileRow}>
+        <Image
+            source={{
+                uri:
+                    gender === 'Male'
+                        ? 'https://cdn.shopify.com/s/files/1/0734/7155/7942/files/Male.png?v=1750153759'
+                        : 'https://cdn.shopify.com/s/files/1/0734/7155/7942/files/Female_8b0512eb-3582-4d53-9609-4924bd169c3a.png?v=1750153759',
+            }}
+            style={styles.profileImage}
+        />
+        <View>
+            <Text style={styles.nameText}>Hi {name}</Text>
+            <Text style={styles.reportIntro}>Here’s what your diabetes analysis report says:</Text>
+        </View>
+    </View>
 
-
-                    <View style={styles.rowHeader}>
-                        <Text style={styles.reportHeading}>Your Diabetes Root Causes</Text>
-                        <View style={styles.line} />
-                    </View>
-
-
-                    <View style={styles.rootCauses}>
-                        {[
-                            {
-                                label: 'Heart',
-                                icon: 'https://cdn.shopify.com/s/files/1/0734/7155/7942/files/Heart_411a6ee7-8dc7-47a7-b1f3-f7d12f5ca883.png?v=1747394357',
-                            },
-                            {
-                                label: 'Kidney',
-                                icon: 'https://cdn.shopify.com/s/files/1/0734/7155/7942/files/Kidneys_cbeb8c7a-6d2c-46db-bb0c-2f6a8ad9d419.png?v=1747394357',
-                            },
-                            {
-                                label: 'Nerve',
-                                icon: 'https://cdn.shopify.com/s/files/1/0734/7155/7942/files/Nerve_d10bc9ad-9857-4fea-b984-8192738ce6fc.png?v=1747394357',
-                            },
-                            {
-                                label: 'Foot',
-                                icon: 'https://cdn.shopify.com/s/files/1/0734/7155/7942/files/Foot_41be811d-646b-4908-a3e5-8a756ef8d134.png?v=1747394357',
-                            },
-                        ].map((item, index) => (
-                            <View key={index} style={styles.causeItem}>
-                                <Image source={{ uri: item.icon }} style={styles.causeIcon} />
-                                <Text style={styles.causeLabel}>{item.label}</Text>
-                            </View>
-                        ))}
-                    </View>
+    {/* Root Cause Card */}
+    <View style={styles.rootCard}>
+        <Text style={styles.reportHeading}>Your Diabetes Root Causes</Text>
+        <View style={styles.rootCauses}>
+            {[
+                {
+                    label: 'Heart',
+                    icon: 'https://cdn.shopify.com/s/files/1/0734/7155/7942/files/Heart_411a6ee7-8dc7-47a7-b1f3-f7d12f5ca883.png?v=1747394357',
+                },
+                {
+                    label: 'Kidney',
+                    icon: 'https://cdn.shopify.com/s/files/1/0734/7155/7942/files/Kidneys_cbeb8c7a-6d2c-46db-bb0c-2f6a8ad9d419.png?v=1747394357',
+                },
+                {
+                    label: 'Nerve',
+                    icon: 'https://cdn.shopify.com/s/files/1/0734/7155/7942/files/Nerve_d10bc9ad-9857-4fea-b984-8192738ce6fc.png?v=1747394357',
+                },
+                {
+                    label: 'Foot',
+                    icon: 'https://cdn.shopify.com/s/files/1/0734/7155/7942/files/Foot_41be811d-646b-4908-a3e5-8a756ef8d134.png?v=1747394357',
+                },
+            ].map((item, index) => (
+                <View key={index} style={styles.causeItem}>
+                    <Image source={{ uri: item.icon }} style={styles.causeIcon} />
+                    <Text style={styles.causeLabel}>{item.label}</Text>
                 </View>
+            ))}
+        </View>
+    </View>
+</View>
+
 
 
                 {/* HbA1c Drop Bar */}
                 <View style={styles.hba1cContainer}>
+                    <Text style={styles.hba1cText}>HbA1c Drop Possibility 93%</Text>
+
                     <View style={styles.hba1cBarBg}>
                         <View style={styles.hba1cBarFill}>
-                            <Text style={styles.hba1cText}>HbA1c Drop Possibility 93%</Text>
+
                         </View>
                     </View>
                 </View>
-
 
                 {/* Note */}
                 <Text style={styles.noteText}>
                     *Based on 23,235 customers of Muditam Ayurveda that match this profile.
                 </Text>
 
-
-
-
                 <View style={styles.impactSection}>
                     <Text style={styles.impactTitle}>Impact of High Sugar</Text>
-
-
                     <View style={styles.impactIcons}>
-                        {[
-                            {
-                                label: 'Heart',
-                                icon: 'https://cdn.shopify.com/s/files/1/0734/7155/7942/files/Heart_411a6ee7-8dc7-47a7-b1f3-f7d12f5ca883.png?v=1747394357',
-                            },
-                            {
-                                label: 'Kidney',
-                                icon: 'https://cdn.shopify.com/s/files/1/0734/7155/7942/files/Kidneys_cbeb8c7a-6d2c-46db-bb0c-2f6a8ad9d419.png?v=1747394357',
-                            },
-                            {
-                                label: 'Nerve',
-                                icon: 'https://cdn.shopify.com/s/files/1/0734/7155/7942/files/Nerve_d10bc9ad-9857-4fea-b984-8192738ce6fc.png?v=1747394357',
-                            },
-                            {
-                                label: 'Foot',
-                                icon: 'https://cdn.shopify.com/s/files/1/0734/7155/7942/files/Foot_41be811d-646b-4908-a3e5-8a756ef8d134.png?v=1747394357',
-                            },
-                        ].map((item, index) => (
-                            <Pressable
-                                key={index}
-                                style={[
-                                    styles.causeBox,
-                                    selectedCause === item.label && styles.causeBoxActive,
-                                ]}
-                                onPress={() => setSelectedCause(item.label)}
-                            >
-                                <Image source={{ uri: item.icon }} style={styles.causeIcon} />
-                                <Text
-                                    style={[
-                                        styles.causeLabel,
-                                        selectedCause === item.label && styles.causeLabelActive,
-                                    ]}
-                                >
-                                    {item.label}
-                                </Text>
-                            </Pressable>
-                        ))}
-                    </View>
+  {[
+    {
+      label: 'Heart',
+      icon: 'https://cdn.shopify.com/s/files/1/0734/7155/7942/files/Heart_411a6ee7-8dc7-47a7-b1f3-f7d12f5ca883.png?v=1747394357',
+    },
+    {
+      label: 'Kidney',
+      icon: 'https://cdn.shopify.com/s/files/1/0734/7155/7942/files/Kidneys_cbeb8c7a-6d2c-46db-bb0c-2f6a8ad9d419.png?v=1747394357',
+    },
+    {
+      label: 'Nerve',
+      icon: 'https://cdn.shopify.com/s/files/1/0734/7155/7942/files/Nerve_d10bc9ad-9857-4fea-b984-8192738ce6fc.png?v=1747394357',
+    },
+    {
+      label: 'Foot',
+      icon: 'https://cdn.shopify.com/s/files/1/0734/7155/7942/files/Foot_41be811d-646b-4908-a3e5-8a756ef8d134.png?v=1747394357',
+    },
+  ].map((item, index) => {
+    const isSelected = selectedCause === item.label;
+
+    return (
+      <Pressable
+        key={index}
+        style={styles.circleBoxWrapper}
+        onPress={() => setSelectedCause(item.label)}
+      >
+        <View style={[styles.circle, isSelected && styles.circleActive]}>
+          <Image source={{ uri: item.icon }} style={styles.iconInsideCircle} />
+        </View>
+        <Text
+          style={[
+            styles.causeLabel,
+            isSelected && styles.causeLabelActive,
+          ]}
+        >
+          {item.label}
+        </Text>
+      </Pressable>
+    );
+  })}
+</View>
+
 
 
                     <View style={styles.dynamicBox}>
@@ -175,48 +176,25 @@ export default function AfterQuizView() {
                     </View>
                 </View>
 
-
                 <HbA1cProgressView />
-
-
                 <AfterProductList setTotalPrice={setTotalPrice} totalPrice={totalPrice} setSelectedProducts={setSelectedProducts} />
-
-
                 <Result />
-
-
-                <FeaturesComparison />
-
-
+                <ChatWithUsSection />
                 <PlansInclude />
-
-
                 <StepsSection />
-
-
                 <RetakeQuizBox />
-
-
+                <HeroVideoList/>
                 <RealJourneysSlider />
-
-
+                <FeaturesComparison />
                 <ExpertsPanelCard />
-
-
                 <NeedHelpSection />
-
-
                 <ReviewsRatings />
-
-
                 <ReviewsSection />
-
 
                 {(() => {
                     const [imageHeight, setImageHeight] = useState(0);
-                    const imageUrl = 'https://cdn.shopify.com/s/files/1/0734/7155/7942/files/image.png?v=1747056675';
+                    const imageUrl = 'https://cdn.shopify.com/s/files/1/0734/7155/7942/files/footer.png?v=1750146666';
                     const sideMargin = 20; // 20px left + right
-
 
                     useEffect(() => {
                         Image.getSize(
@@ -232,7 +210,6 @@ export default function AfterQuizView() {
                         );
                     }, []);
 
-
                     if (!imageHeight) {
                         return (
                             <View style={{ height: 200, alignItems: 'center', justifyContent: 'center', marginTop: 10, marginBottom: 40, marginHorizontal: sideMargin }}>
@@ -240,7 +217,6 @@ export default function AfterQuizView() {
                             </View>
                         );
                     }
-
 
                     return (
                         <View style={{ marginTop: -50, marginBottom: 80, marginHorizontal: sideMargin }}>
@@ -252,95 +228,87 @@ export default function AfterQuizView() {
                         </View>
                     );
                 })()}
-
-
             </ScrollView>
 
 
             {/* Price & CTA floating at bottom */}
-            <View style={styles.priceContainer}> 
+            <View style={styles.priceContainer}>
                 <View>
                     <Text style={styles.price}>₹{totalPrice.toFixed(0)}</Text>
                     <Text style={styles.tax}>Inclusive of all taxes</Text>
                 </View>
                 <TouchableOpacity
-  style={styles.buyButton}
-  onPress={async () => {
-    try {
-      const validItems = selectedProducts.filter(
-        (item) => item.first_variant_id && item.quantity > 0
-      );
+                    style={styles.buyButton}
+                    onPress={async () => {
+                        try {
+                            const validItems = selectedProducts.filter(
+                                (item) => item.first_variant_id && item.quantity > 0
+                            );
 
-      if (validItems.length === 0) {
-        Alert.alert("No products selected", "Please add products to continue.");
-        return;
-      }
+                            if (validItems.length === 0) {
+                                Alert.alert("No products selected", "Please add products to continue.");
+                                return;
+                            }
 
-      const response = await fetch('http://192.168.1.32:3001/api/shopify/create-cart', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ items: validItems }),
-      });
+                            const response = await fetch('http://192.168.1.32:3001/api/shopify/create-cart', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ items: validItems }),
+                            });
 
-      const data = await response.json();
+                            const data = await response.json();
 
-      if (!response.ok || !data.cartId) {
-        Alert.alert("Checkout Failed", "Unable to create cart. Try again.");
-        return;
-      }
+                            if (!response.ok || !data.cartId) {
+                                Alert.alert("Checkout Failed", "Unable to create cart. Try again.");
+                                return;
+                            }
 
-      const cartToken = data.cartId.split('/').pop();
+                            const cartToken = data.cartId.split('/').pop();
 
-      // Navigate to GoKwikCheckout
-      const { router } = require("expo-router");
-      router.push({
-        pathname: '/GoKwikCheckout',
-        params: { cartId: cartToken, total: totalPrice },
-      });
-    } catch (err) {
-      console.error("Error launching checkout:", err);
-      Alert.alert("Error", "Something went wrong. Please try again.");
-    }
-  }}
->
-  <Text style={styles.buyText}>Buy Now</Text>
-</TouchableOpacity>
-
+                            // Navigate to GoKwikCheckout
+                            const { router } = require("expo-router");
+                            router.push({
+                                pathname: '/GoKwikCheckout',
+                                params: { cartId: cartToken, total: totalPrice },
+                            });
+                        } catch (err) {
+                            console.error("Error launching checkout:", err);
+                            Alert.alert("Error", "Something went wrong. Please try again.");
+                        }
+                    }}
+                >
+                    <Text style={styles.buyText}>Buy Now</Text>
+                </TouchableOpacity>
             </View>
         </View>
     );
 }
 
-
 const styles = StyleSheet.create({
     container: {
-        paddingBottom: 120,
+        paddingBottom: 10,
         backgroundColor: '#fff',
-    },
-    banner: {
-        width: '100%',
-        height: 440,
     },
     reportCard: {
-        backgroundColor: '#fff',
-        marginHorizontal: 16,
-        marginTop: -100,
-        padding: 16,
-        borderRadius: 12,
+        backgroundColor: '#9D57FF', 
+        marginTop: 20,  
         elevation: 3,
         shadowColor: '#000',
         shadowOpacity: 0.1,
         shadowRadius: 5,
+        padding: 15,
+        paddingBottom: 80,
     },
     nameText: {
         fontSize: 18,
         fontWeight: '600',
         marginBottom: 4,
         fontFamily: 'Poppins',
+        color: 'white',
     },
     reportIntro: {
         fontSize: 14,
-        color: '#404040',
+        color: 'white',
         marginBottom: 10,
         fontFamily: 'Poppins',
     },
@@ -351,21 +319,31 @@ const styles = StyleSheet.create({
         marginBottom: 10,
     },
     reportHeading: {
-        fontSize: 18,
+        fontSize: 20,
         fontWeight: '600',
         fontFamily: 'Poppins',
-    },
-    line: {
-        flex: 1,
-        height: 2,
-        backgroundColor: '#878787',
-        marginLeft: 10,
-        marginTop: 5,
     },
     rootCauses: {
         flexDirection: 'row',
         justifyContent: 'space-between',
     },
+    profileRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+},
+profileImage: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    marginRight: 12,
+    backgroundColor: '#fff',
+},
+rootCard: {
+    backgroundColor: '#fff',
+    padding: 16,
+    borderRadius: 12,
+},
     rootCausess: {
         flexDirection: 'row',
         justifyContent: 'space-between',
@@ -384,11 +362,13 @@ const styles = StyleSheet.create({
         fontSize: 12,
         color: '#404040',
         textAlign: 'center',
-        fontFamily: 'Poppins',
+        fontFamily: 'Poppins', 
     },
     hba1cContainer: {
-        marginHorizontal: 16,
-        marginTop: 20,
+        padding: 20, 
+        marginTop: -45,
+        borderRadius: 30,   
+        backgroundColor: 'white',
         alignItems: 'flex-start',
     },
     hba1cBarBg: {
@@ -405,16 +385,17 @@ const styles = StyleSheet.create({
         backgroundColor: '#A05CFF',
         justifyContent: 'center',
         paddingLeft: 16,
+        padding: 5,
         borderTopLeftRadius: 999,
         borderBottomLeftRadius: 999,
         borderTopRightRadius: 999,
         borderBottomRightRadius: 999,
     },
     hba1cText: {
-        color: 'white',
-        fontWeight: '600',
-        fontSize: 12,
+        fontWeight: '700',
+        fontSize: 20,
         fontFamily: 'Poppins',
+        marginBottom: 14,
     },
     noteText: {
         fontSize: 11,
@@ -442,16 +423,10 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         paddingVertical: 8,
         paddingRight: 16,
-        paddingLeft:34,
+        paddingLeft: 34,
         borderRadius: 0,
         elevation: 5,
-
-
-
-
-   
     },
- 
     price: {
         fontSize: 20,
         fontWeight: '700',
@@ -475,52 +450,77 @@ const styles = StyleSheet.create({
         fontFamily: 'Poppins',
     },
     impactSection: {
-  marginTop: 20,
-  marginHorizontal: 16,
-},
-impactTitle: {
-  fontSize: 16,
-  fontWeight: '600',
-  fontFamily: 'Poppins',
-  marginBottom: 12,
-  color: '#000',
-},
-impactIcons: {
-  flexDirection: 'row',
-  justifyContent: 'space-between',
-  marginBottom: 12,
-},
-causeBox: {
+        marginTop: 20,
+        marginHorizontal: 16,
+    },
+    impactTitle: {
+        fontSize: 16,
+        fontWeight: '600',
+        fontFamily: 'Poppins',
+        marginBottom: 12,
+        color: '#000',
+    },
+    impactIcons: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginBottom: 12,
+    },
+    causeBox: {
+        alignItems: 'center',
+        width: '23%',
+        paddingVertical: 10,
+        borderRadius: 4,
+        backgroundColor: '#fff',
+        borderWidth: 0.5,
+        borderColor: '#8F8F8F',
+    },
+    causeBoxActive: {
+        backgroundColor: '#EBDBFF',
+    },
+    causeLabel: {
+        fontSize: 12,
+        color: '#333',
+        textAlign: 'center',
+        fontFamily: 'Poppins',
+    },
+    circleBoxWrapper: {
   alignItems: 'center',
   width: '23%',
-  paddingVertical: 10,
-  borderRadius: 4,
+},
+circle: {
+  width: 60,
+  height: 60,
+  borderRadius: 30,
+  borderWidth: 1,
+  borderColor: '#A3A3A3',
+  alignItems: 'center',
+  justifyContent: 'center',
   backgroundColor: '#fff',
-  borderWidth: 0.5,
-  borderColor: '#8F8F8F',
+  marginBottom: 6,
 },
-causeBoxActive: {
-  backgroundColor: '#EBDBFF',
+circleActive: {
+  backgroundColor: '#EBDDFF',
+  borderColor: '#EBDDFF',
 },
-causeLabel: {
-  fontSize: 12,
-  color: '#333',
-  textAlign: 'center',
-  fontFamily: 'Poppins',
-},
-causeLabelActive: {
-  fontWeight: '600',
-},
-dynamicBox: {
-  backgroundColor: '#EBDBFF',
-  padding: 14,
-  borderRadius: 4,
-  paddingVertical:20
-},
-dynamicText: {
-  fontSize: 13,
-  fontFamily: 'Poppins',
-  lineHeight: 20,
+iconInsideCircle: {
+  width: 30,
+  height: 30,
+  resizeMode: 'contain',
 },
 
+    dynamicBox: {
+        backgroundColor: '#EBDBFF',
+        padding: 14,
+        borderRadius: 50,
+        paddingVertical: 10,
+        paddingHorizontal: 20,
+    },
+    dynamicText: {
+        fontSize: 12,
+        fontFamily: 'Poppins',
+        lineHeight: 20,
+        textAlign: 'center',
+        fontWeight: '500',
+    },
 });
+

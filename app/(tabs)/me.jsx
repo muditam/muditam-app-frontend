@@ -339,8 +339,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: 'white',
-    paddingHorizontal: 16,
-    paddingVertical: 24,
+    paddingHorizontal: 16, 
   },
   profileBlock: {
     flexDirection: 'row',
