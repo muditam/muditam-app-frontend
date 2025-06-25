@@ -25,7 +25,7 @@ export default function AfterProductList({ setTotalPrice, totalPrice, setSelecte
         const stored = await AsyncStorage.getItem('hba1c');
         const hba1c = stored ? JSON.parse(stored) : null;
 
-        const res = await fetch('http://192.168.1.32:3001/api/shopify/products');
+        const res = await fetch('https://muditam-app-backend.onrender.com/api/shopify/products');
         const data = await res.json();
 
         let titlesToShow = [];
@@ -323,10 +323,10 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   giftImage: {
-    width: '100%',
+    width: '90%',
     height: 100,
-    borderRadius: 8,
-    marginRight: 16,
+    borderRadius: 8, 
+    marginHorizontal: 16,
     marginBottom: 16,
   },
 });

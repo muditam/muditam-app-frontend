@@ -9,7 +9,7 @@ import {
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { router } from "expo-router";
-
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const expertsData = [
   {
@@ -39,78 +39,84 @@ const expertsData = [
 ];
 const dietitianTitle = `Head of Dietitian - \nMuditam Ayurveda`;
 
-
 export default function ExpertList() {
   return (
-    <ScrollView vertical showsVerticalScrollIndicator={false}>
-      <View style={{ padding: 16 }}>
-        <View style={styles.header}>
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => router.back()}
-          >
-            <Feather name="arrow-left" size={26} color="black" />
-          </TouchableOpacity>
-          <Text style={styles.headerText}>
-            "Every body is different, so is our care"
-          </Text>
-          <Text style={styles.subHeaderText}>
-            My team of experienced diabetologists and advisors guide you through
-            every step of your sugar control journey, and support your progress.
-          </Text>
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#F6F6F6" }}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        style={{ flex: 1 }}
+        contentContainerStyle={{ paddingBottom: 24 }}
+      >
+        <View style={styles.content}>
+          <View style={styles.header}>
+            <TouchableOpacity
+              style={styles.backButton}
+              onPress={() => router.back()}
+            >
+              <Feather name="arrow-left" size={26} color="black" />
+            </TouchableOpacity>
+            <Text style={styles.headerText}>
+              "Every body is different, so is our care"
+            </Text>
+            <Text style={styles.subHeaderText}>
+              My team of experienced diabetologists and advisors guide you through
+              every step of your sugar control journey, and support your progress.
+            </Text>
+          </View>
+
+          <View style={styles.dietitianInfo}>
+            <Text style={styles.dietitianName}>Dt. Mansvi Ahuja</Text>
+            <Text style={styles.dietitianTitle}>{dietitianTitle}</Text>
+          </View>
         </View>
 
+        {/* Divider outside the padding */}
+        <View style={styles.divider} />
 
-        <View style={styles.dietitianInfo}>
-          <Text style={styles.dietitianName}>Dt. Mansvi Ahuja</Text>
-          <Text style={styles.dietitianTitle}>{dietitianTitle}</Text>
-        </View>
-      </View>
-
-
-      <View style={{ height: 16, backgroundColor: "black" }}></View>
-      <View style={styles.container}>
-        <View style={styles.expertList}>
-          {expertsData.map((expert, index) => (
-            <View key={index} style={styles.expertCard}>
-              <View style={styles.expertInfo}>
-                <View style={styles.expertText}>
-                  <Text style={styles.expertName}>{expert.name}</Text>
-                  <Text style={styles.expertQualifications}>
-                    {expert.qualifications}
-                  </Text>
-                  <Text style={styles.expertPatients}>
-                    {expert.patientsTreated}
-                  </Text>
+        <View style={styles.content}>
+          <View style={styles.expertList}>
+            {expertsData.map((expert, index) => (
+              <View key={index} style={styles.expertCard}>
+                <View style={styles.expertInfo}>
+                  <View style={styles.expertText}>
+                    <Text style={styles.expertName}>{expert.name}</Text>
+                    <Text style={styles.expertQualifications}>
+                      {expert.qualifications}
+                    </Text>
+                    <Text style={styles.expertPatients}>
+                      {expert.patientsTreated}
+                    </Text>
+                  </View>
+                  <Image source={{ uri: expert.avatar }} style={styles.avatar} />
                 </View>
-                <Image source={{ uri: expert.avatar }} style={styles.avatar} />
               </View>
-            </View>
-          ))}
+            ))}
+          </View>
         </View>
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
-
 const styles = StyleSheet.create({
-  container: {
-    padding: 16,
+  content: {
+    paddingHorizontal: 16,
     backgroundColor: "#F6F6F6",
-    height: "100%",
   },
   header: {
     marginBottom: 20,
-    width: 300,
+    width: "100%",
   },
   backButton: {
-    top: 20,
+    marginTop: 8,
+    marginBottom: 8,
+    alignSelf: "flex-start",
   },
   headerText: {
     fontSize: 26,
     fontWeight: "600",
-    marginTop: 40,
+    marginTop: 24,
   },
   subHeaderText: {
     fontSize: 14,
@@ -120,11 +126,11 @@ const styles = StyleSheet.create({
   },
   dietitianInfo: {
     marginTop: 20,
-    lineHeight: 20,
+    marginBottom: 8,
   },
   dietitianName: {
     fontSize: 14,
-    fontWeight: 400,
+    fontWeight: "400",
     lineHeight: 20,
   },
   dietitianTitle: {
@@ -132,6 +138,15 @@ const styles = StyleSheet.create({
     fontWeight: "400",
     marginBottom: 40,
     lineHeight: 20,
+  },
+  divider: {
+    height: 16,
+    backgroundColor: "black",
+    width: "100%",
+    marginVertical: 8,
+  },
+  expertList: {
+    width: "100%",
   },
   expertCard: {
     backgroundColor: "#FFFFFF",
@@ -172,11 +187,8 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   avatar: {
-    height: 120,
-    width: 120,
-    borderRadius: 69,
+    height: 90,
+    width: 90,
+    borderRadius: 45,
   },
 });
-
-
-

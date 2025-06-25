@@ -102,13 +102,12 @@ export default function PlansInclude() {
 const styles = StyleSheet.create({
   heading: {
   fontSize: 21,
-  fontWeight: '700',
-  color: '#222',
+  fontWeight: '700', 
   textAlign: 'left',
   width: '100%',
   paddingHorizontal: 16,
   marginBottom: 16,
-  marginTop: 16,
+  marginTop: 6,
 },
   container: {
     alignItems: 'center',

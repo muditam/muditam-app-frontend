@@ -6,7 +6,7 @@ export const fetchKitProgress = async () => {
     const phone = JSON.parse(userData || '{}')?.phone;
     if (!phone) return { currentKit: 1, completedKits: [] };
 
-    const res = await fetch(`http://192.168.1.32:3001/api/user/kit-progress/${phone}`);
+    const res = await fetch(`https://muditam-app-backend.onrender.com/api/user/kit-progress/${phone}`);
     const data = await res.json();
     return data;
   } catch (err) {

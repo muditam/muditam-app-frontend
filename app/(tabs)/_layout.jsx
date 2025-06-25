@@ -12,18 +12,17 @@ import { checkPurchaseStatus } from '../utils/checkPurchaseStatus';
 export default function Layout() {
   const [quizCompleted, setQuizCompleted] = useState(false);
   const [hasPurchased, setHasPurchased] = useState(false);
-  const [loading, setLoading] = useState(true); // Delay rendering until data is ready
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchStatus = async () => {
       try {
         const isCompleted = await checkQuizStatus();
-        const purchased = await checkPurchaseStatus(); // ✅ fetch from backend
+        const purchased = await checkPurchaseStatus();
 
         setQuizCompleted(isCompleted);
         setHasPurchased(purchased);
 
-        // Optional: cache locally for fast load next time
         await AsyncStorage.setItem('hasPurchased', purchased ? 'true' : 'false');
       } catch (err) {
         console.error('Tab logic load error:', err);
@@ -34,7 +33,6 @@ export default function Layout() {
     fetchStatus();
   }, []);
 
-  // Delay rendering tabs until status is known
   if (loading) return null;
 
   return (
@@ -79,6 +77,10 @@ export default function Layout() {
                 icon = <MaterialIcons name="person-outline" size={25} color={iconColor} />;
                 label = 'You';
                 break;
+              case 'dietcart':
+                icon = <Ionicons name="bar-chart-outline" size={25} color={iconColor} />;
+                label = 'Diet Cart';
+                break;
             }
 
             return (
@@ -110,19 +112,32 @@ export default function Layout() {
         <Tabs.Screen
           name="buykit"
           options={{
-            href: quizCompleted ? undefined : null, // Hide tab if quiz not done
+            href: quizCompleted ? undefined : null,
           }}
         />
         <Tabs.Screen
           name="test"
           options={{
-            href: quizCompleted ? null : undefined, // Hide tab if quiz done
+            href: quizCompleted ? null : undefined,
           }}
         />
         <Tabs.Screen name="products" />
         <Tabs.Screen name="videos" />
-        <Tabs.Screen name="me" />
+
+        <Tabs.Screen
+          name="me"
+          options={{
+            href: hasPurchased ? null : undefined,
+          }}
+        />
+        <Tabs.Screen
+          name="dietcart"
+          options={{
+            href: hasPurchased ? undefined : null,
+          }}
+        />
       </Tabs>
     </SafeAreaView>
   );
 }
+ 

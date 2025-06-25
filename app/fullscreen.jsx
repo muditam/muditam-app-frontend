@@ -1,7 +1,7 @@
 import React, { useRef, useState, useCallback } from 'react';
 import { FlatList, Dimensions } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import VideoFeedItem from './components/VideoFeedItem';
+import VideoFeedItem from './components/VideoFeedItem'; 
 
 const { height } = Dimensions.get('window');
 
@@ -19,7 +19,7 @@ export default function FullscreenFeed() {
   const flatListRef = useRef(null);
   const [activeIndex, setActiveIndex] = useState(0);
 
-  const startIndex = videos.findIndex((v) => v.video === video);
+  const startIndex = videos.findIndex((v) => v.video === video); 
 
   const onViewableItemsChanged = useCallback(({ viewableItems }) => {
     if (viewableItems.length > 0) {

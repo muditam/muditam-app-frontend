@@ -41,7 +41,7 @@ export const CartProvider = ({ children }) => {
           return;
         }
 
-        const res = await fetch(`http://192.168.1.32:3001/api/cart/${phone}`);
+        const res = await fetch(`https://muditam-app-backend.onrender.com/api/cart/${phone}`);
         const data = await res.json();
 
         if (res.ok && Array.isArray(data.items)) {
@@ -66,7 +66,7 @@ export const CartProvider = ({ children }) => {
       try {
         const validItems = cartItems.filter(isValidProduct);
 
-        await fetch(`http://192.168.1.32:3001/api/cart/save`, {
+        await fetch(`https://muditam-app-backend.onrender.com/api/cart/save`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ phone: userPhone, items: validItems }),

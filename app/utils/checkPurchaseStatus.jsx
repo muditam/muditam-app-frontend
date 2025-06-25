@@ -7,7 +7,7 @@ export const checkPurchaseStatus = async () => {
 
     if (!phone) return false;
 
-    const response = await fetch(`http://192.168.1.32:3001/api/user/purchase-status/${phone}`);
+    const response = await fetch(`https://muditam-app-backend.onrender.com/api/user/purchase-status/${phone}`);
 
     if (!response.ok) {
       console.warn(`Server responded with status: ${response.status}`);

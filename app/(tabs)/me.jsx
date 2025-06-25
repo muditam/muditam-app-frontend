@@ -7,6 +7,7 @@ import {
   ScrollView,
   StyleSheet,
   Modal,
+  Linking,
   Platform,
 } from 'react-native';
 import { useRouter } from 'expo-router';
@@ -18,8 +19,8 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
-    shouldShowAlert: true,     
-    shouldPlaySound: true,     
+    shouldShowAlert: true,
+    shouldPlaySound: true,
     shouldSetBadge: false,
   }),
 });
@@ -31,98 +32,98 @@ export default function MeScreen() {
   const [showReminderSheet, setShowReminderSheet] = useState(false);
   const [reminderType, setReminderType] = useState('water');
   const [reminderTime, setReminderTime] = useState('08:00');
-  const [showTimePicker, setShowTimePicker] = useState(false); 
+  const [showTimePicker, setShowTimePicker] = useState(false);
 
-  const saveReminder = async (type, time) => { 
-  try {
-    const res = await fetch('http://192.168.1.32:3001/api/reminder', {
-      method: 'POST',
-      headers: { 'Content-Type':'application/json' },
-      body: JSON.stringify({ type, time, userId: user._id }),
-    });
-    if (res.ok) console.log('Reminder saved');
-  } catch (e) {
-    console.error('Saving reminder failed', e);
-  }
-};
-
-useEffect(() => {
-  const init = async () => {
+  const saveReminder = async (type, time) => {
     try {
-      const stored = await AsyncStorage.getItem('userDetails');
-      if (!stored) return;
-
-      const parsedUser = JSON.parse(stored);
-      setUser(parsedUser);
-      registerForPush(parsedUser._id);
-
-      const res = await fetch(`http://192.168.1.32:3001/api/reminder/${parsedUser._id}`);
-      if (res.ok) {
-        const reminders = await res.json();
-        const match = reminders.find(r => r.type === reminderType);
-        setReminderTime(match?.time || '08:00');
-      }
-    } catch (err) {
-      console.error("Error loading user/reminder", err);
+      const res = await fetch('https://muditam-app-backend.onrender.com/api/reminder', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type, time, userId: user._id }),
+      });
+      if (res.ok) console.log('Reminder saved');
+    } catch (e) {
+      console.error('Saving reminder failed', e);
     }
   };
 
-  init();
-}, [reminderType]);
+  useEffect(() => {
+    const init = async () => {
+      try {
+        const stored = await AsyncStorage.getItem('userDetails');
+        if (!stored) return;
+
+        const parsedUser = JSON.parse(stored);
+        setUser(parsedUser);
+        registerForPush(parsedUser._id);
+
+        const res = await fetch(`https://muditam-app-backend.onrender.com/api/reminder/${parsedUser._id}`);
+        if (res.ok) {
+          const reminders = await res.json();
+          const match = reminders.find(r => r.type === reminderType);
+          setReminderTime(match?.time || '08:00');
+        }
+      } catch (err) {
+        console.error("Error loading user/reminder", err);
+      }
+    };
+
+    init();
+  }, [reminderType]);
 
 
 
-const registerForPush = async (userId) => {
-  if (!Device.isDevice) {
-    console.warn("⚠️ Not a physical device");
-    return;
-  }
-
-  const { status: existingStatus } = await Notifications.getPermissionsAsync();
-  let finalStatus = existingStatus;
-
-  if (existingStatus !== 'granted') {
-    const { status } = await Notifications.requestPermissionsAsync();
-    finalStatus = status;
-  }
-
-  if (finalStatus !== 'granted') {
-    console.warn("🚫 Permission not granted for push notifications");
-    return;
-  }
-
-  // ✅ Create Android notification channel
-  if (Platform.OS === 'android') {
-    await Notifications.setNotificationChannelAsync('default', {
-      name: 'default',
-      importance: Notifications.AndroidImportance.MAX,
-      sound: 'default',
-      vibrationPattern: [0, 250, 250, 250],
-      lightColor: '#FF231F7C',
-    });
-  }
-
-  // ✅ Get Expo token
-  const token = (await Notifications.getExpoPushTokenAsync()).data; 
-
-  // ✅ Send token to backend
-  try {
-    const res = await fetch('http://192.168.1.32:3001/api/user/save-token', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId, expoPushToken: token }),
-    });
-
-    if (res.ok) {
-      console.log("✅ Token saved to backend");
-    } else {
-      const errorText = await res.text();
-      console.error("Failed to save token:", errorText);
+  const registerForPush = async (userId) => {
+    if (!Device.isDevice) {
+      console.warn("⚠️ Not a physical device");
+      return;
     }
-  } catch (err) {
-    console.error("Error sending token to backend:", err);
-  }
-};
+
+    const { status: existingStatus } = await Notifications.getPermissionsAsync();
+    let finalStatus = existingStatus;
+
+    if (existingStatus !== 'granted') {
+      const { status } = await Notifications.requestPermissionsAsync();
+      finalStatus = status;
+    }
+
+    if (finalStatus !== 'granted') {
+      console.warn("🚫 Permission not granted for push notifications");
+      return;
+    }
+
+    // ✅ Create Android notification channel
+    if (Platform.OS === 'android') {
+      await Notifications.setNotificationChannelAsync('default', {
+        name: 'default',
+        importance: Notifications.AndroidImportance.MAX,
+        sound: 'default',
+        vibrationPattern: [0, 250, 250, 250],
+        lightColor: '#FF231F7C',
+      });
+    }
+
+    // ✅ Get Expo token
+    const token = (await Notifications.getExpoPushTokenAsync()).data;
+
+    // ✅ Send token to backend
+    try {
+      const res = await fetch('https://muditam-app-backend.onrender.com/api/user/save-token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, expoPushToken: token }),
+      });
+
+      if (res.ok) {
+        console.log("✅ Token saved to backend");
+      } else {
+        const errorText = await res.text();
+        console.error("Failed to save token:", errorText);
+      }
+    } catch (err) {
+      console.error("Error sending token to backend:", err);
+    }
+  };
 
 
 
@@ -151,8 +152,10 @@ const registerForPush = async (userId) => {
 
         {/* Buy Kit Box */}
         <View style={styles.buyKitBox}>
-          <Ionicons name="cart-outline" size={28} color="white" style={{ marginBottom: 8 }} />
-          <Text style={styles.buyKitHeaderText}>Once you buy your kit</Text>
+          <View style={styles.row2}>
+            <Ionicons name="cart-outline" size={28} style={{ marginBottom: 8 }} />
+            <Text style={styles.buyKitHeaderText}>Once you buy your kit</Text>
+          </View>
           <Text style={styles.buyKitDescription}>
             Muditam Exerts will approve your plan and build a detailed prescription.
           </Text>
@@ -168,9 +171,11 @@ const registerForPush = async (userId) => {
         <View style={styles.buttonsRow}>
           <TouchableOpacity
             style={styles.buttonItem}
-            onPress={() => router.push('/sugardrop')} // navigate to Sugar Drop page
+            onPress={() => router.push('/sugardrop')}
           >
-            <FontAwesome5 name="tint" size={20} color="#543087" />
+            <View style={styles.iconCircle}>
+              <FontAwesome5 name="tint" size={24} color="white" />
+            </View>
             <Text style={styles.buttonText}>Sugar Drop</Text>
           </TouchableOpacity>
           <TouchableOpacity
@@ -180,14 +185,26 @@ const registerForPush = async (userId) => {
               params: { title: 'FAQs' }
             })}
           >
-            <Ionicons name="help-circle-outline" size={22} color="#543087" />
+            <View style={styles.iconCircle}>
+              <Ionicons name="help-circle-outline" size={28} color="white" />
+            </View>
             <Text style={styles.buttonText}>Help & Support</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.buttonItem}>
-            <FontAwesome5 name="whatsapp" size={20} color="#543087" />
+          <TouchableOpacity
+            style={styles.buttonItem}
+            onPress={() => {
+              const phoneNumber = '8989174741';
+              const url = `https://wa.me/91${phoneNumber}`;
+              Linking.openURL(url).catch(err =>
+                console.error("Failed to open WhatsApp:", err)
+              );
+            }}
+          >
+            <View style={styles.iconCircle}>
+              <FontAwesome5 name="whatsapp" size={24} color="white" />
+            </View>
             <Text style={styles.buttonText}>Chat With Us</Text>
           </TouchableOpacity>
-          
         </View>
 
         {/* Links */}
@@ -207,12 +224,12 @@ const registerForPush = async (userId) => {
         ))}
 
         <TouchableOpacity
-            style={styles.linkRow}
-            onPress={() => setShowReminderSheet(true)}
-          >
-            <Text style={styles.linkText}>Set Daily Reminder</Text>
-            <Entypo name="chevron-right" size={20} color="black" />
-          </TouchableOpacity>
+          style={styles.linkRow}
+          onPress={() => setShowReminderSheet(true)}
+        >
+          <Text style={styles.linkText}>Set Daily Reminder</Text>
+          <Entypo name="chevron-right" size={20} color="black" />
+        </TouchableOpacity>
 
         {/* Logout */}
         <TouchableOpacity onPress={() => setShowLogoutModal(true)} style={styles.linkRow}>
@@ -221,74 +238,74 @@ const registerForPush = async (userId) => {
         </TouchableOpacity>
 
         <Modal
-  visible={showReminderSheet}
-  transparent
-  animationType="slide"
-  onRequestClose={() => setShowReminderSheet(false)}
->
-  <View style={styles.sheetOverlay}>
-    <View style={styles.sheetContainer}>
-      <Text style={styles.sheetTitle}>Set Daily Reminder</Text>
+          visible={showReminderSheet}
+          transparent
+          animationType="slide"
+          onRequestClose={() => setShowReminderSheet(false)}
+        >
+          <View style={styles.sheetOverlay}>
+            <View style={styles.sheetContainer}>
+              <Text style={styles.sheetTitle}>Set Daily Reminder</Text>
 
-      <View style={styles.optionGroup}>
-        {[
-          { key: 'water', icon: 'water', label: 'Water 💧' },
-          { key: 'food', icon: 'restaurant', label: 'Food 🍱' },
-          { key: 'walk', icon: 'walk', label: 'Walk 🚶‍♂️' }
-        ].map(({ key, icon, label }) => (
-          <TouchableOpacity
-            key={key}
-            style={[
-              styles.typeButton,
-              reminderType === key && styles.typeButtonSelected
-            ]}
-            onPress={() => setReminderType(key)}
-          >
-            <Ionicons name={icon} size={20} color={reminderType === key ? '#fff' : '#543087'} />
-            <Text style={[styles.typeButtonText, reminderType === key && { color: '#fff' }]}>{label}</Text>
-          </TouchableOpacity>
-        ))}
-      </View>
+              <View style={styles.optionGroup}>
+                {[
+                  { key: 'water', icon: 'water', label: 'Water 💧' },
+                  { key: 'food', icon: 'restaurant', label: 'Food 🍱' },
+                  { key: 'walk', icon: 'walk', label: 'Walk 🚶‍♂️' }
+                ].map(({ key, icon, label }) => (
+                  <TouchableOpacity
+                    key={key}
+                    style={[
+                      styles.typeButton,
+                      reminderType === key && styles.typeButtonSelected
+                    ]}
+                    onPress={() => setReminderType(key)}
+                  >
+                    <Ionicons name={icon} size={20} color={reminderType === key ? '#fff' : '#543087'} />
+                    <Text style={[styles.typeButtonText, reminderType === key && { color: '#fff' }]}>{label}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
 
-      {/* Time Picker */}
-      <TouchableOpacity
-        style={styles.timeSelector}
-        onPress={() => setShowTimePicker(true)}
-      >
-        <Ionicons name="time-outline" size={18} color="#543087" />
-        <Text style={styles.timeSelectorText}>Time: {reminderTime}</Text>
-      </TouchableOpacity>
+              {/* Time Picker */}
+              <TouchableOpacity
+                style={styles.timeSelector}
+                onPress={() => setShowTimePicker(true)}
+              >
+                <Ionicons name="time-outline" size={18} color="#543087" />
+                <Text style={styles.timeSelectorText}>Time: {reminderTime}</Text>
+              </TouchableOpacity>
 
-      {/* Save button */}
-      <TouchableOpacity
-        style={styles.sheetSaveButton}
-        onPress={() => {
-          saveReminder(reminderType, reminderTime);
-          setShowReminderSheet(false);
-        }}
-      >
-        <Text style={styles.sheetSaveButtonText}>Save Reminder</Text>
-      </TouchableOpacity>
-    </View>
-  </View>
+              {/* Save button */}
+              <TouchableOpacity
+                style={styles.sheetSaveButton}
+                onPress={() => {
+                  saveReminder(reminderType, reminderTime);
+                  setShowReminderSheet(false);
+                }}
+              >
+                <Text style={styles.sheetSaveButtonText}>Save Reminder</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
 
-  {/* Native Time Picker */}
-  {showTimePicker && (
-    <DateTimePicker
-      value={new Date(`1970-01-01T${reminderTime}:00`)}
-      mode="time"
-      display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-      onChange={(event, selectedDate) => {
-        setShowTimePicker(false);
-        if (selectedDate) {
-          const hours = selectedDate.getHours().toString().padStart(2, '0');
-          const minutes = selectedDate.getMinutes().toString().padStart(2, '0');
-          setReminderTime(`${hours}:${minutes}`);
-        }
-      }}
-    />
-  )}
-</Modal>
+          {/* Native Time Picker */}
+          {showTimePicker && (
+            <DateTimePicker
+              value={new Date(`1970-01-01T${reminderTime}:00`)}
+              mode="time"
+              display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+              onChange={(event, selectedDate) => {
+                setShowTimePicker(false);
+                if (selectedDate) {
+                  const hours = selectedDate.getHours().toString().padStart(2, '0');
+                  const minutes = selectedDate.getMinutes().toString().padStart(2, '0');
+                  setReminderTime(`${hours}:${minutes}`);
+                }
+              }}
+            />
+          )}
+        </Modal>
 
 
         {/* Logout Confirmation Modal */}
@@ -334,17 +351,16 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: 'white',
-    paddingTop: Platform.OS === 'android' ? 25 : 0, // handle Android status bar
+    paddingTop: Platform.OS === 'android' ? 25 : 0,
   },
   container: {
     flex: 1,
     backgroundColor: 'white',
-    paddingHorizontal: 16, 
+    paddingHorizontal: 16,
   },
   profileBlock: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F7F0FF',
     padding: 16,
     marginBottom: 24,
     marginHorizontal: -16,
@@ -352,7 +368,7 @@ const styles = StyleSheet.create({
   profileAvatar: {
     width: 40,
     height: 40,
-    backgroundColor: '#A78BFA',
+    backgroundColor: '#9D57FF',
     borderRadius: 20,
     marginRight: 12,
   },
@@ -363,32 +379,30 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   buyKitBox: {
-    backgroundColor: '#7C3AED',
     borderRadius: 16,
-    padding: 16,
     marginBottom: 24,
+    marginTop: -10,
   },
   buyKitHeaderText: {
-    color: 'white',
     fontSize: 16,
     fontWeight: '600',
     marginBottom: 6,
   },
   buyKitDescription: {
-    color: 'white',
     fontSize: 12,
     textAlign: 'left',
     marginBottom: 12,
   },
   buyNowButton: {
-    backgroundColor: '#DDD6FE',
+    backgroundColor: '#9D57FF',
     borderRadius: 8,
     paddingVertical: 8,
     paddingHorizontal: 24,
     alignSelf: 'flex-start',
+    width: '100%',
   },
   buyNowText: {
-    color: '#5B21B6',
+    color: 'white',
     fontWeight: '600',
     textAlign: 'center',
     fontSize: 14,
@@ -397,19 +411,31 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: 24,
+    marginTop: -8,
   },
   buttonItem: {
     flex: 1,
     alignItems: 'center',
-    backgroundColor: '#E4D0FF',
-    paddingVertical: 12,
-    borderRadius: 8,
-    marginHorizontal: 4,
+  },
+  iconCircle: {
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    backgroundColor: '#9D57FF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 8,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 4 },
+    shadowRadius: 8,
+    elevation: 4, // For Android shadow
   },
   buttonText: {
     marginTop: 6,
     fontSize: 12,
-    color: '#543087',
+    color: '#222',
+    textAlign: 'center',
   },
   linkRow: {
     flexDirection: 'row',
@@ -436,6 +462,11 @@ const styles = StyleSheet.create({
     padding: 20,
     alignItems: 'center',
     position: 'relative',
+  },
+  row2: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
   },
   modalClose: {
     position: 'absolute',
@@ -483,61 +514,61 @@ const styles = StyleSheet.create({
     color: '#A78BFA',
     fontWeight: '600',
   },
-  sheetOverlay: { flex:1, justifyContent:'flex-end', backgroundColor:'rgba(0,0,0,0.5)' },
-sheetContainer: { backgroundColor:'white', padding:16, borderTopLeftRadius:12, borderTopRightRadius:12 },
-sheetTitle: { fontSize:18, fontWeight:'600', marginBottom:12 },
-sheetOption: { padding:10 },
-sheetOptionSelected: { backgroundColor:'#E4D0FF', borderRadius:8 },
-sheetOptionText: { fontSize:16 },
-timePickerContainer: { paddingVertical:12, alignItems:'center' },
-sheetSaveButton: { marginTop:20, backgroundColor:'#A78BFA', padding:12, borderRadius:8, alignItems:'center' },
-optionGroup: {
-  flexDirection: 'row',
-  justifyContent: 'space-between',
-  marginBottom: 16,
-},
-typeButton: {
-  flex: 1,
-  flexDirection: 'row',
-  alignItems: 'center',
-  justifyContent: 'center',
-  borderColor: '#DDD6FE',
-  borderWidth: 1,
-  borderRadius: 8,
-  paddingVertical: 10,
-  marginHorizontal: 4,
-  backgroundColor: '#F3E8FF',
-},
-typeButtonSelected: {
-  backgroundColor: '#7C3AED',
-  borderColor: '#7C3AED',
-},
-typeButtonText: {
-  marginLeft: 8,
-  fontSize: 14,
-  color: '#543087',
-  fontWeight: '600',
-},
-timeSelector: {
-  flexDirection: 'row',
-  alignItems: 'center',
-  justifyContent: 'center',
-  padding: 12,
-  borderWidth: 1,
-  borderColor: '#DDD6FE',
-  borderRadius: 8,
-  marginBottom: 20,
-},
-timeSelectorText: {
-  marginLeft: 8,
-  fontSize: 16,
-  color: '#543087',
-  fontWeight: '500',
-},
-sheetSaveButtonText: {
-  color: 'white',
-  fontWeight: '600',
-  fontSize: 16,
-},
+  sheetOverlay: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.5)' },
+  sheetContainer: { backgroundColor: 'white', padding: 16, borderTopLeftRadius: 12, borderTopRightRadius: 12 },
+  sheetTitle: { fontSize: 18, fontWeight: '600', marginBottom: 12 },
+  sheetOption: { padding: 10 },
+  sheetOptionSelected: { backgroundColor: '#E4D0FF', borderRadius: 8 },
+  sheetOptionText: { fontSize: 16 },
+  timePickerContainer: { paddingVertical: 12, alignItems: 'center' },
+  sheetSaveButton: { marginTop: 20, backgroundColor: '#A78BFA', padding: 12, borderRadius: 8, alignItems: 'center' },
+  optionGroup: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+  },
+  typeButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderColor: '#DDD6FE',
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingVertical: 10,
+    marginHorizontal: 4,
+    backgroundColor: '#F3E8FF',
+  },
+  typeButtonSelected: {
+    backgroundColor: '#7C3AED',
+    borderColor: '#7C3AED',
+  },
+  typeButtonText: {
+    marginLeft: 8,
+    fontSize: 14,
+    color: '#543087',
+    fontWeight: '600',
+  },
+  timeSelector: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#DDD6FE',
+    borderRadius: 8,
+    marginBottom: 20,
+  },
+  timeSelectorText: {
+    marginLeft: 8,
+    fontSize: 16,
+    color: '#543087',
+    fontWeight: '500',
+  },
+  sheetSaveButtonText: {
+    color: 'white',
+    fontWeight: '600',
+    fontSize: 16,
+  },
 
 });

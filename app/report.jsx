@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -6,39 +6,118 @@ import {
   TouchableOpacity,
   ScrollView,
   Modal,
-  SafeAreaView,
   Alert,
-  StatusBar,
-  Platform,
-} from 'react-native';
-import { useRouter } from 'expo-router';
-import { Ionicons, Entypo } from '@expo/vector-icons';
-import * as DocumentPicker from 'expo-document-picker';
+  ScrollViewComponent,
+  Animated,
+  Dimensions,
+  findNodeHandle,
+} from "react-native";
+import { useRouter } from "expo-router";
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons, Entypo } from "@expo/vector-icons";
+import * as DocumentPicker from "expo-document-picker";
+
 
 const dateOptions = [
-  'Last 7 days',
-  'Last 30 days',
-  'Last 60 days',
-  'Last 90 days',
-  'Custom',
+  "Last 7 days",
+  "Last 30 days",
+  "Last 60 days",
+  "Last 90 days",
 ];
 
-const filters = ['All', 'Prescription', 'Medical Report', 'Lab Report'];
+
+const filters = ["All", "Prescription", "Medical Report", "Lab Report"];
+const { height } = Dimensions.get("window");
+
 
 export default function Report() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState('Report');
-  const [selectedDate, setSelectedDate] = useState('Last 7 days');
+  const [activeTab, setActiveTab] = useState("Report");
+  const [selectedDate, setSelectedDate] = useState("Last 7 days");
   const [showDateModal, setShowDateModal] = useState(false);
+  const [selectedFilter, setSelectedFilter] = useState("All");
   const [showUploadModal, setShowUploadModal] = useState(false);
-  const [selectedFilter, setSelectedFilter] = useState('All');
-  const [showDotsMenu, setShowDotsMenu] = useState(null); // ID of the card showing the dots menu
+  const [showMethodModal, setShowMethodModal] = useState(false);
+  const [deleteOption, setDeleteOption] = useState(false);
+
+
+  const [menuVisible, setMenuVisible] = useState(false);
+  const [menuPosition, setMenuPosition] = useState({ x: 0, y: 0 });
+  const [selectedReportId, setSelectedReportId] = useState(null);
+
+
+  const [slideAnim] = useState(new Animated.Value(height));
+
+
+  const menuAnchorRefs = React.useRef({});
+
 
   const [reports, setReports] = useState([]);
 
+
+  const openModal = (action) => {
+    setShowMethodModal(true);
+    Animated.timing(slideAnim, {
+      toValue: 0,
+      duration: 300,
+      useNativeDriver: true,
+    }).start();
+  };
+
+
+  const openMenu = (id) => {
+    const ref = menuAnchorRefs.current[id];
+    if (!ref) return;
+
+
+    ref.measure((fx, fy, width, heightRef, px, py) => {
+      const xOffset = 40;
+      const yOffset = -43;
+
+
+      setMenuPosition({
+        x: px + xOffset,
+        y: py + heightRef + yOffset,
+      });
+      setSelectedReportId(id);
+      setMenuVisible(true);
+    });
+  };
+
+
+  const closeMenu = () => {
+    setMenuVisible(false);
+    setSelectedReportId(null);
+  };
+
+
+  const closeModal = () => {
+    Animated.timing(slideAnim, {
+      toValue: height,
+      duration: 300,
+      useNativeDriver: true,
+    }).start(() => setShowMethodModal(false));
+  };
+
+
+  const filteredReports =
+    selectedFilter === "All"
+      ? reports
+      : reports.filter((item) => item.type === selectedFilter);
+
+
+  const groupedReports = filteredReports.reduce((acc, item) => {
+    if (!acc[item.date]) acc[item.date] = [];
+    acc[item.date].push(item);
+    return acc;
+  }, {});
+
+
   const handleUpload = async (type) => {
     try {
-      const result = await DocumentPicker.getDocumentAsync({ copyToCacheDirectory: false });
+      const result = await DocumentPicker.getDocumentAsync({
+        copyToCacheDirectory: false,
+      });
       if (result.canceled) {
         setShowUploadModal(false);
         return;
@@ -47,395 +126,496 @@ export default function Report() {
       const newReport = {
         id: Date.now(),
         type,
-        title: result.assets[0]?.name || 'Untitled Report',
+        title: result.assets[0]?.name || "Untitled Report",
         date: now.toLocaleDateString(undefined, {
-          month: 'short',
-          day: 'numeric',
-          year: 'numeric',
+          month: "short",
+          day: "numeric",
+          year: "numeric",
         }),
-        time: now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        time: now.toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
       };
       setReports((prev) => [...prev, newReport]);
       setShowUploadModal(false);
     } catch (error) {
-      console.error('File pick error:', error);
+      console.error("File pick error:", error);
       setShowUploadModal(false);
     }
   };
 
+
   const handleDelete = (id) => {
-    Alert.alert('Delete Report', 'Are you sure you want to delete this report?', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: () => {
-          setReports((prev) => prev.filter((item) => item.id !== id));
-          setShowDotsMenu(null);
+    Alert.alert(
+      "Delete Report",
+      "Are you sure you want to delete this report?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: () => {
+            setReports((prev) => prev.filter((item) => item.id !== id));
+            setMenuVisible(false);
+            setShowUploadModal(false);
+          },
         },
-      },
-    ]);
+      ]
+    );
   };
 
-  const filteredReports =
-    selectedFilter === 'All'
-      ? reports
-      : reports.filter((item) => item.type === selectedFilter);
-
-  const groupedReports = filteredReports.reduce((acc, item) => {
-    if (!acc[item.date]) acc[item.date] = [];
-    acc[item.date].push(item);
-    return acc;
-  }, {});
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-        <StatusBar barStyle="dark-content" backgroundColor="#fff" />
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        {/* Header Tabs */}
-        <View style={styles.tabContainer}>
-          <TouchableOpacity
-            style={[styles.tab, activeTab === 'Timeline' && styles.activeTab]}
-            onPress={() => router.push('/sugardrop')}
-          >
-            <Text style={[styles.tabText, activeTab === 'Timeline' && styles.activeTabText]}>
-              Timeline
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.tab, activeTab === 'Report' && styles.activeTab]}
-            onPress={() => setActiveTab('Report')}
-          >
-            <Text style={[styles.tabText, activeTab === 'Report' && styles.activeTabText]}>
-              Report
-            </Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Choose Date */}
-        <TouchableOpacity
-          style={styles.dateSelector}
-          onPress={() => setShowDateModal(true)}
-        >
-          <Text style={styles.dateText}>Choose date</Text>
-          <Text style={styles.dateValue}>{selectedDate}</Text>
-          <Entypo name="chevron-down" size={20} color="#333" />
-        </TouchableOpacity>
-
-        {/* Filters */}
-        <View style={styles.filterRow}>
-          {filters.map((filter) => (
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#f4f4f4' }}>
+      <View style={styles.container}>
+        <ScrollView contentContainerStyle={styles.scrollContent}>
+          <View style={styles.header}>
             <TouchableOpacity
-              key={filter}
-              style={[
-                styles.filterButton,
-                selectedFilter === filter && styles.activeFilter,
-              ]}
-              onPress={() => setSelectedFilter(filter)}
+              onPress={() => router.back()}
+              style={styles.backBtn}
+            >
+              <Ionicons name="arrow-back" size={24} />
+            </TouchableOpacity>
+            <Text style={styles.heading}>Report</Text>
+          </View>
+          {/* Header Tabs */}
+          <View style={styles.tabContainer}>
+            <TouchableOpacity
+              style={[styles.tab, activeTab === "Timeline" && styles.activeTab]}
+              onPress={() => router.push('/me')}
             >
               <Text
                 style={[
-                  styles.filterText,
-                  selectedFilter === filter && styles.activeFilterText,
+                  styles.tabText,
+                  activeTab === "Timeline" && styles.activeTabText,
                 ]}
               >
-                {filter}
+                Timeline
               </Text>
             </TouchableOpacity>
-          ))}
-        </View>
+            <TouchableOpacity
+              style={[styles.tab, activeTab === "Report" && styles.activeTab]}
+              onPress={() => setActiveTab("Report")}
+            >
+              <Text
+                style={[
+                  styles.tabText,
+                  activeTab === "Report" && styles.activeTabText,
+                ]}
+              >
+                Report
+              </Text>
+            </TouchableOpacity>
+          </View>
 
-        {/* Reports List */}
-        {Object.keys(groupedReports).length === 0 ? (
-          <Text style={styles.noReportsText}>No reports yet.</Text>
-        ) : (
-          Object.keys(groupedReports)
-            .sort((a, b) => new Date(b) - new Date(a))
-            .map((date) => (
-              <View key={date}>
-                <Text style={styles.sectionDate}>{date}</Text>
-                <View style={styles.reportGrid}>
-                  {groupedReports[date].map((item) => (
-                    <View key={item.id} style={styles.reportCard}>
-                      <View style={styles.reportTag}>
-                        <Text style={styles.reportTagText}>{item.type}</Text>
-                      </View>
-                      <View style={styles.reportContent}>
-                        <View style={styles.reportPlaceholder} />
-                        <Text style={styles.reportTitle}>{item.title}</Text>
-                        <Text style={styles.reportTime}>{item.time}</Text>
-                      </View>
+
+          {/* Choose Date */}
+          <TouchableOpacity
+            style={styles.dateSelector}
+            onPress={() => setShowDateModal(true)}
+          >
+            <Text style={styles.dateText}>Choose date</Text>
+            <Text style={styles.dateValue}>{selectedDate}</Text>
+            <Entypo name="chevron-down" size={24} color="#333" />
+          </TouchableOpacity>
+
+
+          {/* Filters */}
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            <View style={styles.filterRow}>
+              {filters.map((filter) => (
+                <TouchableOpacity
+                  key={filter}
+                  style={[
+                    styles.filterButton,
+                    selectedFilter === filter && styles.activeFilter,
+                  ]}
+                  onPress={() => setSelectedFilter(filter)}
+                >
+                  <Text
+                    style={[
+                      styles.filterText,
+                      selectedFilter === filter && styles.activeFilterText,
+                    ]}
+                  >
+                    {filter}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </ScrollView>
+
+
+          {/* Reports Grouped by Date */}
+
+
+          {Object.entries(
+            filteredReports.reduce((acc, report) => {
+              if (!acc[report.date]) acc[report.date] = [];
+              acc[report.date].push(report);
+              return acc;
+            }, {})
+          ).map(([date, items]) => (
+            <View key={date}>
+              <Text style={styles.sectionDate}>{date}</Text>
+              <View style={styles.reportGrid}>
+                {items.map((item) => (
+                  <View key={item.id} style={styles.reportCard}>
+                    <View style={styles.reportTag}>
+                      <Text style={styles.reportTagText}>{item.type}</Text>
+                    </View>
+
+
+                    <View style={styles.reportContent}>
+                      <View style={styles.reportPlaceholder} />
+                      <Text style={styles.reportTitle}>{item.title}</Text>
+                      <Text style={styles.reportTime}>{item.time}</Text>
+
+
                       <TouchableOpacity
-                        style={styles.moreBtn}
+                        ref={(ref) => (menuAnchorRefs.current[item.id] = ref)}
                         onPress={() =>
-                          setShowDotsMenu(showDotsMenu === item.id ? null : item.id)
+                          setSelectedReportId((prevId) =>
+                            prevId === item.id ? null : item.id
+                          )
                         }
                       >
-                        <Entypo name="dots-three-vertical" size={14} color="#333" />
+                        <Entypo
+                          name="dots-three-vertical"
+                          style={styles.moreBtn}
+                        />
                       </TouchableOpacity>
 
-                      {showDotsMenu === item.id && (
-                        <View style={styles.dotsMenu}>
+
+                      {selectedReportId === item.id && (
+                        <View style={styles.menuBox}>
                           <TouchableOpacity
-                            style={styles.dotsMenuItem}
-                            onPress={() => {
-                              Alert.alert('Details', 'Feature coming soon!');
-                              setShowDotsMenu(null);
-                            }}
+                            onPress={() => handleDelete(selectedReportId)}
                           >
-                            <Text style={styles.dotsMenuText}>View Details</Text>
-                          </TouchableOpacity>
-                          <TouchableOpacity
-                            style={styles.dotsMenuItem}
-                            onPress={() => handleDelete(item.id)}
-                          >
-                            <Text style={[styles.dotsMenuText, { color: 'red' }]}>Delete</Text>
+                            <Text style={{ fontSize: 18 }}>Delete</Text>
                           </TouchableOpacity>
                         </View>
                       )}
                     </View>
-                  ))}
-                </View>
+                  </View>
+                ))}
               </View>
-            ))
-        )}
-      </ScrollView>
-
-      {/* Upload Button */}
-      <TouchableOpacity
-        style={styles.uploadButton}
-        onPress={() => setShowUploadModal(true)}
-      >
-        <Ionicons name="add" size={18} color="white" />
-        <Text style={styles.uploadButtonText}>Upload</Text>
-      </TouchableOpacity>
-
-      {/* Date Selection Modal */}
-      <Modal
-        visible={showDateModal}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setShowDateModal(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalBox}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Choose date</Text>
-              <TouchableOpacity onPress={() => setShowDateModal(false)}>
-                <Entypo name="cross" size={22} color="#333" />
-              </TouchableOpacity>
             </View>
-            {dateOptions.map((option) => (
-              <TouchableOpacity
-                key={option}
-                style={styles.modalOption}
-                onPress={() => {
-                  setSelectedDate(option);
-                  setShowDateModal(false);
-                }}
-              >
-                <View
-                  style={[
-                    styles.radioCircle,
-                    selectedDate === option && styles.radioSelected,
-                  ]}
-                />
-                <Text style={styles.modalOptionText}>{option}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-      </Modal>
+          ))}
+        </ScrollView>
 
-      {/* Upload Type Modal */}
-      <Modal
-        visible={showUploadModal}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setShowUploadModal(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalBox}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Upload Type</Text>
-              <TouchableOpacity onPress={() => setShowUploadModal(false)}>
-                <Entypo name="cross" size={22} color="#333" />
-              </TouchableOpacity>
+
+        {/* Date Selection Modal */}
+        <Modal
+          visible={showDateModal}
+          transparent
+          animationType="slide"
+          onRequestClose={() => setShowDateModal(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalBox}>
+              <View style={styles.modalHeader}>
+                <Text style={styles.modalTitle}>Choose date</Text>
+                <TouchableOpacity onPress={() => setShowDateModal(false)}>
+                  <Entypo
+                    name="cross"
+                    size={22}
+                    backgroundColor="#D9D9D9"
+                    borderRadius={50}
+                  />
+                </TouchableOpacity>
+              </View>
+              {/* <View style={styles.separator} /> */}
+              {dateOptions.map((option, index) => (
+                <React.Fragment key={option}>
+                  <TouchableOpacity
+                    style={styles.modalOption}
+                    onPress={() => {
+                      setSelectedDate(option);
+                      setShowDateModal(false);
+                    }}
+                  >
+                    <View style={styles.radioCircle}>
+                      {selectedDate === option && (
+                        <View style={styles.radioSelected} />
+                      )}
+                    </View>
+                    <Text
+                      style={[
+                        styles.modalOptionText,
+                        selectedDate === option &&
+                          styles.modalOptionTextSelected,
+                      ]}
+                    >
+                      {option}
+                    </Text>
+                  </TouchableOpacity>
+                </React.Fragment>
+              ))}
             </View>
-            {['Prescription', 'Lab Report', 'Medical Report'].map((type) => (
-              <TouchableOpacity
-                key={type}
-                style={styles.modalOption}
-                onPress={() => handleUpload(type)}
-              >
-                <Ionicons name="document-text-outline" size={20} color="#7C3AED" />
-                <Text style={[styles.modalOptionText, { marginLeft: 10 }]}>{type}</Text>
-              </TouchableOpacity>
-            ))}
           </View>
-        </View>
-      </Modal>
+        </Modal>
+
+
+        {/* Upload Button */}
+        <TouchableOpacity
+          style={styles.uploadButton}
+          onPress={() => setShowUploadModal(true)}
+        >
+          <Ionicons name="add" size={22} color="white" />
+          <Text style={styles.uploadButtonText}>Upload</Text>
+        </TouchableOpacity>
+
+
+        <Modal
+          visible={showUploadModal}
+          transparent
+          animationType="slide"
+          onRequestClose={() => setShowUploadModal(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalBox}>
+              <View style={styles.modalHeader}>
+                <Text style={styles.modalTitle}>Select report type</Text>
+
+
+                <TouchableOpacity onPress={() => setShowUploadModal(false)}>
+                  <Entypo
+                    name="cross"
+                    size={22}
+                    backgroundColor="#D9D9D9"
+                    borderRadius={50}
+                  />
+                </TouchableOpacity>
+              </View>
+             
+              {["Prescription", "Lab Report", "Medical Report"].map((type) => (
+                <TouchableOpacity
+                  key={type}
+                  style={styles.modalOption}
+                  onPress={() => handleUpload(type)}
+                >
+                  <Ionicons
+                    name="document-text-outline"
+                    size={20}
+                    color="#7C3AED"
+                  />
+                  <Text style={[styles.modalOptionText, { marginLeft: 10 }]}>
+                    {type}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+        </Modal>
+      </View>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-  flex: 1,
-  backgroundColor: '#fff',
-  paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
-}, 
+  container: { flex: 1, backgroundColor: "#f4f4f4" },
+  header: {
+   flexDirection: 'row', alignItems: 'center', padding: 16, 
+  },
+  heading: { fontSize: 20, fontWeight: "600", marginLeft: 12,  },
+
+
   scrollContent: { paddingBottom: 100 },
   tabContainer: {
-    flexDirection: 'row',
-    backgroundColor: '#E5E7EB',
-    borderRadius: 30,
+    flexDirection: "row",
+    backgroundColor: "white",
+    borderRadius: 50,
     marginHorizontal: 16,
-    marginTop: 16,
     marginBottom: 16,
-  },
-  tab: { flex: 1, paddingVertical: 8, alignItems: 'center', borderRadius: 30 },
-  activeTab: { backgroundColor: '#543287' },
-  tabText: { fontSize: 14, color: '#543287', fontWeight: '600' },
-  activeTabText: { color: 'white' },
-  dateSelector: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginHorizontal: 16,
-    padding: 12,
+    padding: 2,
+    borderColor: "#D9D9D9",
     borderWidth: 1,
-    borderColor: '#ddd',
+  },
+  tab: { flex: 1, paddingVertical: 12, alignItems: "center", borderRadius: 50 },
+  activeTab: { backgroundColor: "#252525" },
+  tabText: { fontSize: 16, color: "#D9D9D9" },
+  activeTabText: { color: "white" },
+  dateSelector: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginHorizontal: 16,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: "#D9D9D9",
+    backgroundColor: "white",
     borderRadius: 8,
     marginBottom: 12,
   },
-  dateText: { fontSize: 14, color: '#555', marginRight: 8 },
-  dateValue: { flex: 1, fontSize: 14, fontWeight: '600', color: '#333' },
+  dateText: { fontSize: 14, color: "#8B8B8B", marginRight: 8 },
+  dateValue: { flex: 1, fontSize: 16, fontWeight: "600" },
   filterRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
     marginHorizontal: 16,
     marginBottom: 16,
   },
   filterButton: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingHorizontal: 18,
+    paddingVertical: 8,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: "#543087",
     marginRight: 8,
     marginBottom: 8,
   },
-  activeFilter: { backgroundColor: '#7C3AED', borderColor: '#7C3AED' },
-  filterText: { fontSize: 12, color: '#555' },
-  activeFilterText: { color: 'white' },
+  activeFilter: { backgroundColor: "#9D57FF", borderColor: "#9D57FF" },
+  filterText: { fontSize: 14 },
+  activeFilterText: { color: "white" },
   sectionDate: {
-    fontSize: 14,
-    fontWeight: '700',
+    fontSize: 20,
+    fontWeight: "600",
     marginLeft: 16,
-    marginBottom: 8,
+    marginBottom: 10,
   },
   reportGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
     marginHorizontal: 16,
   },
   reportCard: {
-    width: '48%',
-    backgroundColor: '#f9f9f9',
-    borderRadius: 8,
+    width: "47%",
+    backgroundColor: "#f9f9f9",
+    borderRadius: 9,
     marginBottom: 12,
     padding: 8,
-    position: 'relative',
+    position: "relative",
+    borderWidth: 1,
+    borderColor: "#ccc",
   },
+  moreBtn: {
+    position: "absolute",
+    bottom: 8,
+    right: 0,
+    fontSize: 22,
+  },
+
+
+  menuBox: {
+    position: "absolute",
+    backgroundColor: "white",
+    paddingHorizontal: 18,
+    paddingVertical: 7,
+    bottom: -25,
+    right: 16,
+    zIndex: 1,
+
+
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+
+
   reportTag: {
-    position: 'absolute',
-    top: 6,
-    left: 6,
-    backgroundColor: '#E5E7EB',
+    position: "absolute",
+    top: 15,
+    right: 15,
+    zIndex: 1,
+    backgroundColor: "white",
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 4,
   },
-  reportTagText: { fontSize: 10, fontWeight: '600' },
-  reportContent: { alignItems: 'center', marginTop: 20 },
+  reportTagText: { fontSize: 12, fontWeight: "500" },
   reportPlaceholder: {
-    width: '100%',
-    height: 80,
-    backgroundColor: '#ddd',
-    borderRadius: 6,
+    width: "100%",
+    height: 150,
+    backgroundColor: "#B2B2B2",
     marginBottom: 8,
   },
-  reportTitle: { fontSize: 12, fontWeight: '600', marginBottom: 2 },
-  reportTime: { fontSize: 10, color: '#555' },
-  moreBtn: { position: 'absolute', top: 6, right: 6 },
-  dotsMenu: {
-    position: 'absolute',
-    top: 26,
-    right: 6,
-    backgroundColor: '#fff',
-    borderRadius: 6,
-    padding: 8,
-    elevation: 5,
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
-  },
-  dotsMenuItem: { paddingVertical: 6, paddingHorizontal: 12 },
-  dotsMenuText: { fontSize: 12, color: '#333' },
+  reportTitle: { fontSize: 16, fontWeight: "600", marginBottom: 2 },
+  reportTime: { fontSize: 14, color: "#969696" },
   uploadButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#7C3AED',
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 8,
-    position: 'absolute',
-    bottom: 20,
-    right: 20,
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#9D57FF",
+    paddingVertical: 13,
+    paddingHorizontal: 45,
+    borderRadius: 4,
+    position: "absolute",
+    bottom: 25,
+    right: 16,
+ 
   },
-  uploadButtonText: { color: 'white', fontWeight: '600', marginLeft: 6 },
+  uploadButtonText: {
+    color: "white",
+    fontSize: 14,
+    fontWeight: 500,
+    marginLeft: 3,
+  },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.4)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "transparent",
+    justifyContent: "flex-end",
+    alignItems: "center",
   },
   modalBox: {
-    width: '85%',
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 20,
+    width: "100%",
+    backgroundColor: "#fff",
+    borderTopLeftRadius: 12,
+    borderTopRightRadius: 12,
   },
   modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 16,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: 16,
+    paddingHorizontal: 16,
   },
-  modalTitle: { fontSize: 16, fontWeight: '700' },
+  modalTitle: { fontSize: 18, fontWeight: "500" },
   modalOption: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 14,
+    borderBottomColor: "#6C6C6C",
+    borderTopWidth: 0.5,
   },
+  modalOptionText: { fontSize: 16, color: "#6C6C6C" },
+
+
+  modalOptionTextSelected: {
+    color: "#000",
+    fontWeight: "500",
+  },
+
+
   radioCircle: {
     width: 18,
     height: 18,
     borderRadius: 9,
-    borderWidth: 2,
-    borderColor: '#7C3AED',
-    marginRight: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: "#727272",
+    marginRight: 16,
+    alignItems: "center",
+    justifyContent: "center",
   },
   radioSelected: {
-    backgroundColor: '#7C3AED',
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: "#543087",
+    borderColor: "#543087",
   },
-  modalOptionText: { fontSize: 14, color: '#333' },
-  noReportsText: {
-    textAlign: 'center',
-    marginTop: 40,
-    fontSize: 14,
-    color: '#999',
+
+
+  separator: {
+    height: 1,
+    backgroundColor: "#D9D9D9",
+    marginVertical: 4,
   },
 });
+
+
+
+
+

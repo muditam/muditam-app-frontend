@@ -7,42 +7,41 @@ import {
   StyleSheet,
   ScrollView,
   Alert,
-  Pressable,
   Image,
   ActivityIndicator,
+  Platform,
 } from "react-native";
-import { Picker } from "@react-native-picker/picker";
-import { Feather } from "@expo/vector-icons";
+import DropDownPicker from "react-native-dropdown-picker";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { SafeAreaView } from "react-native-safe-area-context";
-
 
 export default function UserProfileForm() {
   const router = useRouter();
   const { phone: phoneParam } = useLocalSearchParams();
   const [phone, setPhone] = useState(phoneParam || "");
-  const [loadingPhone, setLoadingPhone] = useState(!phoneParam); 
+  const [loadingPhone, setLoadingPhone] = useState(!phoneParam);
   const [name, setName] = useState("");
-  const [yearOfBirth, setYearOfBirth] = useState("");
+  const [yearOfBirth, setYearOfBirth] = useState(null);
   const [gender, setGender] = useState("");
   const [email, setEmail] = useState("");
   const [loadingSubmit, setLoadingSubmit] = useState(false);
 
-
+  // For DropDownPicker
+  const [open, setOpen] = useState(false);
   const years = Array.from(
     { length: 80 },
     (_, i) => `${new Date().getFullYear() - i}`
   );
-
+  const [yearItems, setYearItems] = useState(
+    years.map((year) => ({ label: year, value: year }))
+  );
 
   useEffect(() => {
-    // Load phone from AsyncStorage only if no param provided
     if (!phoneParam) {
       const loadPhone = async () => {
         try {
           const storedPhone = await AsyncStorage.getItem("userPhone");
-          console.log("Loaded phone from AsyncStorage:", storedPhone);
           if (storedPhone) {
             setPhone(storedPhone);
           }
@@ -58,7 +57,6 @@ export default function UserProfileForm() {
     }
   }, [phoneParam]);
 
-
   const handleSubmit = async () => {
     if (!name || !yearOfBirth || !gender || !phone) {
       Alert.alert("Missing Fields", "Please fill all required fields.");
@@ -66,7 +64,7 @@ export default function UserProfileForm() {
     }
     try {
       setLoadingSubmit(true);
-      const res = await fetch("http://192.168.1.32:3001/api/user", {
+      const res = await fetch("https://muditam-app-backend.onrender.com/api/user", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -77,7 +75,6 @@ export default function UserProfileForm() {
           email,
         }),
       });
-
 
       if (res.ok) {
         const userData = await res.json();
@@ -93,8 +90,6 @@ export default function UserProfileForm() {
     }
   };
 
-
-  // Show loading indicator until phone is loaded from storage
   if (loadingPhone) {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
@@ -106,109 +101,110 @@ export default function UserProfileForm() {
     );
   }
 
-
   return (
     <SafeAreaView style={{ flex: 1 }}>
-    <ScrollView contentContainerStyle={styles.container}>
-      <View style={styles.card}>
-        <TouchableOpacity
-          onPress={() => router.back()}
-          style={{ paddingTop: 5, marginLeft: -5, marginBottom: -9, }}
-        >
-          <Image
-            source={{
-              uri: "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/Group_23.png?v=1747130916",
+      <ScrollView contentContainerStyle={styles.container} nestedScrollEnabled={true}>
+        <View style={styles.card}>
+          <TouchableOpacity
+            onPress={() => router.back()}
+            style={{
+              paddingTop: 5,
+              marginLeft: -5,
+              marginBottom: -9,
             }}
-            style={{ width: 28, height: 28 }}
-            resizeMode="contain"
-          />
-        </TouchableOpacity>
-
-
-        <Text style={styles.label}>What’s your Name?</Text>
-        <TextInput
-          placeholderTextColor="#B5B5B5"
-          style={styles.input}
-          placeholder="Enter your Name"
-          value={name}
-          onChangeText={setName}
-        />
-
-
-        <Text style={styles.label}>What’s your Year of Birth?</Text>
-        <View style={styles.pickerContainer}>
-          <Picker
-            selectedValue={yearOfBirth}
-            onValueChange={(itemValue) => setYearOfBirth(itemValue)}
           >
-            <Picker.Item
-              label="Drop down selection of year/ Calender"
-              value=""
-              color="#B5B5B5"
+            <Image
+              source={{
+                uri: "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/Group_23.png?v=1747130916",
+              }}
+              style={{ width: 28, height: 28 }}
+              resizeMode="contain"
             />
-            {years.map((year) => (
-              <Picker.Item key={year} label={year} value={year} />
-            ))}
-          </Picker>
-        </View>
-
-
-        <Text style={styles.label}>What’s your Gender?</Text>
-        <View style={styles.genderRow}>
-          <TouchableOpacity
-            style={[
-              styles.genderButton,
-              gender === "Male" && styles.genderSelected,
-            ]}
-            onPress={() => setGender("Male")}
-          >
-            <Text style={styles.genderIcon}>♂</Text>
-            <Text style={styles.genderText}>Male</Text>
           </TouchableOpacity>
-          <TouchableOpacity
-            style={[
-              styles.genderButton,
-              gender === "Female" && styles.genderSelected,
-            ]}
-            onPress={() => setGender("Female")}
-          >
-            <Text style={styles.genderIcon}>♀</Text>
-            <Text style={styles.genderText}>Female</Text>
-          </TouchableOpacity>
-        </View>
 
+          <Text style={styles.label}>What’s your Name?</Text>
+          <TextInput
+            placeholderTextColor="#B5B5B5"
+            style={styles.input}
+            placeholder="Enter your Name"
+            value={name}
+            onChangeText={setName}
+          />
 
-        <Text style={styles.label}>What’s your Email? (optional)</Text>
-        <TextInput
-          placeholderTextColor="#B5B5B5"
-          style={styles.input}
-          placeholder="Enter your email address"
-          value={email}
-          keyboardType="email-address"
-          onChangeText={setEmail}
-        />
+          <Text style={styles.label}>What’s your Year of Birth?</Text>
+          <View style={styles.dropdownWrapper}>
+            <DropDownPicker
+              open={open}
+              value={yearOfBirth}
+              items={yearItems}
+              setOpen={setOpen}
+              setValue={setYearOfBirth}
+              setItems={setYearItems}
+              placeholder="Select your year of birth"
+              style={styles.dropdown}
+              dropDownContainerStyle={styles.dropdownBox}
+              listMode={Platform.OS === "android" ? "MODAL" : "SCROLLVIEW"}
+              modalProps={{
+                animationType: "fade",
+                hardwareAccelerated: true,
+              }}
+              modalTitle="Select Year of Birth"
+              nestedScrollEnabled={true}
+            />
+          </View>
 
+          <Text style={styles.label}>What’s your Gender?</Text>
+          <View style={styles.genderRow}>
+            <TouchableOpacity
+              style={[
+                styles.genderButton,
+                gender === "Male" && styles.genderSelected,
+              ]}
+              onPress={() => setGender("Male")}
+            >
+              <Text style={styles.genderIcon}>♂</Text>
+              <Text style={styles.genderText}>Male</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles.genderButton,
+                gender === "Female" && styles.genderSelected,
+              ]}
+              onPress={() => setGender("Female")}
+            >
+              <Text style={styles.genderIcon}>♀</Text>
+              <Text style={styles.genderText}>Female</Text>
+            </TouchableOpacity>
+          </View>
 
-        <Text style={styles.infoText}>
-          We keep your personal data safe and secure.
-        </Text>
+          <Text style={styles.label}>What’s your Email? (optional)</Text>
+          <TextInput
+            placeholderTextColor="#B5B5B5"
+            style={styles.input}
+            placeholder="Enter your email address"
+            value={email}
+            keyboardType="email-address"
+            onChangeText={setEmail}
+          />
 
-
-        <TouchableOpacity
-          style={styles.submitButton}
-          onPress={handleSubmit}
-          disabled={loadingSubmit}
-        >
-          <Text style={styles.submitText}>
-            {loadingSubmit ? "Submitting..." : "Submit"}
+          <Text style={styles.infoText}>
+            We keep your personal data safe and secure.
           </Text>
-        </TouchableOpacity>
-      </View>
-    </ScrollView>
+
+          <TouchableOpacity
+            style={styles.submitButton}
+            onPress={handleSubmit}
+            disabled={loadingSubmit}
+          >
+            <Text style={styles.submitText}>
+              {loadingSubmit ? "Submitting..." : "Submit"}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
-
 
 const styles = StyleSheet.create({
   container: {
@@ -220,11 +216,6 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     flex: 1,
   },
-  backArrow: {
-    fontSize: 24,
-    marginBottom: 0,
-  },
-
   label: {
     fontWeight: "600",
     marginTop: 20,
@@ -239,32 +230,50 @@ const styles = StyleSheet.create({
     backgroundColor: "#F6F6F6",
     fontSize: 16,
   },
-  pickerContainer: {
+  dropdownWrapper: {
+    zIndex: 1000, 
+    elevation: 1000,  
+    marginBottom: 30,
+    position: 'relative',
+  },
+  dropdown: {
     borderWidth: 1,
     borderRadius: 4,
-    overflow: "hidden",
     backgroundColor: "#F6F6F6",
     fontSize: 16,
-    justifyContent: "center",
-    height: 45,
+    minHeight: 45,
+  },
+  dropdownBox: {
+    borderWidth: 1,
+    borderRadius: 4,
+    backgroundColor: "#fff",
+    maxHeight: 180,
+    marginTop: 2,
   },
   genderRow: {
     flexDirection: "row",
     justifyContent: "space-between",
+    marginTop: 10,
+    marginBottom: 15,
+    zIndex: 500,
+    elevation: 500,
   },
   genderButton: {
     flex: 1,
     borderWidth: 1,
     borderRadius: 4,
-    marginRight: 50,
+    marginRight: 16,
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: "#F6F6F6",
     fontSize: 16,
+    paddingVertical: 10,
   },
   genderSelected: {
     backgroundColor: "#e9d5ff",
+    borderColor: "#9D57FF",
+    borderWidth: 2,
   },
   genderIcon: {
     fontSize: 34,
@@ -275,8 +284,6 @@ const styles = StyleSheet.create({
     color: "#B5B5B5",
     fontSize: 16,
   },
-
-
   infoText: {
     fontSize: 17,
     marginTop: 30,
@@ -297,6 +304,4 @@ const styles = StyleSheet.create({
     fontSize: 18,
   },
 });
-
-
 

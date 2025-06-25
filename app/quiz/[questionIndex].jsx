@@ -12,10 +12,11 @@ import {
   ImageBackground,
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
-import { Picker } from "@react-native-picker/picker";  
-import {  RadioButton } from "react-native-paper"; 
+import { Picker } from "@react-native-picker/picker";
+import { RadioButton } from "react-native-paper";
 import { Feather } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const questions = [
   {
@@ -225,7 +226,7 @@ export default function QuestionScreen() {
   const saveProgress = async (updatedAnswers) => {
     try {
       await AsyncStorage.setItem("quizProgress", JSON.stringify({
-        answers: updatedAnswers
+        answers: updatedAnswers,
       }));
     } catch (e) {
       console.error("Failed to save progress", e);
@@ -233,55 +234,54 @@ export default function QuestionScreen() {
   };
 
   const submitAnswers = async (finalAnswers) => {
-  try {
-    const userData = await AsyncStorage.getItem("userVitals");
-    const { height, weight } = JSON.parse(userData || "{}");
+    try {
+      const userData = await AsyncStorage.getItem("userVitals");
+      const { height, weight } = JSON.parse(userData || "{}");
 
-    const userDetails = await AsyncStorage.getItem("userDetails");
-    const phone = JSON.parse(userDetails || "{}")?.phone;
+      const userDetails = await AsyncStorage.getItem("userDetails");
+      const phone = JSON.parse(userDetails || "{}")?.phone;
 
-    const hba1cValue = await AsyncStorage.getItem("hba1c");
-    const hba1c = hba1cValue ? JSON.parse(hba1cValue) : null;
+      const hba1cValue = await AsyncStorage.getItem("hba1c");
+      const hba1c = hba1cValue ? JSON.parse(hba1cValue) : null;
 
-    const response = await fetch("http://192.168.1.32:3001/api/quiz/submit", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ answers: finalAnswers, height, weight, hba1c, phone }),
-    });
+      const response = await fetch("https://muditam-app-backend.onrender.com/api/quiz/submit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ answers: finalAnswers, height, weight, hba1c, phone }),
+      });
 
-    const data = await response.json();
+      const data = await response.json();
 
-    if (response.ok) {
-      await AsyncStorage.removeItem("quizProgress");
+      if (response.ok) {
+        await AsyncStorage.removeItem("quizProgress");
 
-      // ✅ Save quiz completion per user
-      if (phone) {
-        await AsyncStorage.setItem(`quizCompleted_${phone}`, 'true');
+        // ✅ Save quiz completion per user
+        if (phone) {
+          await AsyncStorage.setItem(`quizCompleted_${phone}`, 'true');
+        }
+
+        router.replace('/home');
+      } else {
+        Alert.alert("Error", data.error || "Failed to submit quiz.");
       }
-
-      router.replace('/home');
-    } else {
-      Alert.alert("Error", data.error || "Failed to submit quiz.");
+    } catch (error) {
+      console.error("Submit Error:", error);
+      Alert.alert("Error", "Something went wrong while submitting your answers.");
     }
-  } catch (error) {
-    console.error("Submit Error:", error);
-    Alert.alert("Error", "Something went wrong while submitting your answers.");
-  }
-};
-
+  };
 
   const handleNext = (value = inputValue || selectedOption) => {
-  if (!value || (Array.isArray(value) && value.length === 0)) return;
-  const updatedAnswers = [...answers];
-  updatedAnswers[index] = value;
-  saveProgress(updatedAnswers);
+    if (!value || (Array.isArray(value) && value.length === 0)) return;
+    const updatedAnswers = [...answers];
+    updatedAnswers[index] = value;
+    saveProgress(updatedAnswers);
 
-  if (index + 1 < questions.length) {
-    router.push({ pathname: `/quiz/${index + 1}` });
-  } else {
-    submitAnswers(updatedAnswers);
-  }
-};
+    if (index + 1 < questions.length) {
+      router.push({ pathname: `/quiz/${index + 1}` });
+    } else {
+      submitAnswers(updatedAnswers);
+    }
+  };
 
   const toggleSelection = (option) => {
     if (selectedOption.includes(option)) {
@@ -292,19 +292,20 @@ export default function QuestionScreen() {
   };
 
   return (
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }}>
     <View style={{ flex: 1 }}>
-       <ImageBackground
-      source={{ uri: "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/image_2_3f1a9fbb-3859-430c-96e3-1f78f9efc641.png?v=1747201712" }}
-      style={{
-        flexDirection: "row",
-        justifyContent: "space-between",
-        alignItems: "center",
-        paddingHorizontal: 10,
-        paddingTop: 40,
-        height: 100,
-      }}
-      resizeMode="cover"
-    >
+      <ImageBackground
+        source={{ uri: "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/image_2_3f1a9fbb-3859-430c-96e3-1f78f9efc641.png?v=1747201712" }}
+        style={{
+          flexDirection: "row",
+          justifyContent: "space-between",
+          alignItems: "center",
+          paddingHorizontal: 10,
+          paddingTop: 40,
+          height: 100,
+        }}
+        resizeMode="cover"
+      >
         {/* Back Button */}
         <Pressable
           onPress={() => router.back()}
@@ -344,16 +345,14 @@ export default function QuestionScreen() {
           )}
         </Text>
 
-
         <View
           style={{
             height: 3,
-            backgroundColor: "#EEEEEE",   
+            backgroundColor: "#EEEEEE",
             width: "17%",
             marginBottom: 20,
           }}
         />
-
 
         {currentQuestion.type === "select" && (
           <View style={{ borderWidth: 1, borderRadius: 1 }}>
@@ -373,39 +372,39 @@ export default function QuestionScreen() {
         {currentQuestion.type === "choice" && (
           <View style={{ marginBottom: 30 }}>
             {currentQuestion.options.map((option, i) => {
-  const isSelected = selectedOption === option;
-  return (
-    <Pressable
-      key={i}
-      onPress={() => {
-        setSelectedOption(option);
-        setTimeout(() => handleNext(option), 200);
-      }}
-      style={{
-        flexDirection: "row",
-        alignItems: "center",
-        borderRadius: 6,
-        marginBottom: 18,
-        paddingHorizontal: 10,
-        paddingVertical: 6,
-        borderWidth: 1,
-        borderColor: isSelected ? "#BFA3F6" : "#ccc",
-        backgroundColor: isSelected ? "#F3EDFF" : "white",
-      }}
-    >
-      <RadioButton
-        value={option}
-        status={isSelected ? "checked" : "unchecked"}
-        onPress={() => {
-          setSelectedOption(option);
-          setTimeout(() => handleNext(), 200);
-        }}
-        color="#543287"
-      />
-      <Text style={{ flex: 1, fontSize: 14 }}>{option}</Text>
-    </Pressable>
-  );
-})}
+              const isSelected = selectedOption === option;
+              return (
+                <Pressable
+                  key={i}
+                  onPress={() => {
+                    setSelectedOption(option);
+                    setTimeout(() => handleNext(option), 200);
+                  }}
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    borderRadius: 6,
+                    marginBottom: 18,
+                    paddingHorizontal: 10,
+                    paddingVertical: 6,
+                    borderWidth: 1,
+                    borderColor: isSelected ? "#BFA3F6" : "#ccc",
+                    backgroundColor: isSelected ? "#F3EDFF" : "white",
+                  }}
+                >
+                  <RadioButton
+                    value={option}
+                    status={isSelected ? "checked" : "unchecked"}
+                    onPress={() => {
+                      setSelectedOption(option);
+                      setTimeout(() => handleNext(), 200);
+                    }}
+                    color="#543287"
+                  />
+                  <Text style={{ flex: 1, fontSize: 14 }}>{option}</Text>
+                </Pressable>
+              );
+            })}
 
           </View>
         )}
@@ -484,7 +483,7 @@ export default function QuestionScreen() {
               alignItems: "center",
             }}
           >
-            <TouchableOpacity style={styles.nextButton} onPress={handleNext}>
+            <TouchableOpacity style={styles.nextButton} onPress={() => handleNext([...selectedOption])}>
               <Text style={styles.nextButtonText}>
                 {index === questions.length - 1 ? "Finish" : "Next"}
               </Text>
@@ -528,6 +527,7 @@ export default function QuestionScreen() {
         )}
       </View>
     </View>
+    </SafeAreaView>
   );
 }
 
@@ -549,4 +549,3 @@ const styles = StyleSheet.create({
   },
 });
 
- 

@@ -6,7 +6,7 @@ const features = [
   "Triwellness Approach",
   "Root-Cause Healing",
   "Natural & Safe Supplements",
-  "Personalization Custom Solution",
+  "Personalization Solution",
   "Constant Expert Support",
   "Focus on Long - Term Solution",
   "Safe for Long - Term Use",
@@ -108,7 +108,7 @@ const styles = StyleSheet.create({
 
   headerText: {
     fontWeight: "700",
-    fontSize: 14,
+    fontSize: 13,
     color: "#3A3A3A",
     textAlign: "center",
   },
@@ -127,7 +127,7 @@ const styles = StyleSheet.create({
     borderColor: "#eee",
   },
   featureText: {
-    fontSize: 14,
+    fontSize: 13,
     color: "#626262",
     lineHeight:20
   },

@@ -9,14 +9,14 @@ import {
   ImageBackground,
   Pressable,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Feather } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-
+import * as Haptics from "expo-haptics"; // <-- Import Haptics
 
 const ITEM_WIDTH = 12;
 const screenWidth = Dimensions.get("window").width;
-
 
 const generateInchLabels = () => {
   const list = [];
@@ -31,7 +31,6 @@ const generateInchLabels = () => {
   return list;
 };
 
-
 const generateNumericRange = (min, max, step = 2) => {
   const range = [];
   for (let i = min; i <= max; i += step) {
@@ -39,7 +38,6 @@ const generateNumericRange = (min, max, step = 2) => {
   }
   return range;
 };
-
 
 const generateLbsRange = () => {
   const range = [];
@@ -49,13 +47,11 @@ const generateLbsRange = () => {
   return Array.from(new Set(range));
 };
 
-
-
-
 const Ruler = ({ data, selectedValue, setSelectedValue, isInchFormat }) => {
   const flatListRef = useRef();
+  const lastIndexRef = useRef(null);
 
-
+  // Scroll to selected index when unit/initial value changes
   useEffect(() => {
     const index = data.findIndex((item) =>
       typeof item === "object"
@@ -64,9 +60,27 @@ const Ruler = ({ data, selectedValue, setSelectedValue, isInchFormat }) => {
     );
     if (index !== -1) {
       flatListRef.current?.scrollToIndex({ index, animated: false });
+      lastIndexRef.current = index;
     }
   }, [data, selectedValue]);
 
+  // Haptic feedback on every value "tick"
+  const handleScroll = (event) => {
+    let x = event.nativeEvent.contentOffset.x;
+    let index = Math.round(x / ITEM_WIDTH);
+
+    // Clamp
+    if (index < 0) index = 0;
+    if (index >= data.length) index = data.length - 1;
+
+    if (lastIndexRef.current !== index) {
+      lastIndexRef.current = index;
+      const val = data[index];
+      setSelectedValue(typeof val === "object" ? val.value : val);
+      // Haptic feedback!
+      Haptics.selectionAsync();
+    }
+  };
 
   return (
     <View style={{ position: "relative", height: 70 }}>
@@ -89,37 +103,20 @@ const Ruler = ({ data, selectedValue, setSelectedValue, isInchFormat }) => {
         keyExtractor={(item) =>
           (typeof item === "object" ? item.value : item).toString()
         }
-        onMomentumScrollEnd={(event) => {
-          let index = Math.round(
-            event.nativeEvent.contentOffset.x / ITEM_WIDTH
-          );
-
-
-          // Clamp index to stay within data bounds
-          if (index < 0) index = 0;
-          if (index >= data.length) index = data.length - 1;
-
-
-          const val = data[index];
-          setSelectedValue(typeof val === "object" ? val.value : val);
-        }}
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
         renderItem={({ item }) => {
           const value = typeof item === "object" ? item.value : item;
           const label = typeof item === "object" ? item.label : item;
 
-
           const isSelected = value === selectedValue;
           const isMajor = value % 10 === 0;
 
-
           const tickColor = isSelected ? "#000" : isMajor ? "#000" : "#999";
-
-
           const tickHeight = isSelected ? 45 : isMajor ? 30 : 15;
           const tickWidth = isSelected ? 2 : 1;
           const labelColor = isSelected ? "#000" : "#999";
-          const tickPadding =isSelected?4: isMajor? 4 :8;
-
+          const tickPadding = isSelected ? 4 : isMajor ? 4 : 8;
 
           return (
             <View
@@ -138,7 +135,7 @@ const Ruler = ({ data, selectedValue, setSelectedValue, isInchFormat }) => {
                     fontWeight: isSelected ? "bold" : "400",
                     width: 45,
                     textAlign: "center",
-                    display:isSelected?"none":"true"
+                    display: isSelected ? "none" : "flex",
                   }}
                 >
                   {label}
@@ -149,7 +146,7 @@ const Ruler = ({ data, selectedValue, setSelectedValue, isInchFormat }) => {
                   width: tickWidth,
                   height: tickHeight,
                   backgroundColor: tickColor,
-                  marginBottom:tickPadding,
+                  marginBottom: tickPadding,
                 }}
               />
             </View>
@@ -160,27 +157,20 @@ const Ruler = ({ data, selectedValue, setSelectedValue, isInchFormat }) => {
   );
 };
 
-
 export default function HeightWeightScreen() {
   const router = useRouter();
   const [heightUnit, setHeightUnit] = useState("inches");
   const [weightUnit, setWeightUnit] = useState("kg");
-
-
   const [height, setHeight] = useState(60); // cm or inchValue
   const [weight, setWeight] = useState(70); // kg or lbs
-
-
   const inchLabels = generateInchLabels();
   const cmRange = generateNumericRange(122, 196);
   const kgRange = generateNumericRange(20, 200);
   const lbsRange = generateLbsRange();
 
-
   // Height Toggle
   const toggleHeightUnit = (unit) => {
     if (unit === heightUnit) return;
-
 
     if (unit === "inches") {
       const inches = Math.round(height / 2.54);
@@ -190,15 +180,12 @@ export default function HeightWeightScreen() {
       setHeight(cm);
     }
 
-
     setHeightUnit(unit);
   };
-
 
   // Weight Toggle
   const toggleWeightUnit = (unit) => {
     if (unit === weightUnit) return;
-
 
     if (unit === "lbs") {
       const lbs = Math.round(weight * 2.20462);
@@ -207,150 +194,135 @@ export default function HeightWeightScreen() {
       const kg = Math.round(weight / 2.20462);
       setWeight(kg);
     }
-
-
     setWeightUnit(unit);
   };
 
-
   return (
-    <View style={{ flex: 1 }}>
-      <ImageBackground
-        source={{
-          uri: "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/image_2_3f1a9fbb-3859-430c-96e3-1f78f9efc641.png?v=1747201712",
-        }}
-        style={{
-          flexDirection: "row",
-          justifyContent: "space-between",
-          alignItems: "center",
-          paddingHorizontal: 10,
-          paddingTop: 40,
-          height: 100,
-        }}
-        resizeMode="cover"
-      >
-        <Pressable
-          onPress={() => router.back()}
-          style={{ paddingHorizontal: 10 }}
-        >
-          <Feather name="arrow-left" size={24} color="white" />
-        </Pressable>
-
-
-        <Text
-          style={{
-            fontSize: 30,
-            color: "white",
-            letterSpacing: 3,
-            fontWeight: "500",
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }} edges={['top', 'bottom', 'left', 'right']}>
+      <View style={{ flex: 1 }}>
+        <ImageBackground
+          source={{
+            uri: "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/image_2_3f1a9fbb-3859-430c-96e3-1f78f9efc641.png?v=1747201712",
           }}
-        >
-          MEASURE
-        </Text>
-
-
-        <Pressable
-          onPress={() => router.back()}
-          style={{ paddingHorizontal: 10 }}
-        >
-          <Feather name="x" size={24} color="white" />
-        </Pressable>
-      </ImageBackground>
-
-
-      <View style={{ marginHorizontal: 18 }}>
-        <Text
           style={{
-            fontSize: 18,
-            color: "#2E2E2E",
-            marginTop: 30,
-            marginBottom: 10,
+            flexDirection: "row",
+            justifyContent: "space-between",
+            alignItems: "center",
+            paddingHorizontal: 10,
+            height: 100,
           }}
+          resizeMode="cover"
         >
-          Select your height and weight
-        </Text>
+          <Pressable
+            onPress={() => router.back()}
+            style={{ paddingHorizontal: 10 }}
+          >
+            <Feather name="arrow-left" size={24} color="white" />
+          </Pressable>
 
-
-        <View
-          style={{
-            height: 3,
-            backgroundColor: "#EEEEEE",
-            width: "17%",
-            marginBottom: 20,
-          }}
-        />
-
-
-        {/* HEIGHT */}
-        <View style={[styles.rulerBox, { backgroundColor: "#D6EBEB" }]}>
-          <Text style={styles.selectedValue}>
-            {heightUnit === "cm"
-              ? height
-              : inchLabels.find((i) => i.value === height)?.label}
-            <Text style={styles.unit}> {heightUnit}</Text>
+          <Text
+            style={{
+              fontSize: 20,
+              color: "white", 
+              fontWeight: "600",
+            }}
+          >
+            MEASURE
           </Text>
-          <Ruler
-            data={heightUnit === "cm" ? cmRange : inchLabels}
-            selectedValue={height}
-            setSelectedValue={setHeight}
-          />
-        </View>
-        <View style={styles.toggleRow}>
-          <UnitToggle
-            options={["inches", "cm"]}
-            value={heightUnit}
-            onChange={(unit) => toggleHeightUnit(unit)}
-          />
-        </View>
 
+          <Pressable
+            onPress={() => router.back()}
+            style={{ paddingHorizontal: 10 }}
+          >
+            <Feather name="x" size={24} color="white" />
+          </Pressable>
+        </ImageBackground>
 
-        {/* WEIGHT */}
-        <View style={[styles.rulerBox, { backgroundColor: "#F6F3BA" }]}>
-          <Text style={styles.selectedValue}>
-            {weight}
-            <Text style={styles.unit}> {weightUnit}</Text>
+        <View style={{ marginHorizontal: 18 }}>
+          <Text
+            style={{
+              fontSize: 18,
+              color: "#2E2E2E",
+              marginTop: 30,
+              marginBottom: 10,
+            }}
+          >
+            Select your height and weight
           </Text>
-          <Ruler
-            data={weightUnit === "kg" ? kgRange : lbsRange}
-            selectedValue={weight}
-            setSelectedValue={setWeight}
+
+          <View
+            style={{
+              height: 3,
+              backgroundColor: "#EEEEEE",
+              width: "17%",
+              marginBottom: 20,
+            }}
           />
+
+          {/* HEIGHT */}
+          <View style={[styles.rulerBox, { backgroundColor: "#D6EBEB" }]}>
+            <Text style={styles.selectedValue}>
+              {heightUnit === "cm"
+                ? height
+                : inchLabels.find((i) => i.value === height)?.label}
+              <Text style={styles.unit}> {heightUnit}</Text>
+            </Text>
+            <Ruler
+              data={heightUnit === "cm" ? cmRange : inchLabels}
+              selectedValue={height}
+              setSelectedValue={setHeight}
+            />
+          </View>
+          <View style={styles.toggleRow}>
+            <UnitToggle
+              options={["inches", "cm"]}
+              value={heightUnit}
+              onChange={(unit) => toggleHeightUnit(unit)}
+            />
+          </View>
+
+          {/* WEIGHT */}
+          <View style={[styles.rulerBox, { backgroundColor: "#F6F3BA" }]}>
+            <Text style={styles.selectedValue}>
+              {weight}
+              <Text style={styles.unit}> {weightUnit}</Text>
+            </Text>
+            <Ruler
+              data={weightUnit === "kg" ? kgRange : lbsRange}
+              selectedValue={weight}
+              setSelectedValue={setWeight}
+            />
+          </View>
+          <View style={styles.toggleRow}>
+            <UnitToggle
+              options={["lbs", "kg"]}
+              value={weightUnit}
+              onChange={(unit) => toggleWeightUnit(unit)}
+            />
+          </View>
         </View>
-        <View style={styles.toggleRow}>
-          <UnitToggle
-            options={["lbs", "kg"]}
-            value={weightUnit}
-            onChange={(unit) => toggleWeightUnit(unit)}
-          />
-        </View>
+
+        <TouchableOpacity
+          style={styles.nextButton}
+          onPress={async () => {
+            try {
+              await AsyncStorage.setItem(
+                "userVitals",
+                JSON.stringify({ height, weight })
+              );
+              router.push('/quiz/HbA1cScreen');
+            } catch (e) {
+              console.error("Failed to save height/weight", e);
+              router.push("/quiz/0");
+            }
+          }}
+        >
+          <Text style={styles.nextButtonText}>Next</Text>
+        </TouchableOpacity>
       </View>
-
-
-      <TouchableOpacity
-      style={styles.nextButton}
-      onPress={async () => {
-        try {
-          await AsyncStorage.setItem(
-            "userVitals",
-            JSON.stringify({ height, weight })
-          );
-
-          const progress = await AsyncStorage.getItem("quizProgress");
-          const resumeIndex = progress ? JSON.parse(progress).answers?.length || 0 : 0;
-
-          router.push('/quiz/HbA1cScreen');
-        } catch (e) {
-          console.error("Failed to save height/weight", e);
-          router.push("/quiz/0");
-        }
-      }}
-    >
-      <Text style={styles.nextButtonText}>Next</Text>
-    </TouchableOpacity>
-    </View>
+    </SafeAreaView>
   );
 }
-
 
 const UnitToggle = ({ options, value, onChange }) => {
   return (
@@ -380,12 +352,11 @@ const UnitToggle = ({ options, value, onChange }) => {
   );
 };
 
-
 const styles = StyleSheet.create({
   rulerBox: {
     borderRadius: 8,
-    paddingTop:0,
-    paddingBottom:8,
+    paddingTop: 0,
+    paddingBottom: 8,
     marginBottom: 10,
   },
   selectedValue: {
@@ -416,11 +387,6 @@ const styles = StyleSheet.create({
     color: "white",
     fontSize: 16,
   },
-
-
-  //   new style
-
-
   toggleContainer: {
     flexDirection: "row",
     backgroundColor: "#fff",
@@ -432,34 +398,24 @@ const styles = StyleSheet.create({
     alignSelf: "center",
     width: 200,
   },
-
-
   toggleOption: {
     flex: 1,
-    paddingVertical:5,
+    paddingVertical: 5,
     borderRadius: 999,
     justifyContent: "center",
     alignItems: "center",
   },
-
-
   toggleActive: {
     backgroundColor: "#231b36", // dark fill
   },
-
-
   toggleInactive: {
     backgroundColor: "transparent",
   },
-
-
   toggleTextActive: {
     color: "#fff",
     fontWeight: "600",
     fontSize: 14,
   },
-
-
   toggleTextInactive: {
     color: "#bbb",
     fontWeight: "500",

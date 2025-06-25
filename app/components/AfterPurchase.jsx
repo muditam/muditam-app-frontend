@@ -24,6 +24,7 @@ export default function AfterPurchase() {
   const [kitProgress, setKitProgress] = useState({ currentKit: 1, completedKits: [] });
   const [loadingProgress, setLoadingProgress] = useState(true);
   const [gender, setGender] = useState('');
+  const [avatar, setAvatar] = useState('');
 
   useEffect(() => {
     const loadName = async () => {
@@ -31,6 +32,7 @@ export default function AfterPurchase() {
       const parsed = JSON.parse(userData || '{}');
       if (parsed?.name) setName(parsed.name);
       if (parsed?.gender) setGender(parsed.gender);
+      if (parsed?.avatar) setAvatar(parsed.avatar);
     };
     loadName();
   }, []);
@@ -51,30 +53,28 @@ export default function AfterPurchase() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      {/* Top Header */}
       <LinearGradient
-          colors={['#9C4DF4', '#7C4DFF']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.greetingBox1}
-        >
-      <View style={styles.header}>
-        <Image
-          source={{
-            uri: 'https://cdn.shopify.com/s/files/1/0734/7155/7942/files/new_logo_orange_leaf_1_4e0e0f89-08a5-4264-9d2b-0cfe9535d553.png?v=1727508866',
-          }}
-          style={styles.logo}
-          resizeMode="contain"
-        />
-        <TouchableOpacity style={styles.profileIcon}>
-          <Ionicons name="person-outline" size={20} color="white" />
-          <Text style={styles.profileText}>You</Text>
-        </TouchableOpacity>
-      </View>
+        colors={['#9C4DF4', '#7C4DFF']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.greetingBox1}
+      >
+        <View style={styles.header}>
+          <Image
+            source={{
+              uri: 'https://cdn.shopify.com/s/files/1/0734/7155/7942/files/new_logo_orange_leaf_1_4e0e0f89-08a5-4264-9d2b-0cfe9535d553.png?v=1727508866',
+            }}
+            style={styles.logo}
+            resizeMode="contain"
+          />
+          <TouchableOpacity style={styles.profileIcon} onPress={() => router.push('/me')}>
+            <Ionicons name="person-outline" size={20} color="white" />
+            <Text style={styles.profileText}>You</Text>
+          </TouchableOpacity>
+        </View>
       </LinearGradient>
 
       <ScrollView contentContainerStyle={styles.scrollContainer}>
-        {/* Gradient Greeting */}
         <LinearGradient
           colors={['#9C4DF4', '#7C4DFF']}
           start={{ x: 0, y: 0 }}
@@ -83,6 +83,16 @@ export default function AfterPurchase() {
         >
           <View style={styles.userRow}>
             <View style={styles.profileRow}>
+             {avatar ? (
+  <Image
+    source={{ uri: avatar }}
+    style={styles.profileImage}
+    onError={() => {
+      console.warn("Failed to load avatar:", avatar);
+      setAvatar('');
+    }}
+  />
+) : (
   <Image
     source={{
       uri: gender === 'Male'
@@ -91,15 +101,16 @@ export default function AfterPurchase() {
     }}
     style={styles.profileImage}
   />
-  <View>
-    <Text style={styles.userName}>Hi {name}</Text>
-    <Text style={styles.userSubtitle}>Every day you’re a step closer to,{'\n'}healthier hair!</Text>
-  </View>
-</View>
+)}
+
+              <View>
+                <Text style={styles.userName}>Hi {name}</Text>
+                <Text style={styles.userSubtitle}>Every day you’re a step closer to,{'\n'}healthier hair!</Text>
+              </View>
+            </View>
           </View>
         </LinearGradient>
 
-        {/* My Tasks */}
         <View style={styles.sectionBlock}>
           <Text style={styles.sectionLabel}>My Tasks</Text>
           <TouchableOpacity style={styles.taskCard}>
@@ -109,7 +120,6 @@ export default function AfterPurchase() {
           </TouchableOpacity>
         </View>
 
-        {/* Reorder Section */}
         <View style={styles.reorderWrapper}>
           <Text style={styles.reorderTitle}>Reorder Your Kit</Text>
           <View style={styles.reorderCard}>
@@ -121,35 +131,40 @@ export default function AfterPurchase() {
           </View>
         </View>
 
-        {/* Chat Section */}
         <View style={{ marginTop: 10 }}>
           <SupportCard />
           <NeedHelpSection />
         </View>
 
-        {/* Diet Plan */}
-        <View style={{ paddingHorizontal: 16, marginTop: 32 }}>
+        <View style={styles.line3} />
+         <View style={{ marginHorizontal: 16 }}>
           <Text style={styles.sectionTitle}>Diet Plan</Text>
           <View style={styles.dietCard}>
-            <Text style={styles.dietText}>
-              Drinking 8 glasses of{'\n'}water daily will improve your skin overnight
+            <Image style={{backgroundColor:"#000", borderRadius:8,height:123, width:141}}></Image>
+            <View style={{display:"flex", flexDirection:"column"}}>
+              <Text style={styles.dietText}>
+              Drinking 8 glasses of water{"\n"}daily will improve your{"\n"}skin
+              overnight
             </Text>
-            <TouchableOpacity style={styles.planBtn}>
+            <TouchableOpacity style={styles.planBtn} onPress={() => router.push('/my-plan')}>
               <Text style={styles.planBtnText}>View My Plan</Text>
             </TouchableOpacity>
+            </View>
+           
           </View>
         </View>
+        <View style={styles.line4} />
 
-        {/* Digital Prescription Section */}
-        <View style={{ paddingHorizontal: 16, marginTop: 32 }}>
+        <View style={{ paddingHorizontal: 16, marginTop: 10 }}>
           <Text style={styles.sectionTitle}>Your Digital Prescription</Text>
           <View style={styles.prescriptionBox}>
-            <Text style={styles.prescriptionText}>Your doctor recommended\ntreatment plan</Text>
-            <TouchableOpacity onPress={() => router.push('/my-plan')}>
+            <Text style={styles.prescriptionText}>Your doctor recommended{'\n'}treatment plan</Text>
+            <TouchableOpacity>
               <Text style={styles.prescriptionLink}>View Prescription</Text>
             </TouchableOpacity>
           </View>
         </View>
+        <View style={styles.line4} />
 
         {loadingProgress ? (
           <ActivityIndicator size="large" color="#9C4DF4" style={{ marginTop: 16 }} />
@@ -167,7 +182,7 @@ export default function AfterPurchase() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#fff', 
   },
   header: { 
     flexDirection: 'row',
@@ -190,7 +205,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   scrollContainer: {
-    paddingBottom: 30,
+    // Removed paddingBottom
   },
   greetingBox1: {
     padding: 1, 
@@ -267,14 +282,14 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   reorderCard: {
-    borderWidth: 1,
-    borderColor: '#A78BFA',
+    borderWidth: 0.5,
+    borderColor: '#000000',
     borderRadius: 12,
     padding: 16,
   },
   reorderHeading: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: 18,
+    fontWeight: '700',
     fontFamily: 'Poppins',
     marginBottom: 6,
   },
@@ -291,36 +306,38 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   orderBtnText: {
-    color: '#543287',
+    color: '#000000',
     fontSize: 15,
-    fontWeight: '600',
+    fontWeight: '700',
     fontFamily: 'Poppins',
   },
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    fontFamily: 'Poppins',
-    marginBottom: 12,
-    color: '#000',
+    fontSize: 20,
+    fontWeight: "600",
+    marginBottom: 14,
+    color: "#000",
   },
   dietCard: {
-    borderWidth: 1,
-    borderColor: '#D9D9D9',
-    borderRadius: 10,
+    borderWidth: 0.25,
+    borderRadius: 8,
     padding: 16,
+    paddingTop:20,
+    display:"flex",
+    flexDirection:"row",
+    justifyContent:"space-between"
   },
   dietText: {
-    fontSize: 16,
-    fontFamily: 'Poppins',
-    color: '#000',
-    marginBottom: 16,
+    fontSize: 14,
+    color: "#000",
+    lineHeight:18,
+    marginBottom:10,
   },
   planBtn: {
-    backgroundColor: '#9D57FF',
+    backgroundColor: "#9D57FF",
     paddingVertical: 15,
-    borderRadius: 8,
-    alignItems: 'center',
-    width: 150,
+    borderRadius: 12,
+    alignItems: "center",
+    width: 180,
   },
   planBtnText: {
     color: '#fff',
@@ -347,15 +364,28 @@ const styles = StyleSheet.create({
     fontFamily: 'Poppins',
   },
   profileRow: {
-  flexDirection: 'row',
-  alignItems: 'center',
-  marginBottom: 16,
-},
-profileImage: {
-  width: 60,
-  height: 60,
-  borderRadius: 30,
-  marginRight: 12,
-  backgroundColor: '#fff',
-},
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  line3: {
+    height: 7,
+    backgroundColor: '#E9E9E9',
+    marginVertical: 20,
+    width: '100%',
+  },
+  line4: {
+    height: 7,
+    backgroundColor: '#E9E9E9',
+    marginVertical: 20,
+    marginTop: 35,
+    width: '100%',
+  },
+  profileImage: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    marginRight: 12,
+    backgroundColor: '#fff',
+  },
 });

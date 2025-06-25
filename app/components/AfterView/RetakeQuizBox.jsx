@@ -28,7 +28,7 @@ export default function RetakeQuizBox() {
     <View style={styles.container}>
       <Text style={styles.heading}>Not completely sure?</Text>
       <Text style={styles.subtext}>
-        If you’ve left something or want to update a response on the diabetes test, simply re-take it.
+        If you’ve left something or want{'\n'}to update a response on the{'\n'}diabetes test, simply re-take it.
       </Text>
       <TouchableOpacity style={styles.button} onPress={handleRetakeQuiz}>
         <Text style={styles.buttonText}>Take The Diabetes Quiz Again</Text>
@@ -48,21 +48,22 @@ const styles = StyleSheet.create({
   },
   heading: {
     color: 'white',
-    fontSize: 20,
-    fontWeight: '700',
+    fontSize: 22,
+    fontWeight: '600',
     marginBottom: 10,
   },
   subtext: {
     color: 'white',
-    fontSize: 14,
+    fontSize: 16,
+    lineHeight: 22,
     marginBottom: 20,
   },
   button: {
     backgroundColor: 'white',
-    borderRadius: 6,
+    borderRadius: 10,
     paddingVertical: 12,
-    paddingHorizontal: 20,
     alignItems: 'center',
+    width: "80%",
   },
   buttonText: {
     color: '#543287',

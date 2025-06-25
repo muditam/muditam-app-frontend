@@ -29,7 +29,7 @@ export default function MyPlanScreen() {
           return;
         }
 
-        const res = await fetch(`http://192.168.1.32:3001/api/shopify/purchased-products/${phone}`);
+        const res = await fetch(`https://muditam-app-backend.onrender.com/api/shopify/purchased-products/${phone}`);
         const data = await res.json();
         setProducts(data || []);
       } catch (error) {

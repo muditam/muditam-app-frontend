@@ -92,8 +92,8 @@ const styles = StyleSheet.create({
     color: "#000",
   },
   arrow: {
-    width: 40,
-    height: 40,
+    width: 50,
+    height: 50,
   },
   avatarGrid: {
     flexDirection: "row",
@@ -102,10 +102,10 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   avatar: {
-    width: 48,
-    height: 48,
+    width: 49,
+    height: 49,
     borderRadius: 24,
-    margin: 10,
+    margin: 5,
   },
 });
 

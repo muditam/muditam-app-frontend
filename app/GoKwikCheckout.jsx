@@ -102,21 +102,21 @@ export default function GoKwikCheckout() {
           await AsyncStorage.setItem('hasPurchased', 'true');
 
           // ✅ 1. Mark as purchased
-          await fetch('http://192.168.1.32:3001/api/user/mark-purchased', {
+          await fetch('https://muditam-app-backend.onrender.com/api/user/mark-purchased', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ phone }),
           });
 
           // ✅ 2. Get current kit progress
-          const progressRes = await fetch(`http://192.168.1.32:3001/api/user/kit-progress/${phone}`);
+          const progressRes = await fetch(`https://muditam-app-backend.onrender.com/api/user/kit-progress/${phone}`);
           const progressData = await progressRes.json();
           const currentKit = progressData?.currentKit || 1;
           const nextKit = currentKit + 1;
           const newKitNumber = nextKit > 5 ? 5 : nextKit; // cap at 5
 
           // ✅ 3. Update to new kit number
-          await fetch('http://192.168.1.32:3001/api/user/kit-progress/update', {
+          await fetch('https://muditam-app-backend.onrender.com/api/user/kit-progress/update', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ phone, newKitNumber }),

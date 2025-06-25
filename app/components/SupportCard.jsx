@@ -15,8 +15,11 @@ const SupportCard = () => {
   };
 
   return (
+    <>
+    <View style={styles.line2} />
     <View style={styles.card}>
       {/* Top Content */}
+      
       <View style={styles.topRow}>
         <View style={styles.textContainer}>
           <Text style={styles.title}>We are here for you,{'\n'}always.</Text>
@@ -31,7 +34,7 @@ const SupportCard = () => {
       {/* Bottom Buttons */}
       <View style={styles.buttonsContainer}>
         <TouchableOpacity style={styles.chatButton} onPress={handleWhatsApp}>
-          <FontAwesome name="whatsapp" size={18} color="#7E22CE" />
+          <FontAwesome name="whatsapp" size={18} color="#000" />
           <Text style={styles.chatButtonText}>Chat With Us</Text>
         </TouchableOpacity>
 
@@ -41,6 +44,7 @@ const SupportCard = () => {
         </TouchableOpacity>
       </View>
     </View>
+    </>
   );
 };
 
@@ -96,7 +100,7 @@ const styles = StyleSheet.create({
   },
   chatButtonText: {
     marginLeft: 8,
-    color: '#7E22CE',
+    color: '#000',
     fontWeight: '600',
     fontSize: 14,
   },
@@ -110,6 +114,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     borderRadius: 12,
     justifyContent: 'center',
+  },
+  line2: {
+    height: 4,
+    backgroundColor: '#E9E9E9',
+    marginVertical: 20,
+    width: '100%',
   },
   callButtonText: {
     marginLeft: 8,

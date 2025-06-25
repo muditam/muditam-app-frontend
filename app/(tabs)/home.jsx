@@ -6,9 +6,8 @@ import {
   TouchableOpacity,
   FlatList,
   ActivityIndicator,
-  SafeAreaView,
-  Platform,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import HeroVideoList from '../components/HeroVideoList';
@@ -19,7 +18,6 @@ import FooterImageSection from '../components/FooterImageSection';
 import FAQ from '../components/FAQ';
 import AfterQuizView from '../components/AfterQuizView';
 import AfterPurchase from '../components/AfterPurchase';
-
 import { checkQuizStatus } from '../utils/checkQuizFromServer';
 
 export default function HomeScreen() {
@@ -61,7 +59,10 @@ export default function HomeScreen() {
   }
 
   return (
-    <SafeAreaView style={{ flex: 1, paddingTop: Platform.OS === 'android' ? 25 : 0, backgroundColor: '#fff' }}>
+    <SafeAreaView
+      style={{ flex: 1, backgroundColor: '#fff' }}
+      edges={['top', 'left', 'right']} // Prevents bottom padding!
+    >
       <FlatList
         data={[]} // just to enable scrolling
         keyExtractor={(item, index) => index.toString()}
@@ -69,14 +70,14 @@ export default function HomeScreen() {
         ListHeaderComponent={
           <>
             {/* Top Image Section */}
-            <View style={{ alignItems: 'center', backgroundColor: '#F3F4F6', }}>
+            <View style={{ alignItems: 'center', backgroundColor: '#F3F4F6' }}>
               <Image
                 source={{
                   uri: 'https://cdn.shopify.com/s/files/1/0734/7155/7942/files/2ND_PAGE_TOP_BANNER.png?v=1750145299',
                 }}
                 style={{
                   width: '100%',
-                  height: 280, 
+                  height: 260,
                 }}
               />
             </View>
@@ -84,9 +85,9 @@ export default function HomeScreen() {
             {/* White Card Section with Text and Button */}
             <View
               style={{
-                backgroundColor: '#fff', 
+                backgroundColor: '#fff',
                 padding: 20,
-                borderRadius: 25,  
+                borderRadius: 25,
                 marginTop: -15,
                 marginBottom: 24,
               }}
@@ -95,7 +96,7 @@ export default function HomeScreen() {
                 style={{
                   fontSize: 17,
                   fontWeight: '600',
-                  fontFamily: 'Poppins', 
+                  fontFamily: 'Poppins',
                   marginBottom: 16,
                 }}
               >

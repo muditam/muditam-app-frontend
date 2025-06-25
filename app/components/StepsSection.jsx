@@ -8,10 +8,8 @@ import {
   TouchableOpacity,
 } from "react-native";
 
-
 const { width } = Dimensions.get("window");
 const STEP_WIDTH = 379 + 16;
-
 
 const stepData = [
   {
@@ -31,22 +29,18 @@ const stepData = [
   },
 ];
 
-
 const Steps = () => {
   const scrollRef = useRef(null);
   const [activeIndex, setActiveIndex] = useState(0);
-
 
   const handleScroll = (e) => {
     const index = Math.round(e.nativeEvent.contentOffset.x / STEP_WIDTH);
     setActiveIndex(index);
   };
 
-
   const scrollToIndex = (index) => {
     scrollRef.current?.scrollTo({ x: index * STEP_WIDTH, animated: true });
   };
-
 
   return (
     <View style={styles.container}>
@@ -74,7 +68,6 @@ const Steps = () => {
         </ScrollView>
       </View>
 
-
       <View style={styles.dotsContainer}>
         {stepData.map((_, index) => (
           <TouchableOpacity key={index} onPress={() => scrollToIndex(index)}>
@@ -96,7 +89,6 @@ const Steps = () => {
 
 export default Steps;
 
-
 const styles = StyleSheet.create({
   container: {
     paddingVertical:16,
@@ -107,7 +99,7 @@ const styles = StyleSheet.create({
     marginLeft: 16,
   },
   box: {
-    width: 379,
+    width: 375,
     height: 165,
     borderRadius: 8,
     borderWidth: 0.5,
@@ -120,8 +112,6 @@ const styles = StyleSheet.create({
   rowOne: {
     flexDirection: "row",
   },
-
-
   number: {
   position: "absolute",
   top: -30,
@@ -139,10 +129,6 @@ const styles = StyleSheet.create({
   color: "#03AD31",
   zIndex: 10,
 },
-
-
-
-
   title: {
     fontSize: 22,
     marginTop: 50,
@@ -170,6 +156,3 @@ const styles = StyleSheet.create({
     marginHorizontal: 4,
   },
 });
-
-
-

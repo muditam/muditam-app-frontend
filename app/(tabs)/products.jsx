@@ -56,7 +56,7 @@ export default function Products() {
 
 
   useEffect(() => {
-    fetch("http://192.168.1.32:3001/api/shopify/products")
+    fetch("https://muditam-app-backend.onrender.com/api/shopify/products")
       .then((res) => res.json())
       .then((data) => setProducts(data))
       .catch((err) => {

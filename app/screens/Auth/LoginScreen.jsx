@@ -16,12 +16,14 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import LegalModal from "../../components/LegalModal";
 import { LinearGradient } from "expo-linear-gradient";
 
+
 export default function LoginScreen() {
   const router = useRouter();
-  const [showPrivacy, setShowPrivacy] = useState(false); 
+  const [showPrivacy, setShowPrivacy] = useState(false);
   const [showTerms, setShowTerms] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState("");
   const [loading, setLoading] = useState(false);
+
 
   const handleGetOtp = async () => {
     if (phoneNumber.length !== 10) {
@@ -30,6 +32,7 @@ export default function LoginScreen() {
         "Please enter a 10-digit mobile number."
       );
     }
+
 
     setLoading(true);
     try {
@@ -42,8 +45,10 @@ export default function LoginScreen() {
     }
   };
 
+
   const privacyContent = `Welcome to our website/mobile site...`;
   const termsContent = `These Terms of Service (“Terms”)...`;
+
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "white" }}>
@@ -61,10 +66,11 @@ export default function LoginScreen() {
             resizeMode="cover"
           />
 
+
           {/* Content Card */}
           <View
             style={{
-              marginTop: -180, // pulls it up slightly into the image
+              marginTop: -210,
               marginHorizontal: 16,
               backgroundColor: "white",
               paddingTop: 40,
@@ -75,6 +81,7 @@ export default function LoginScreen() {
               shadowOpacity: 0.1,
               shadowRadius: 6,
               elevation: 1.3,
+              paddingBottom: 90,
             }}
           >
             {/* Heading */}
@@ -89,6 +96,7 @@ export default function LoginScreen() {
             >
               Kindly fill in the details:
             </Text>
+
 
             {/* Phone Input */}
             <View
@@ -106,13 +114,14 @@ export default function LoginScreen() {
               <Text style={{ marginRight: 10, fontSize: 17 }}>+91</Text>
               <TextInput
                 style={{ flex: 1, fontSize: 17 }}
-                keyboardType="number-pad" // safer for just digits
+                keyboardType="number-pad"
                 placeholder="Enter your number"
                 maxLength={10}
                 value={phoneNumber}
                 onChangeText={setPhoneNumber}
               />
             </View>
+
 
             {/* Get OTP Button */}
             <TouchableOpacity
@@ -126,19 +135,18 @@ export default function LoginScreen() {
               onPress={handleGetOtp}
               disabled={loading}
             >
-              <Text
-                style={{ color: "white", fontWeight: "600", fontSize: 18 }}
-              >
+              <Text style={{ color: "white", fontWeight: "600", fontSize: 18 }}>
                 {loading ? "Please wait..." : "Get OTP"}
               </Text>
             </TouchableOpacity>
+
 
             {/* Gradient Line */}
             <View
               style={{
                 flexDirection: "row",
                 height: 1,
-                marginTop: 40,
+                marginTop: 60,
                 marginBottom: 50,
                 borderRadius: 1,
               }}
@@ -153,47 +161,60 @@ export default function LoginScreen() {
                 }}
               />
             </View>
-
-            {/* Terms Text */}
-            <Text style={{ fontSize: 16, color: "#B5B5B5", textAlign: "center" }}>
-              By Signing in, I accept the
-            </Text>
-            <Text
+ 
+            <View
               style={{
-                fontSize: 15,
-                textAlign: "center",
-                color: "#B5B5B5",
-                marginTop: 2,
+                borderTopColor: "#eee",
+                marginBottom: 10,
+                paddingTop: 16,
+                alignItems: "center",
+                justifyContent: "center",
+                // marginTop:150,
               }}
             >
               <Text
-                style={{
-                  fontSize: 17,
-                  textDecorationLine: "underline",
-                  textDecorationColor: "#000000",
-                  fontWeight: "regular",
-                  color: "#000000",
-                }}
-                onPress={() => setShowTerms(true)}
+                style={{ fontSize: 16, color: "#B5B5B5", textAlign: "center" }}
               >
-                Terms & Conditions
-              </Text>{" "}
-              and{" "}
+                By Signing in, I accept the
+              </Text>
               <Text
                 style={{
-                  fontSize: 17,
-                  fontWeight: "regular",
-                  color: "#000000",
-                  textDecorationLine: "underline",
-                  textDecorationColor: "#000000",
+                  fontSize: 15,
+                  textAlign: "center",
+                  color: "#B5B5B5",
+                  marginTop: 2,
                 }}
-                onPress={() => setShowPrivacy(true)}
               >
-                Privacy Policy
+                <Text
+                  style={{
+                    fontSize: 17,
+                    textDecorationLine: "underline",
+                    textDecorationColor: "#000000",
+                    fontWeight: "regular",
+                    color: "#000000",
+                  }}
+                  onPress={() => setShowTerms(true)}
+                >
+                  Terms & Conditions
+                </Text>{" "}
+                and{" "}
+                <Text
+                  style={{
+                    fontSize: 17,
+                    fontWeight: "regular",
+                    color: "#000000",
+                    textDecorationLine: "underline",
+                    textDecorationColor: "#000000",
+                  }}
+                  onPress={() => setShowPrivacy(true)}
+                >
+                  Privacy Policy
+                </Text>
               </Text>
-            </Text>
+            </View>
           </View>
         </ScrollView>
+
 
         {/* Modals */}
         <LegalModal
@@ -214,3 +235,6 @@ export default function LoginScreen() {
     </SafeAreaView>
   );
 }
+
+
+

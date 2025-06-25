@@ -23,6 +23,18 @@ export default function Cart() {
   const { cartItems, incrementItem, decrementItem, addToCart } = useCart();
   const [products, setProducts] = useState([]);
 
+  const productInfoMap = {
+  "Karela Jamun Fizz": "Control blood sugar levels",
+  "Liver Fix": "Liver Detox friend",
+  "Sugar Defend Pro": "Work on Root Cause",
+  "Chandraprabha Vati": "Kidney Health Support",
+  "Heart Defend Pro": "Support healthy heart",
+  "Vasant Kusmakar Ras": "Blood sugar control",
+  "Performance Forever": "Men's health",
+  "Power Gut": "Support Gut Health",
+  "Shilajit with Gold": "Increase Stamina",
+  "Stress And Sleep": "Reduce stress",
+};
 
   const handleDecrement = (item) => {
     if (item.quantity === 1) {
@@ -58,24 +70,24 @@ export default function Cart() {
   };
 
 
-   useEffect(() => {
-    fetch("http://192.168.1.32:3001/api/shopify/products")   
+  useEffect(() => {
+    fetch("https://muditam-app-backend.onrender.com/api/shopify/products")
       .then((res) => res.json())
       .then((data) => setProducts(data))
       .catch((err) => console.error("Error fetching products:", err));
   }, []);
 
   async function getShopifyCartToken() {
-  try {
-    const response = await fetch('https://muditam.myshopify.com/cart.js');
-    const data = await response.json();
-    const formattedCartId = `gid://shopify/Cart/${data.token}`;  
-    return formattedCartId;  
-  } catch (error) {
-    console.error('Error fetching Shopify cart token:', error);
-    return ''; 
+    try {
+      const response = await fetch('https://muditam.myshopify.com/cart.js');
+      const data = await response.json();
+      const formattedCartId = `gid://shopify/Cart/${data.token}`;
+      return formattedCartId;
+    } catch (error) {
+      console.error('Error fetching Shopify cart token:', error);
+      return '';
+    }
   }
-}
 
   const handlePress = (item) => {
     router.push({
@@ -91,182 +103,177 @@ export default function Cart() {
   );
 
   const handleProceedToPay = async () => {
-  try {
-    const validItems = cartItems.filter(
-      (item) => item.first_variant_id && item.quantity > 0
-    );
+    try {
+      const validItems = cartItems.filter(
+        (item) => item.first_variant_id && item.quantity > 0
+      );
 
-    if (validItems.length === 0) {
-      Alert.alert("Cart is empty", "Add products to continue.");
-      return;
-    }
-
-    const response = await fetch(
-      "http://192.168.1.32:3001/api/shopify/create-cart",
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ items: validItems }),
+      if (validItems.length === 0) {
+        Alert.alert("Cart is empty", "Add products to continue.");
+        return;
       }
-    );
 
-    const data = await response.json();
+      const response = await fetch(
+        "https://muditam-app-backend.onrender.com/api/shopify/create-cart",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ items: validItems }),
+        }
+      );
 
-    if (!response.ok || !data.cartId) {
-      Alert.alert("Error", "Unable to create Shopify cart. Try again.");
-      return;
+      const data = await response.json();
+
+      if (!response.ok || !data.cartId) {
+        Alert.alert("Error", "Unable to create Shopify cart. Try again.");
+        return;
+      }
+
+      const cartId = data.cartId.split("/").pop(); // extract token
+      router.push({
+        pathname: "/GoKwikCheckout",
+        params: { cartId, total },
+      });
+    } catch (err) {
+      console.error("Cart creation failed:", err);
+      Alert.alert("Error", "Something went wrong creating your cart.");
     }
-
-    const cartId = data.cartId.split("/").pop(); // extract token
-    router.push({
-      pathname: "/GoKwikCheckout",
-      params: { cartId, total },
-    });
-  } catch (err) {
-    console.error("Cart creation failed:", err);
-    Alert.alert("Error", "Something went wrong creating your cart.");
-  }
-};
-
-
-
-
+  };
 
   return (
 
-
-      <View style={styles.container}>
-        <ScrollView style={{marginBottom:80}}>
-          <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-          <Ionicons name="arrow-back" size={24} />
-        </TouchableOpacity>
-        <Text style={styles.heading}>Order Summary</Text>
-      </View>
-
-
-      <View >
-        <Text style={{ paddingHorizontal: 16, fontSize: 20, fontWeight: 500 }}>
-          Products in Cart
-        </Text>
-
-
-        <FlatList
-          data={cartItems}
-          keyExtractor={(item) => `cart-${item.id}`}
-          contentContainerStyle={styles.listContainer}
-          renderItem={({ item }) => (
-            <View style={styles.card}>
-              <Image source={{ uri: item.image }} style={styles.image} />
-              <View style={styles.infoSection}>
-                <Text style={styles.title}>{item.title}</Text>
-                <Text>Information</Text>
-                <Text style={styles.price}>₹{item.price * item.quantity}</Text>
-              </View>
-              <View style={styles.counterContainer}>
-                <TouchableOpacity onPress={() => handleDecrement(item)}>
-                  <Text style={styles.counterButton}>
-                    <MaterialIcons
-                      name="remove"
-                      size={18}
-                      color="white"
-                      backgroundColor="#9D57FF"
-                    />
-                  </Text>
-                </TouchableOpacity>
-                <Text style={styles.counterValue}>{item.quantity}</Text>
-                <TouchableOpacity onPress={() => incrementItem(item.id)}>
-                  <Text style={styles.counterButton}>
-                    <FontAwesome6
-                      name="add"
-                      size={18}
-                      color="white"
-                      backgroundColor="#9D57FF"
-                    />
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          )}
-        />
-
-
-        <View >
-          <Text style={{ paddingVertical: 4, fontSize: 20, fontWeight: 500 ,paddingLeft:16,}}>
-          Recommended Add-ons
-        </Text>
-        <Text style={{ color: "#7D7D7D", fontSize: 14 ,paddingLeft:16,}}>
-          Others with similar conditions also bought these products
-        </Text>
-
-
-        <FlatList
-          data={recommendedProducts}
-          keyExtractor={(item) => `rec-${item.id}`}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{ paddingHorizontal: 16 }}
-
-
-           renderItem={({ item }) => {
-                    const quantity = getItemQuantity(item.id);
-                    return (
-                      <View style={styles.productCard}>
-                        <TouchableOpacity onPress={() => handlePress(item)}>
-                          <Image
-                            source={{ uri: item.image }}
-                            style={styles.productImage}
-                          />
-                          <Text style={styles.productTitle}>{item.title}</Text>
-                          <View style={styles.priceRow}>
-                            <Text style={styles.productPrice}>₹&nbsp;{item.price}</Text>
-                          </View>
-                        </TouchableOpacity>
-         
-                        {quantity > 0 ? (
-                          <View style={styles.counterContainer}>
-                            <TouchableOpacity onPress={() => handleDecrement(item)}>
-                              <Text style={styles.counterButton}>
-                                <MaterialIcons
-                                  name="delete-outline"
-                                  size={20}
-                                  color="#989898"
-                                />
-                              </Text>
-                            </TouchableOpacity>
-                            <Text style={styles.counterValue}>{quantity}</Text>
-                            <TouchableOpacity onPress={() => handleIncrement(item.id)}>
-                              <Text style={styles.counterButton}>
-                                <FontAwesome6
-                                  name="add"
-                                  size={14}
-                                  color="white"
-                                  backgroundColor="#9D57FF"
-                                />
-                              </Text>
-                            </TouchableOpacity>
-                          </View>
-                        ) : (
-                          <TouchableOpacity
-                            style={styles.cartButton}
-                            onPress={() => handleAddToCart(item)}
-                          >
-                            <Text style={styles.cartButtonText}>ADD TO CART</Text>
-                          </TouchableOpacity>
-                        )}
-                      </View>
-                    );
-                  }}
-        />
+    <View style={styles.container}>
+      <ScrollView style={{ marginBottom: 80 }}>
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+            <Ionicons name="arrow-back" size={24} />
+          </TouchableOpacity>
+          <Text style={styles.heading}>Order Summary</Text>
         </View>
 
 
-       
-      </View>
+        <View >
+          <Text style={{ paddingHorizontal: 16, fontSize: 20, fontWeight: 500, paddingTop: 14, }}>
+            Products in Cart
+          </Text>
 
 
-        </ScrollView>
-     
+          <FlatList
+            data={cartItems}
+            keyExtractor={(item) => `cart-${item.id}`}
+            contentContainerStyle={styles.listContainer}
+            renderItem={({ item }) => (
+              <View style={styles.card}>
+                <Image source={{ uri: item.image }} style={styles.image} />
+                <View style={styles.infoSection}>
+                  <Text style={styles.title}>{item.title}</Text>
+                  <Text style={{ color: "#666", fontSize: 13 }}>{productInfoMap[item.title]}</Text>
+                  <Text style={styles.price}>₹{item.price * item.quantity}</Text>
+                </View>
+                <View style={styles.counterContainer}>
+                  <TouchableOpacity onPress={() => handleDecrement(item)}>
+                    <Text style={styles.counterButton}>
+                      <MaterialIcons
+                        name="remove"
+                        size={18}
+                        color="white"
+                        backgroundColor="#9D57FF"
+                      />
+                    </Text>
+                  </TouchableOpacity>
+                  <Text style={styles.counterValue}>{item.quantity}</Text>
+                  <TouchableOpacity onPress={() => incrementItem(item.id)}>
+                    <Text style={styles.counterButton}>
+                      <FontAwesome6
+                        name="add"
+                        size={18}
+                        color="white"
+                        backgroundColor="#9D57FF"
+                      />
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            )}
+          />
+
+
+          <View >
+            <Text style={{ paddingVertical: 4, fontSize: 20, fontWeight: 500, paddingLeft: 16, }}>
+              Recommended Add-ons
+            </Text>
+            <Text style={{ color: "#7D7D7D", fontSize: 14, paddingLeft: 16, }}>
+              Others with similar conditions also bought these products
+            </Text>
+
+
+            <FlatList
+              data={recommendedProducts}
+              keyExtractor={(item) => `rec-${item.id}`}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ paddingHorizontal: 16 }}
+
+
+              renderItem={({ item }) => {
+                const quantity = getItemQuantity(item.id);
+                return (
+                  <View style={styles.productCard}>
+                    <TouchableOpacity onPress={() => handlePress(item)}>
+                      <Image
+                        source={{ uri: item.image }}
+                        style={styles.productImage}
+                      />
+                      <Text style={styles.productTitle}>{item.title}</Text>
+                      <View style={styles.priceRow}>
+                        <Text style={styles.productPrice}>₹&nbsp;{item.price}</Text>
+                      </View>
+                    </TouchableOpacity>
+
+                    {quantity > 0 ? (
+                      <View style={styles.counterContainer}>
+                        <TouchableOpacity onPress={() => handleDecrement(item)}>
+                          <Text style={styles.counterButton}>
+                            <MaterialIcons
+                              name="delete-outline"
+                              size={20}
+                              color="#989898"
+                            />
+                          </Text>
+                        </TouchableOpacity>
+                        <Text style={styles.counterValue}>{quantity}</Text>
+                        <TouchableOpacity onPress={() => handleIncrement(item.id)}>
+                          <Text style={styles.counterButton}>
+                            <FontAwesome6
+                              name="add"
+                              size={14}
+                              color="white"
+                              backgroundColor="#9D57FF"
+                            />
+                          </Text>
+                        </TouchableOpacity>
+                      </View>
+                    ) : (
+                      <TouchableOpacity
+                        style={styles.cartButton}
+                        onPress={() => handleAddToCart(item)}
+                      >
+                        <Text style={styles.cartButtonText}>ADD TO CART</Text>
+                      </TouchableOpacity>
+                    )}
+                  </View>
+                );
+              }}
+            />
+          </View>
+
+
+
+        </View>
+
+
+      </ScrollView>
+
 
 
       <View style={styles.bottomBar}>
@@ -279,12 +286,12 @@ export default function Cart() {
         </TouchableOpacity>
       </View>
     </View>
-   
+
   );
 }
 
 
-const cardWidth = (Dimensions.get("window").width - 40) / 2;
+const cardWidth = (Dimensions.get("window").width - 70) / 2;
 
 
 
@@ -292,7 +299,7 @@ const cardWidth = (Dimensions.get("window").width - 40) / 2;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-     backgroundColor: "#F4F4F4F4",
+    backgroundColor: "#F4F4F4",
   },
   header: {
     flexDirection: "row",
@@ -300,6 +307,7 @@ const styles = StyleSheet.create({
     paddingTop: 40,
     paddingBottom: 16,
     paddingHorizontal: 16,
+    backgroundColor: 'white',
   },
   backBtn: {
     marginRight: 12,
@@ -386,8 +394,8 @@ const styles = StyleSheet.create({
   },
   payButton: {
     backgroundColor: "#9D57FF",
-    paddingHorizontal: 16,
-    paddingVertical: 10,
+    paddingHorizontal: 35,
+    paddingVertical: 8,
     borderRadius: 4,
   },
   payText: {
@@ -407,8 +415,8 @@ const styles = StyleSheet.create({
   productCard: {
     width: cardWidth,
     marginBottom: 16,
-    marginTop:20,
-    marginRight:16,
+    marginTop: 20,
+    marginRight: 16,
     backgroundColor: "#fff",
     borderRadius: 8,
     paddingHorizontal: 16,
@@ -457,4 +465,3 @@ const styles = StyleSheet.create({
   },
 });
 
- 
