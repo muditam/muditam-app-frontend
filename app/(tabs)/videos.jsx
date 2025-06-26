@@ -7,191 +7,136 @@ import {
   ImageBackground,
   TouchableOpacity,
   Dimensions,
-  Modal,
   FlatList,
   Image,
   Platform,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { Video } from "expo-av";
+import { Video } from "expo-av"; // (Upgrade to expo-video in the future)
 import { router } from "expo-router";
+import Modal from "react-native-modal";
 const { width, height } = Dimensions.get("window");
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { SectionList } from "react-native";
 
+// --- categorizedVideos data unchanged (paste yours here) ---
 const categorizedVideos = {
-  "Customer Testimonial Clips": [
-    {
-      id: 1,
-      title:
-        "How to Manage Blood Sugar Naturally",
-      url: "https://cdn.shopify.com/videos/c/o/v/eec1a9292b424341b1f9ae2c42fdb191.mp4",
-      thumbnail: "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/6_527d324c-da6b-4954-80f6-8280a0d6c300.png?v=1722316967",
-    },
-    {
-      id: 2,
-      title: "Top 5 Ayurvedic Tips for Diabetes",
-      url: "https://cdn.shopify.com/videos/c/o/v/b5baf7888efb47599c3efb16f0a79a1e.mp4",
-      thumbnail: "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/3_0b563148-da79-4a3b-95e6-1f5720ab00a7.png?v=1722316842",
-    },
-    {
-      id: 3,
-      title: "What is HbA1c? Explained!",
-      url: "https://cdn.shopify.com/videos/c/o/v/c1d7b744e7324a5e882bda4cd515780c.mp4",
-      thumbnail: "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/6_527d324c-da6b-4954-80f6-8280a0d6c300.png?v=1722316967",
-    },
-    {
-      id: 4,
-      title: "Beginner’s Guide to Ayurveda",
-      url: "https://cdn.shopify.com/videos/c/o/v/67592f944522471c9c317aee972dccc3.mp4",
-      thumbnail: "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/6_527d324c-da6b-4954-80f6-8280a0d6c300.png?v=1722316967",
-    },
-    {
-      id: 5,
-      title: "Diabetes Myths Busted!",
-      url: "https://cdn.shopify.com/videos/c/o/v/6c1d51e9d2644fd88c2ecb29e6393a6a.mp4",
-      thumbnail: "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/5_07a9d779-ebd5-4872-8760-13ec2b09f047.png?v=174704382",
-    },
-  ],
-  "More About Your Treatment": [
+  "Customer Testimonial": [
     {
       id: 1,
       title: "How to Manage Blood Sugar Naturally",
-      url: "https://cdn.shopify.com/videos/c/o/v/eec1a9292b424341b1f9ae2c42fdb191.mp4",
-      thumbnail: "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/ChatGPT_Image_Apr_15_2025_12_29_49_PM.png?v=1750508870",
+      url: "https://cdn.shopify.com/videos/c/o/v/85d03f9b985b4c40bd5986aae0929cad.mp4",
+      thumbnail:
+        "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/6_527d324c-da6b-4954-80f6-8280a0d6c300.png?v=1722316967",
     },
     {
       id: 2,
       title: "Top 5 Ayurvedic Tips for Diabetes",
-      url: "https://cdn.shopify.com/videos/c/o/v/b5baf7888efb47599c3efb16f0a79a1e.mp4",
-      thumbnail: "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/Mask_group_5.png?v=1750508870",
+      url: "https://cdn.shopify.com/videos/c/o/v/f2af7ed73649450dab62f6e3d7eeb061.mp4",
+      thumbnail:
+        "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/3_0b563148-da79-4a3b-95e6-1f5720ab00a7.png?v=1722316842",
     },
     {
       id: 3,
       title: "What is HbA1c? Explained!",
-      url: "https://cdn.shopify.com/videos/c/o/v/c1d7b744e7324a5e882bda4cd515780c.mp4",
-      thumbnail: "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/ChatGPT_Image_Apr_8_2025_07_36_40_PM.png?v=1750508870",
+      url: "https://cdn.shopify.com/videos/c/o/v/85d03f9b985b4c40bd5986aae0929cad.mp4",
+      thumbnail:
+        "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/6_527d324c-da6b-4954-80f6-8280a0d6c300.png?v=1722316967",
+    },
+  ],
+  "More About Muditam Treatment": [
+    {
+      id: 1,
+      title: "How to Manage Blood Sugar Naturally",
+      url: "https://cdn.shopify.com/videos/c/o/v/100c64bd46a244e59b593165d81233d6.mp4",
+      thumbnail:
+        "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/ChatGPT_Image_Apr_15_2025_12_29_49_PM.png?v=1750508870",
     },
     {
-      id: 4,
-      title: "Beginner’s Guide to Ayurveda",
-      url: "https://cdn.shopify.com/videos/c/o/v/67592f944522471c9c317aee972dccc3.mp4",
-      thumbnail: "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/Mask_group_5.png?v=1750508870",
-    },
-    {
-      id: 5,
-      title: "Diabetes Myths Busted!",
-      url: "https://cdn.shopify.com/videos/c/o/v/6c1d51e9d2644fd88c2ecb29e6393a6a.mp4",
-      thumbnail: "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/5_07a9d779-ebd5-4872-8760-13ec2b09f047.png?v=174704382",
+      id: 2,
+      title: "Top 5 Ayurvedic Tips for Diabetes",
+      url: "https://cdn.shopify.com/videos/c/o/v/125531f2aa1f40d885e7d6d8fc52741a.mp4",
+      thumbnail:
+        "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/Mask_group_5.png?v=1750508870",
     },
   ],
   "Sugar Drop Tips": [
     {
       id: 1,
       title: "How to Manage Blood Sugar Naturally",
-      url: "https://cdn.shopify.com/videos/c/o/v/eec1a9292b424341b1f9ae2c42fdb191.mp4",
-      thumbnail: "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/ChatGPT_Image_Apr_15_2025_12_29_49_PM.png?v=1750508870",
+      url: "https://cdn.shopify.com/videos/c/o/v/89eb588587c044a59487d1d00aba8d94.mp4",
+      thumbnail:
+        "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/ChatGPT_Image_Apr_15_2025_12_29_49_PM.png?v=1750508870",
     },
     {
       id: 2,
       title: "Top 5 Ayurvedic Tips for Diabetes",
-      url: "https://cdn.shopify.com/videos/c/o/v/b5baf7888efb47599c3efb16f0a79a1e.mp4",
-      thumbnail: "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/Mask_group_5.png?v=1750508870",
+      url: "https://cdn.shopify.com/videos/c/o/v/bc3c119a1e9a457c99fd3796cf443c97.mp4",
+      thumbnail:
+        "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/Mask_group_5.png?v=1750508870",
     },
     {
       id: 3,
       title: "What is HbA1c? Explained!",
-      url: "https://cdn.shopify.com/videos/c/o/v/c1d7b744e7324a5e882bda4cd515780c.mp4",
-      thumbnail: "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/ChatGPT_Image_Apr_8_2025_07_36_40_PM.png?v=1750508870",
+      url: "https://cdn.shopify.com/videos/c/o/v/e220da5ef3de4772a0c6c3ff55b7ca83.mp4",
+      thumbnail:
+        "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/ChatGPT_Image_Apr_8_2025_07_36_40_PM.png?v=1750508870",
     },
     {
       id: 4,
       title: "Beginner’s Guide to Ayurveda",
-      url: "https://cdn.shopify.com/videos/c/o/v/67592f944522471c9c317aee972dccc3.mp4",
-      thumbnail: "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/Mask_group_5.png?v=1750508870",
+      url: "https://cdn.shopify.com/videos/c/o/v/0d8a24bacb7e445e873fa8519b8221a7.mp4",
+      thumbnail:
+        "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/Mask_group_5.png?v=1750508870",
     },
     {
       id: 5,
       title: "Diabetes Myths Busted!",
-      url: "https://cdn.shopify.com/videos/c/o/v/6c1d51e9d2644fd88c2ecb29e6393a6a.mp4",
-      thumbnail: "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/5_07a9d779-ebd5-4872-8760-13ec2b09f047.png?v=174704382",
+      url: "https://cdn.shopify.com/videos/c/o/v/7d3dc177d1f944f5b153cf5da4771d87.mp4",
+      thumbnail:
+        "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/5_07a9d779-ebd5-4872-8760-13ec2b09f047.png?v=174704382",
     },
-  ],
-  "Simple Nutrition Tips": [
     {
-      id: 1,
+      id: 6,
       title: "How to Manage Blood Sugar Naturally",
-      url: "https://cdn.shopify.com/videos/c/o/v/eec1a9292b424341b1f9ae2c42fdb191.mp4",
-      thumbnail: "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/ChatGPT_Image_Apr_15_2025_12_29_49_PM.png?v=1750508870",
+      url: "https://cdn.shopify.com/videos/c/o/v/91ffb862c4d84a1c9b8483ac33b6518b.mp4",
+      thumbnail:
+        "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/ChatGPT_Image_Apr_15_2025_12_29_49_PM.png?v=1750508870",
     },
     {
-      id: 2,
+      id: 7,
       title: "Top 5 Ayurvedic Tips for Diabetes",
-      url: "https://cdn.shopify.com/videos/c/o/v/b5baf7888efb47599c3efb16f0a79a1e.mp4",
-      thumbnail: "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/Mask_group_5.png?v=1750508870",
+      url: "https://cdn.shopify.com/videos/c/o/v/2f6aff4ab22648b69d03257421e6c0d5.mp4",
+      thumbnail:
+        "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/Mask_group_5.png?v=1750508870",
     },
     {
-      id: 3,
+      id: 8,
       title: "What is HbA1c? Explained!",
-      url: "https://cdn.shopify.com/videos/c/o/v/c1d7b744e7324a5e882bda4cd515780c.mp4",
-      thumbnail: "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/6_527d324c-da6b-4954-80f6-8280a0d6c300.png?v=1722316967",
+      url: "https://cdn.shopify.com/videos/c/o/v/996446823f2d4dc193384ea0c919012e.mp4",
+      thumbnail:
+        "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/ChatGPT_Image_Apr_8_2025_07_36_40_PM.png?v=1750508870",
     },
     {
-      id: 4,
+      id: 9,
       title: "Beginner’s Guide to Ayurveda",
-      url: "https://cdn.shopify.com/videos/c/o/v/67592f944522471c9c317aee972dccc3.mp4",
-      thumbnail: "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/Mask_group_5.png?v=1750508870",
+      url: "https://cdn.shopify.com/videos/c/o/v/f576306c5dc745e988329f2eae7eb16c.mp4",
+      thumbnail:
+        "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/Mask_group_5.png?v=1750508870",
     },
     {
-      id: 5,
+      id: 10,
       title: "Diabetes Myths Busted!",
-      url: "https://cdn.shopify.com/videos/c/o/v/6c1d51e9d2644fd88c2ecb29e6393a6a.mp4",
-      thumbnail: "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/5_07a9d779-ebd5-4872-8760-13ec2b09f047.png?v=174704382",
-    },
-  ],
-  "Health Hacks": [
-    {
-      id: 1,
-      title: "How to Manage Blood Sugar Naturally",
-      url: "https://cdn.shopify.com/videos/c/o/v/eec1a9292b424341b1f9ae2c42fdb191.mp4",
-      thumbnail: "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/ChatGPT_Image_Apr_15_2025_12_29_49_PM.png?v=1750508870",
-    },
-    {
-      id: 2,
-      title: "Top 5 Ayurvedic Tips for Diabetes",
-      url: "https://cdn.shopify.com/videos/c/o/v/b5baf7888efb47599c3efb16f0a79a1e.mp4",
-      thumbnail: "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/Mask_group_5.png?v=1750508870",
-    },
-    {
-      id: 3,
-      title: "What is HbA1c? Explained!",
-      url: "https://cdn.shopify.com/videos/c/o/v/c1d7b744e7324a5e882bda4cd515780c.mp4",
-      thumbnail: "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/6_527d324c-da6b-4954-80f6-8280a0d6c300.png?v=1722316967",
-    },
-    {
-      id: 4,
-      title: "Beginner’s Guide to Ayurveda",
-      url: "https://cdn.shopify.com/videos/c/o/v/67592f944522471c9c317aee972dccc3.mp4",
-      thumbnail: "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/Mask_group_5.png?v=1750508870",
-    },
-    {
-      id: 5,
-      title: "Diabetes Myths Busted!",
-      url: "https://cdn.shopify.com/videos/c/o/v/6c1d51e9d2644fd88c2ecb29e6393a6a.mp4",
-      thumbnail: "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/5_07a9d779-ebd5-4872-8760-13ec2b09f047.png?v=174704382",
+      url: "https://cdn.shopify.com/videos/c/o/v/6f18dfa1172a452aa7b331522acafd6f.mp4",
+      thumbnail:
+        "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/5_07a9d779-ebd5-4872-8760-13ec2b09f047.png?v=174704382",
     },
   ],
 };
 
-
 export default function Videos() {
-  const [selectedVideo, setSelectedVideo] = useState(null);
-
-
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [selectedVideoIndex, setSelectedVideoIndex] = useState(null);
   const [visibleIndex, setVisibleIndex] = useState(null);
-
+  const flatListRef = useRef(null);
 
   const onViewableItemsChanged = useRef(({ viewableItems }) => {
     if (viewableItems.length > 0) {
@@ -199,12 +144,11 @@ export default function Videos() {
     }
   });
 
-
-  const insets = useSafeAreaInsets();
-
   const viewabilityConfig = useRef({ viewAreaCoveragePercentThreshold: 80 });
 
   const handlePress = (category, index) => {
+    const videos = categorizedVideos[category];
+    if (!videos || index < 0 || index >= videos.length) return;
     setSelectedCategory(category);
     setSelectedVideoIndex(index);
     setVisibleIndex(index);
@@ -216,6 +160,25 @@ export default function Videos() {
     setVisibleIndex(null);
   };
 
+  // FlatList error fix for last item crash
+  const onScrollToIndexFailed = useCallback((info) => {
+    // Scroll to first index, then to failed index
+    flatListRef.current?.scrollToIndex({ index: 0, animated: false });
+    setTimeout(() => {
+      flatListRef.current?.scrollToIndex({
+        index: info.index,
+        animated: true,
+      });
+    }, 50);
+  }, []);
+
+  const canOpenModal =
+    selectedCategory !== null &&
+    selectedVideoIndex !== null &&
+    Array.isArray(categorizedVideos[selectedCategory]) &&
+    selectedVideoIndex >= 0 &&
+    selectedVideoIndex < categorizedVideos[selectedCategory].length;
+
   const renderVideoCard = ({ item, index, category }) => (
     <TouchableOpacity
       style={styles.card}
@@ -223,9 +186,7 @@ export default function Videos() {
       activeOpacity={0.8}
     >
       <ImageBackground
-        source={{
-          uri: item.thumbnail,
-        }}
+        source={{ uri: item.thumbnail }}
         style={styles.thumbnail}
         imageStyle={{ borderRadius: 12 }}
       />
@@ -274,7 +235,6 @@ export default function Videos() {
     </View>
   ));
 
-
   return (
     <View style={{ flex: 1, backgroundColor: "#fff" }}>
       <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
@@ -303,15 +263,24 @@ export default function Videos() {
         ))}
       </ScrollView>
 
-
-      {selectedCategory !== null && selectedVideoIndex !== null && (
-        <Modal visible animationType="slide">
-          <View style={{ flex: 1, backgroundColor: "#000" }}>
-            <TouchableOpacity onPress={closeModal} style={styles.closeButton}>
-              <Ionicons name="arrow-back" size={30} color="#fff" />
-            </TouchableOpacity>
+      <Modal
+        isVisible={canOpenModal}
+        onSwipeComplete={closeModal}
+        swipeDirection={['down', 'left', 'right']}
+        style={{ margin: 0 }}
+        onBackdropPress={closeModal}
+        animationIn="slideInUp"
+        animationOut="slideOutDown"
+        useNativeDriver
+        propagateSwipe
+      >
+        <View style={{ flex: 1, backgroundColor: "#000" }}>
+          <TouchableOpacity onPress={closeModal} style={styles.closeButton}>
+            <Ionicons name="arrow-back" size={30} color="#fff" />
+          </TouchableOpacity>
+          {canOpenModal && (
             <FlatList
-              vertical
+              ref={flatListRef}
               data={categorizedVideos[selectedCategory]}
               keyExtractor={(item) => item.id.toString()}
               renderItem={renderReel}
@@ -331,35 +300,29 @@ export default function Videos() {
               windowSize={5}
               initialNumToRender={2}
               maxToRenderPerBatch={2}
+              onScrollToIndexFailed={onScrollToIndexFailed}
             />
-          </View>
-        </Modal>
-
-      )}
+          )}
+        </View>
+      </Modal>
     </View>
   );
 }
 
-
 const styles = StyleSheet.create({
-  container: {
-    // paddingBottom: 24,
-  },
+  container: {},
   header: {
     flexDirection: "row",
     alignItems: "center",
     padding: 10,
     marginTop: 26,
   },
-
-
   headerText: {
     fontSize: 24,
     fontWeight: "bold",
     marginLeft: 8,
   },
   categoryContainer: {
-    // marginBottom:16,
     marginHorizontal: 8,
   },
   categoryTitle: {
@@ -405,12 +368,10 @@ const styles = StyleSheet.create({
   },
   closeButton: {
     position: "absolute",
-    top: 20,
+    top: 30,
     left: 20,
     zIndex: 10,
   },
-
-
   videoInfo: {
     width: width,
     display: "flex",
@@ -449,8 +410,6 @@ const styles = StyleSheet.create({
     display: "flex",
     justifyContent: "center",
   },
-
-
   iconContainer: {
     position: "absolute",
     right: 16,
