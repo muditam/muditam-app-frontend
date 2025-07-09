@@ -110,7 +110,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   boxText: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: "500",
     lineHeight: 18,
     textAlign: "left",

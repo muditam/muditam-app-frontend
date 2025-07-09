@@ -226,7 +226,6 @@ export default function ProductModal({ visible, onClose, product }) {
                   opacity = 0;
                 }
 
-
                 return (
                   <View
                     key={index}
@@ -246,8 +245,7 @@ export default function ProductModal({ visible, onClose, product }) {
 
             {/* Product Details */}
             <Text style={styles.title}>{product.title}</Text>
-            <Text style={styles.price}>₹{product.price}</Text>
-
+            <Text style={styles.price}>₹{product.price}</Text> 
 
             {/* Rating */}
             <View style={styles.ratingRow}>

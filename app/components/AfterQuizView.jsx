@@ -28,6 +28,112 @@ import ExpertsPanelCard from '../components/ExpertsPanelCard';
 import RealJourneysSlider from '../components/RealJourneysSlider';
 import NeedHelpSection from '../components/NeedHelpSection';
 
+const ROOT_CAUSES_CONFIG = [
+    {
+        key: 'body_weight',
+        label: 'Body Weight',
+        image: 'https://cdn.shopify.com/s/files/1/0734/7155/7942/files/Body_Weight_dae952f9-e7ce-4eb9-b175-1b25c2d5f267.png?v=1751959866',
+    },
+    {
+        key: 'genetics',
+        label: 'Genetic',
+        image: 'https://cdn.shopify.com/s/files/1/0734/7155/7942/files/Genetic.png?v=1751959866',
+    },
+    {
+        key: 'thyroid',
+        label: 'Thyroid',
+        image: 'https://cdn.shopify.com/s/files/1/0734/7155/7942/files/Thyroid_e2655085-0b32-4c78-8b4d-96af43c51bbf.png?v=1751959866',
+    },
+    {
+        key: 'fatty_liver',
+        label: 'Fatty Liver',
+        image: 'https://cdn.shopify.com/s/files/1/0734/7155/7942/files/Fatty_Liver_ef8cba82-6329-4876-af75-b2e30964b17d.png?v=1751959867',
+    },
+    {
+        key: 'cholesterol',
+        label: 'Cholesterol',
+        image: 'https://cdn.shopify.com/s/files/1/0734/7155/7942/files/Cholesterol_e4a50abc-215c-4f1a-88ea-beed7df2238b.png?v=1751959866',
+    },
+    {
+        key: 'hypertension',
+        label: 'Hypertension',
+        image: 'https://cdn.shopify.com/s/files/1/0734/7155/7942/files/Hypertension_ae4a1c22-6800-4647-882d-f596081cbe2d.png?v=1751959866',
+    },
+    {
+        key: 'stress',
+        label: 'Stress',
+        image: 'https://cdn.shopify.com/s/files/1/0734/7155/7942/files/Stress_74f7c035-9061-4e2b-906d-8d3de769a350.png?v=1751959866',
+    },
+    {
+        key: 'lifestyle',
+        label: 'Lifestyle',
+        image: 'https://cdn.shopify.com/s/files/1/0734/7155/7942/files/LifeStyle_198ffd9c-fa70-4869-829c-9ecd65d31345.png?v=1751959866',
+    },
+    {
+        key: 'insulin',
+        label: 'Insulin Resistance',
+        image: 'https://cdn.shopify.com/s/files/1/0734/7155/7942/files/insulin.png?v=1751960630',
+    },
+];
+
+function calculateBMI(heightCm, weightKg) {
+    if (!heightCm || !weightKg) return 0;
+    const hM = Number(heightCm) / 100;
+    return Number(weightKg) / (hM * hM);
+}
+
+function getRootCausesFromQuiz(answers, userVitals) {
+    const causes = [];
+
+    // 1. BMI
+    if (userVitals && userVitals.height && userVitals.weight) {
+        const bmi = calculateBMI(userVitals.height, userVitals.weight);
+        if (bmi > 23) causes.push('body_weight');
+    }
+
+    // 2. Genetics: Q1 (index 0)
+    const q1 = answers[0];
+    if (q1 && Array.isArray(q1) ? q1.some(ans => ans !== 'None') : q1 !== 'None') {
+        causes.push('genetics');
+    }
+
+    // 3. Comorbidities: Q6 (index 5)
+    const q6 = answers[5];
+    if (q6) {
+        if (Array.isArray(q6)) {
+            if (q6.includes('Thyroid')) causes.push('thyroid');
+            if (q6.includes('Fatty Liver')) causes.push('fatty_liver');
+            if (q6.includes('High Cholesterol')) causes.push('cholesterol');
+            if (q6.includes('Hypertension')) causes.push('hypertension');
+        }
+    }
+
+    // 4. Stress: Q10 (index 9)
+    const q10 = answers[9];
+    if (q10 && q10 === 'Yes') causes.push('stress');
+
+    // 5. Lifestyle: Q12 (index 11) - "How frequently do you engage in physical activity?"
+    const q12 = answers[11];
+    if (
+        q12 &&
+        q12 !== "I exercise or walk atleast 30 mins daily"
+    ) {
+        causes.push('lifestyle');
+    }
+
+    // 6. Lifestyle: Q11 (index 10) - "How often do you eat or drink sugary foods?"
+    const q11 = answers[10];
+    if (
+        q11 &&
+        (q11 === "Regularly - I can't resist sweet desserts or snacks" ||
+            q11.startsWith("Frequently") ||
+            q11.startsWith("Rarely"))
+    ) {
+        if (!causes.includes('lifestyle')) causes.push('lifestyle');
+    }
+
+    return causes;
+}
 
 export default function AfterQuizView() {
     const [name, setName] = useState('User');
@@ -35,6 +141,9 @@ export default function AfterQuizView() {
     const [selectedCause, setSelectedCause] = useState('Heart');
     const [selectedProducts, setSelectedProducts] = useState([]);
     const [gender, setGender] = useState('');
+    const [quizCauses, setQuizCauses] = useState([]);
+    const [sliderIndex, setSliderIndex] = useState(0);
+    const [customerCount, setCustomerCount] = useState('23,235');
 
     const causeDescriptions = {
         Heart: 'If you’ve left something or want to update a response on the diabetes test, simply re-take it.',
@@ -43,15 +152,50 @@ export default function AfterQuizView() {
         Foot: 'Foot complications may arise from diabetes. Update your test if something was missed.',
     };
 
+    
     useEffect(() => {
-        const loadName = async () => {
+        const loadAll = async () => {
             const userData = await AsyncStorage.getItem('userDetails');
             const parsed = JSON.parse(userData || '{}');
             if (parsed?.name) setName(parsed.name);
             if (parsed?.gender) setGender(parsed.gender);
+
+            const userVitalsRaw = await AsyncStorage.getItem('userVitals');
+            const userVitals = userVitalsRaw ? JSON.parse(userVitalsRaw) : {};
+            const quizRaw = await AsyncStorage.getItem('quizProgress');
+            const quiz = quizRaw ? JSON.parse(quizRaw) : {};
+            const quizAnswers = quiz.answers || [];
+            let causes = getRootCausesFromQuiz(quizAnswers, userVitals);
+
+            // If less than 3, add lifestyle if not already
+            if (causes.length < 3 && !causes.includes('lifestyle')) causes.push('lifestyle');
+            // If less than 2, also add insulin resistance
+            if (causes.length < 2 && !causes.includes('insulin')) causes.push('insulin');
+
+            setQuizCauses(causes);
+
+            const randomCustomers = Math.floor(Math.random() * (50000 - 30000 + 1)) + 30000;
+            setCustomerCount(randomCustomers.toLocaleString('en-IN'));
         };
-        loadName();
+        loadAll();
     }, []);
+
+    const getCauseData = (key) => ROOT_CAUSES_CONFIG.find(x => x.key === key);
+
+    // For slider if >4, else show all
+    const showSlider = quizCauses.length > 4;
+    const sliderWindow = 4; // show 4 at a time
+
+    let displayedCauses = quizCauses;
+    if (showSlider) {
+        displayedCauses = quizCauses.slice(sliderIndex, sliderIndex + sliderWindow);
+        // Loop if at end
+        if (displayedCauses.length < sliderWindow && quizCauses.length >= sliderWindow) {
+            displayedCauses = displayedCauses.concat(
+                quizCauses.slice(0, sliderWindow - displayedCauses.length)
+            );
+        }
+    }
 
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
@@ -77,31 +221,33 @@ export default function AfterQuizView() {
                     {/* Root Cause Card */}
                     <View style={styles.rootCard}>
                         <Text style={styles.reportHeading}>Your Diabetes Root Causes</Text>
-                        <View style={styles.rootCauses}>
-                            {[
-                                {
-                                    label: 'Heart',
-                                    icon: 'https://cdn.shopify.com/s/files/1/0734/7155/7942/files/Heart_411a6ee7-8dc7-47a7-b1f3-f7d12f5ca883.png?v=1747394357',
-                                },
-                                {
-                                    label: 'Kidney',
-                                    icon: 'https://cdn.shopify.com/s/files/1/0734/7155/7942/files/Kidneys_cbeb8c7a-6d2c-46db-bb0c-2f6a8ad9d419.png?v=1747394357',
-                                },
-                                {
-                                    label: 'Nerve',
-                                    icon: 'https://cdn.shopify.com/s/files/1/0734/7155/7942/files/Nerve_d10bc9ad-9857-4fea-b984-8192738ce6fc.png?v=1747394357',
-                                },
-                                {
-                                    label: 'Foot',
-                                    icon: 'https://cdn.shopify.com/s/files/1/0734/7155/7942/files/Foot_41be811d-646b-4908-a3e5-8a756ef8d134.png?v=1747394357',
-                                },
-                            ].map((item, index) => (
-                                <View key={index} style={styles.causeItem}>
-                                    <Image source={{ uri: item.icon }} style={styles.causeIcon} />
-                                    <Text style={styles.causeLabel}>{item.label}</Text>
-                                </View>
-                            ))}
+                        <View style={[styles.rootCauses, showSlider && { justifyContent: 'flex-start' }]}>
+                            {displayedCauses.map((key, index) => {
+                                const cause = getCauseData(key);
+                                return (
+                                    <View key={key} style={styles.causeItem}>
+                                        <Image source={{ uri: cause.image }} style={styles.causeIcon} />
+                                        <Text style={styles.causeLabel}>{cause.label}</Text>
+                                    </View>
+                                );
+                            })}
                         </View>
+                        {showSlider && (
+                            <View style={{ flexDirection: 'row', justifyContent: 'center', marginTop: 10 }}>
+                                <TouchableOpacity
+                                    onPress={() => setSliderIndex((prev) => (prev - 1 + quizCauses.length) % quizCauses.length)}
+                                    style={{ marginHorizontal: 10 }}
+                                >
+                                    <Text style={{ fontSize: 28, color: '#543287' }}>{'‹'}</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity
+                                    onPress={() => setSliderIndex((prev) => (prev + 1) % quizCauses.length)}
+                                    style={{ marginHorizontal: 10 }}
+                                >
+                                    <Text style={{ fontSize: 28, color: '#543287' }}>{'›'}</Text>
+                                </TouchableOpacity>
+                            </View>
+                        )}
                     </View>
                 </View>
 
@@ -120,7 +266,7 @@ export default function AfterQuizView() {
 
                 {/* Note */}
                 <Text style={styles.noteText}>
-                    *Based on 23,235 customers of Muditam Ayurveda that match this profile.
+                    *Based on {customerCount} customers of Muditam Ayurveda that match this profile.
                 </Text>
 
                 <View style={styles.impactSection}>

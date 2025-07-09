@@ -15,7 +15,7 @@ import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import LegalModal from "../../components/LegalModal";
 import { LinearGradient } from "expo-linear-gradient";
-
+import { StatusBar } from "expo-status-bar";
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -24,7 +24,6 @@ export default function LoginScreen() {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [loading, setLoading] = useState(false);
 
-
   const handleGetOtp = async () => {
     if (phoneNumber.length !== 10) {
       return Alert.alert(
@@ -32,7 +31,6 @@ export default function LoginScreen() {
         "Please enter a 10-digit mobile number."
       );
     }
-
 
     setLoading(true);
     try {
@@ -45,13 +43,13 @@ export default function LoginScreen() {
     }
   };
 
-
   const privacyContent = `Welcome to our website/mobile site...`;
   const termsContent = `These Terms of Service (“Terms”)...`;
 
-
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "white" }}>
+      <StatusBar style="dark" backgroundColor="transparent" translucent />
+
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : undefined}
         style={{ flex: 1 }}
@@ -60,17 +58,16 @@ export default function LoginScreen() {
           {/* Header Image */}
           <Image
             source={{
-              uri: "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/ChatGPT_Image_Apr_16_2025_11_24_23_AM.png?v=1747119091",
+              uri: "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/1_5b6c94fe-8228-4d5c-934d-62dde3ab6f26.png?v=1751977906",
             }}
-            style={{ width: "100%", height: 460 }}
+            style={{ width: "100%", height: 430 }}
             resizeMode="cover"
           />
-
 
           {/* Content Card */}
           <View
             style={{
-              marginTop: -210,
+              marginTop: -180,
               marginHorizontal: 16,
               backgroundColor: "white",
               paddingTop: 40,
@@ -97,7 +94,6 @@ export default function LoginScreen() {
               Kindly fill in the details:
             </Text>
 
-
             {/* Phone Input */}
             <View
               style={{
@@ -113,15 +109,15 @@ export default function LoginScreen() {
             >
               <Text style={{ marginRight: 10, fontSize: 17 }}>+91</Text>
               <TextInput
-                style={{ flex: 1, fontSize: 17 }}
+                style={{ flex: 1, fontSize: 17, color: "#000" }}
                 keyboardType="number-pad"
                 placeholder="Enter your number"
                 maxLength={10}
                 value={phoneNumber}
                 onChangeText={setPhoneNumber}
+                placeholderTextColor="#666" // iOS-specific dull text fix
               />
             </View>
-
 
             {/* Get OTP Button */}
             <TouchableOpacity
@@ -135,11 +131,12 @@ export default function LoginScreen() {
               onPress={handleGetOtp}
               disabled={loading}
             >
-              <Text style={{ color: "white", fontWeight: "600", fontSize: 18 }}>
+              <Text
+                style={{ color: "white", fontWeight: "600", fontSize: 18 }}
+              >
                 {loading ? "Please wait..." : "Get OTP"}
               </Text>
             </TouchableOpacity>
-
 
             {/* Gradient Line */}
             <View
@@ -161,7 +158,8 @@ export default function LoginScreen() {
                 }}
               />
             </View>
- 
+
+            {/* Legal Text */}
             <View
               style={{
                 borderTopColor: "#eee",
@@ -169,7 +167,6 @@ export default function LoginScreen() {
                 paddingTop: 16,
                 alignItems: "center",
                 justifyContent: "center",
-                // marginTop:150,
               }}
             >
               <Text
@@ -190,7 +187,6 @@ export default function LoginScreen() {
                     fontSize: 17,
                     textDecorationLine: "underline",
                     textDecorationColor: "#000000",
-                    fontWeight: "regular",
                     color: "#000000",
                   }}
                   onPress={() => setShowTerms(true)}
@@ -201,7 +197,6 @@ export default function LoginScreen() {
                 <Text
                   style={{
                     fontSize: 17,
-                    fontWeight: "regular",
                     color: "#000000",
                     textDecorationLine: "underline",
                     textDecorationColor: "#000000",
@@ -215,7 +210,6 @@ export default function LoginScreen() {
           </View>
         </ScrollView>
 
-
         {/* Modals */}
         <LegalModal
           visible={showPrivacy}
@@ -223,6 +217,8 @@ export default function LoginScreen() {
           title="Privacy Policy"
           lastUpdated="August 18, 2023"
           content={privacyContent}
+          animationType="slide"
+          transparent={true}
         />
         <LegalModal
           visible={showTerms}
@@ -230,11 +226,10 @@ export default function LoginScreen() {
           title="Terms of Service"
           lastUpdated="August 18, 2023"
           content={termsContent}
+          animationType="slide"
+          transparent={true}
         />
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
-
-
-

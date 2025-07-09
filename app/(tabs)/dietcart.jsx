@@ -28,7 +28,7 @@ export default function DietCart() {
           <Text style={styles.chartNote}>You met your goal 5 out of 7 days</Text>
         </View>
 
-        {/* Hydration Tip */}
+        {/* Hydration Tip */} 
         <View style={styles.tipCard}>
           <Ionicons name="water-outline" size={24} color="#9D57FF" />
           <View style={{ marginLeft: 10 }}>
@@ -42,7 +42,7 @@ export default function DietCart() {
           <Text style={styles.ctaText}>View Full Plan</Text>
         </TouchableOpacity>
       </ScrollView>
-    </SafeAreaView>
+    </SafeAreaView> 
   );
 }
 

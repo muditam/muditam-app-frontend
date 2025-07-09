@@ -15,27 +15,27 @@ const features = [
   {
     title: 'Customized Diet Plan',
     image:
-      'https://cdn.shopify.com/s/files/1/0734/7155/7942/files/Group_1149.png?v=1750145047',
+      'https://cdn.shopify.com/s/files/1/0734/7155/7942/files/Customized_Diet_Plan.png?v=1751969141',
   },
   {
-    title: 'Supplement Kit', 
+    title: 'Doctor Prescription', 
     image:
-      'https://cdn.shopify.com/s/files/1/0734/7155/7942/files/Mask_group-1.png?v=1750145047',
+      'https://cdn.shopify.com/s/files/1/0734/7155/7942/files/Doctor_Prescription.png?v=1751969140',
   },
   {
-    title: 'Doctor Consultation',
+    title: 'Supplements Kit',
     image:
-      'https://cdn.shopify.com/s/files/1/0734/7155/7942/files/Mask_group-3.png?v=1750145047',
+      'https://cdn.shopify.com/s/files/1/0734/7155/7942/files/Supplements_Kit.png?v=1751969140',
   },
   {
-    title: 'Diabetes Support',
+    title: 'Expert Guidance',
     image:
-      'https://cdn.shopify.com/s/files/1/0734/7155/7942/files/Mask_group-2.png?v=1750145047',
+      'https://cdn.shopify.com/s/files/1/0734/7155/7942/files/Expert_Guidance.png?v=1751969140',
   },
   {
-    title: 'Overall Health',
+    title: 'Health Coach',
     image:
-      'https://cdn.shopify.com/s/files/1/0734/7155/7942/files/Mask_group_b8baedc2-dc11-46e5-9cec-6dc5ed30ce98.png?v=1750145047',
+      'https://cdn.shopify.com/s/files/1/0734/7155/7942/files/Health_Coach.png?v=1751969140',
   },
 ];
 
@@ -123,7 +123,7 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
   },
   featureBlock: {
-    width: 160,
+    width: 155,
     marginRight: 12,
     alignItems: 'center',
   },

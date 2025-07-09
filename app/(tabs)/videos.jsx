@@ -12,14 +12,16 @@ import {
   Platform,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { Video } from "expo-av"; // (Upgrade to expo-video in the future)
+import { Video } from "expo-av";
 import { router } from "expo-router";
 import Modal from "react-native-modal";
+import { useSafeAreaInsets, SafeAreaView } from "react-native-safe-area-context";
+
 const { width, height } = Dimensions.get("window");
 
 // --- categorizedVideos data unchanged (paste yours here) ---
 const categorizedVideos = {
-  "Customer Testimonial": [
+  "Health Hacks": [
     {
       id: 1,
       title: "How to Manage Blood Sugar Naturally",
@@ -42,7 +44,53 @@ const categorizedVideos = {
         "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/6_527d324c-da6b-4954-80f6-8280a0d6c300.png?v=1722316967",
     },
   ],
-  "More About Muditam Treatment": [
+  "Simple Nutrition Tips": [
+    {
+      id: 1,
+      title: "How to Manage Blood Sugar Naturally",
+      url: "https://cdn.shopify.com/videos/c/o/v/85d03f9b985b4c40bd5986aae0929cad.mp4",
+      thumbnail:
+        "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/6_527d324c-da6b-4954-80f6-8280a0d6c300.png?v=1722316967",
+    },
+    {
+      id: 2,
+      title: "Top 5 Ayurvedic Tips for Diabetes",
+      url: "https://cdn.shopify.com/videos/c/o/v/f2af7ed73649450dab62f6e3d7eeb061.mp4",
+      thumbnail:
+        "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/3_0b563148-da79-4a3b-95e6-1f5720ab00a7.png?v=1722316842",
+    },
+    {
+      id: 3,
+      title: "What is HbA1c? Explained!",
+      url: "https://cdn.shopify.com/videos/c/o/v/85d03f9b985b4c40bd5986aae0929cad.mp4",
+      thumbnail:
+        "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/6_527d324c-da6b-4954-80f6-8280a0d6c300.png?v=1722316967",
+    },
+  ],
+  "Diabetes": [
+    {
+      id: 1,
+      title: "How to Manage Blood Sugar Naturally",
+      url: "https://cdn.shopify.com/videos/c/o/v/85d03f9b985b4c40bd5986aae0929cad.mp4",
+      thumbnail:
+        "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/6_527d324c-da6b-4954-80f6-8280a0d6c300.png?v=1722316967",
+    },
+    {
+      id: 2,
+      title: "Top 5 Ayurvedic Tips for Diabetes",
+      url: "https://cdn.shopify.com/videos/c/o/v/f2af7ed73649450dab62f6e3d7eeb061.mp4",
+      thumbnail:
+        "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/3_0b563148-da79-4a3b-95e6-1f5720ab00a7.png?v=1722316842",
+    },
+    {
+      id: 3,
+      title: "What is HbA1c? Explained!",
+      url: "https://cdn.shopify.com/videos/c/o/v/85d03f9b985b4c40bd5986aae0929cad.mp4",
+      thumbnail:
+        "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/6_527d324c-da6b-4954-80f6-8280a0d6c300.png?v=1722316967",
+    },
+  ],
+  "Muditam Treatment": [
     {
       id: 1,
       title: "How to Manage Blood Sugar Naturally",
@@ -58,7 +106,30 @@ const categorizedVideos = {
         "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/Mask_group_5.png?v=1750508870",
     },
   ],
-  "Sugar Drop Tips": [
+  "Karela Jamun Fizz": [
+    {
+      id: 1,
+      title: "How to Manage Blood Sugar Naturally",
+      url: "https://cdn.shopify.com/videos/c/o/v/85d03f9b985b4c40bd5986aae0929cad.mp4",
+      thumbnail:
+        "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/6_527d324c-da6b-4954-80f6-8280a0d6c300.png?v=1722316967",
+    },
+    {
+      id: 2,
+      title: "Top 5 Ayurvedic Tips for Diabetes",
+      url: "https://cdn.shopify.com/videos/c/o/v/f2af7ed73649450dab62f6e3d7eeb061.mp4",
+      thumbnail:
+        "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/3_0b563148-da79-4a3b-95e6-1f5720ab00a7.png?v=1722316842",
+    },
+    {
+      id: 3,
+      title: "What is HbA1c? Explained!",
+      url: "https://cdn.shopify.com/videos/c/o/v/85d03f9b985b4c40bd5986aae0929cad.mp4",
+      thumbnail:
+        "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/6_527d324c-da6b-4954-80f6-8280a0d6c300.png?v=1722316967",
+    },
+  ],
+  "Liver Fix": [
     {
       id: 1,
       title: "How to Manage Blood Sugar Naturally",
@@ -130,6 +201,29 @@ const categorizedVideos = {
         "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/5_07a9d779-ebd5-4872-8760-13ec2b09f047.png?v=174704382",
     },
   ],
+  "Supplements": [
+    {
+      id: 1,
+      title: "How to Manage Blood Sugar Naturally",
+      url: "https://cdn.shopify.com/videos/c/o/v/85d03f9b985b4c40bd5986aae0929cad.mp4",
+      thumbnail:
+        "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/6_527d324c-da6b-4954-80f6-8280a0d6c300.png?v=1722316967",
+    },
+    {
+      id: 2,
+      title: "Top 5 Ayurvedic Tips for Diabetes",
+      url: "https://cdn.shopify.com/videos/c/o/v/f2af7ed73649450dab62f6e3d7eeb061.mp4",
+      thumbnail:
+        "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/3_0b563148-da79-4a3b-95e6-1f5720ab00a7.png?v=1722316842",
+    },
+    {
+      id: 3,
+      title: "What is HbA1c? Explained!",
+      url: "https://cdn.shopify.com/videos/c/o/v/85d03f9b985b4c40bd5986aae0929cad.mp4",
+      thumbnail:
+        "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/6_527d324c-da6b-4954-80f6-8280a0d6c300.png?v=1722316967",
+    },
+  ],
 };
 
 export default function Videos() {
@@ -137,6 +231,7 @@ export default function Videos() {
   const [selectedVideoIndex, setSelectedVideoIndex] = useState(null);
   const [visibleIndex, setVisibleIndex] = useState(null);
   const flatListRef = useRef(null);
+  const insets = useSafeAreaInsets();
 
   const onViewableItemsChanged = useRef(({ viewableItems }) => {
     if (viewableItems.length > 0) {
@@ -160,9 +255,7 @@ export default function Videos() {
     setVisibleIndex(null);
   };
 
-  // FlatList error fix for last item crash
   const onScrollToIndexFailed = useCallback((info) => {
-    // Scroll to first index, then to failed index
     flatListRef.current?.scrollToIndex({ index: 0, animated: false });
     setTimeout(() => {
       flatListRef.current?.scrollToIndex({
@@ -223,10 +316,6 @@ export default function Videos() {
             <Text style={styles.iconLabel}>Like</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.iconButton}>
-            <Ionicons name="thumbs-down-outline" size={34} color="#fff" />
-            <Text style={styles.iconLabel}>Dislike</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.iconButton}>
             <Ionicons name="share-social-outline" size={34} color="#fff" />
             <Text style={styles.iconLabel}>Share</Text>
           </TouchableOpacity>
@@ -265,17 +354,19 @@ export default function Videos() {
 
       <Modal
         isVisible={canOpenModal}
-        onSwipeComplete={closeModal}
-        swipeDirection={['down', 'left', 'right']}
-        style={{ margin: 0 }}
         onBackdropPress={closeModal}
         animationIn="slideInUp"
         animationOut="slideOutDown"
+        style={{ margin: 0 }}
         useNativeDriver
         propagateSwipe
+        // No swipeDirection so FlatList vertical scroll is not blocked
       >
-        <View style={{ flex: 1, backgroundColor: "#000" }}>
-          <TouchableOpacity onPress={closeModal} style={styles.closeButton}>
+        <SafeAreaView style={{ flex: 1, backgroundColor: "#000" }}>
+          <TouchableOpacity 
+            onPress={closeModal} 
+            style={[styles.closeButton, { top: insets.top + 14 }]}  
+          >
             <Ionicons name="arrow-back" size={30} color="#fff" />
           </TouchableOpacity>
           {canOpenModal && (
@@ -303,7 +394,7 @@ export default function Videos() {
               onScrollToIndexFailed={onScrollToIndexFailed}
             />
           )}
-        </View>
+        </SafeAreaView>
       </Modal>
     </View>
   );
@@ -315,7 +406,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     padding: 10,
-    marginTop: 26,
+    marginTop: 50,
   },
   headerText: {
     fontSize: 24,
@@ -364,13 +455,15 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 12,
   },
   modalContainer: {
-    position: 'absolute', height, width
+    position: "absolute",
+    height,
+    width,
   },
   closeButton: {
     position: "absolute",
-    top: 30,
     left: 20,
     zIndex: 10,
+    // 'top' is set dynamically!
   },
   videoInfo: {
     width: width,
@@ -381,9 +474,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     position: "absolute",
     backgroundColor: "#000",
-    paddingVertical: 10,
-    bottom: 0,
-    paddingBottom: Platform.OS === 'android' ? 62 : 0,
+    paddingVertical: 1,
+    bottom: 30,
+    paddingBottom: Platform.OS === "android" ? 62 : 0,
   },
   videoPlayer: {
     width: width,
@@ -413,7 +506,7 @@ const styles = StyleSheet.create({
   iconContainer: {
     position: "absolute",
     right: 16,
-    bottom: Platform.OS === 'android' ? 150 : 98,
+    bottom: Platform.OS === "android" ? 150 : 98,
     alignItems: "center",
   },
   iconButton: {
@@ -423,7 +516,7 @@ const styles = StyleSheet.create({
   iconLabel: {
     color: "#fff",
     fontSize: 16,
-    fontWeight: 500,
+    fontWeight: "500",
     marginTop: 2,
   },
 });

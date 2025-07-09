@@ -7,6 +7,7 @@ import {
   StyleSheet,
   Dimensions,
   FlatList,
+  Platform,
 } from "react-native";
 
 
@@ -16,47 +17,58 @@ const { width: screenWidth } = Dimensions.get("window");
 const testimonials = [
   {
     image:
-      "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/image_2025_05_01T06_36_10_887Z.png?v=1746081456",
+      "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/B-3.png?v=1751973930",
     name: "Rajesh Verma",
     city: "Lucknow",
     avatar:
-      "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/Contemplative_Gaze_Against_Red_Brick_Wall.png?v=1746525897",
+      "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/M-1.png?v=1751973981",
     description:
-      "I had been struggling with high sugar levels and fatigue for over 5 years. After following the Muditam plan, my sugar is under control and my energy levels are back. I feel like myself again.",
-    symptoms: ["Fatigue", "Frequent urination", "Sugar spikes"],
+      "My sugar levels were out of control for a long time. Doctor was about to start insulin. After Muditam, I didn’t need it. Thank God I started on time. Now I feel very active, sugar is also in good control.",
+    symptoms: ["Uncontrolled Sugars", "Fatigue", "Post Meal Sugar spikes", "Insulin Avoided"],
   },
   {
     image:
-      "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/IMG_2294.heic?v=1746076533",
+      "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/B-5.png?v=1751973930",
     name: "Anita Nair",
     city: "Kochi",
     avatar:
-      "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/Smiling_Outdoors_with_Greenery_Background.png?v=1746516563",
+      "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/F-7.png?v=1751973981",
     description:
-      "Muditam’s approach felt very natural and easy to follow. My sugar levels have improved and so has my digestion. I no longer get acidity after meals!",
-    symptoms: ["Acidity", "Bloating", "High post-meal sugars"],
+      "I was so tired of trying different things. Sugar used to stay high all the time. With Muditam, I finally saw it come under control. Feeling light and more active now.",
+    symptoms: ["Low energy", "Heaviness", "High post-meal sugars"],
   },
   {
     image:
-      "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/image_2025_05_01T06_36_10_887Z.png?v=1746081456",
+      "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/B-4.png?v=1751973930",
     name: "Deepak Sharma",
     city: "Jaipur",
     avatar:
-      "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/Contemplative_Gaze_Against_Red_Brick_Wall.png?v=1746525897",
+      "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/M-9.png?v=1751973980",
     description:
-      "I never believed natural supplements could help until I tried Muditam. With small lifestyle changes and the kit, my sugar dropped and I lost weight too.",
-    symptoms: ["Weight Loss", "High HbA1c", "Sugar cravings"],
+      "My sugar was very high, my legs used to sleep if I ever used to sit down for more than 10 mins. No energy, wanted to sleep all day and only used to wake up for urination several times. Since I started this treatment, all my problems are gone. No ants running, more energy & sugar also in control. ",
+    symptoms: ["Nerve Tingling", "High HbA1c", "Frequent Urination"],
   },
   {
     image:
-      "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/image_2025_04_30T13_40_02_784Z.png?v=1746076534",
+      "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/B-1.png?v=1751973930",
     name: "Meena Gupta",
     city: "Delhi",
     avatar:
-      "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/Smiling_Outdoors_with_Greenery_Background.png?v=1746516563",
+      "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/F-3.png?v=1751973980",
     description:
-      "The team guided me really well. The kit is simple, and the diet tips actually helped. My sugar is stable now and I sleep better too.",
-    symptoms: ["Poor sleep", "Mood swings", "High fasting sugar"],
+      "I started with Karela Jamun Fizz, then added Sugar Defend. Within 2 months, sugar fasting is 97 from 190. First time it’s that low in years. My digestion has also improved",
+    symptoms: ["Bloating", "Indigestion", "High fasting sugar"],
+  },
+  {
+    image:
+      "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/B-2.png?v=1751973930",
+    name: "Suresh Iyer",
+    city: "Mumbai",
+    avatar:
+      "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/M-3.png?v=1751973981",
+    description:
+      "Diabetes was taking away my quality of life. My cholesterol increased, i got fatty liver. I’ve been on medicines for 6 years. But with Muditam, I found a solution to not just sugar but all my health problems. All problems gone. ",
+    symptoms: ["Uncontrolled Diabetes", "Fatty Liver", "Cholestrol"],
   },
 ];
 
@@ -213,20 +225,20 @@ const styles = StyleSheet.create({
   marginHorizontal: SPACING / 2,
   backgroundColor: "#fff",
   borderRadius: 16,
+  // iOS shadow
   shadowColor: "#000",
-  shadowOpacity: 0.9,
+  shadowOpacity: Platform.OS === "ios" ? 0.10 : 0,
   shadowOffset: { width: 0, height: 2 },
-  shadowRadius: 4,
+  shadowRadius: 4, 
   elevation: 2,
   marginTop: 20,
   marginBottom: 10,
 },
- 
   mainImage: {
     width: "100%",
-    height: 200,
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
+    height: 170,
+    borderTopLeftRadius: 16, 
+    borderTopRightRadius: 16,     
     resizeMode: "cover",
   },
   profileContainer: {
@@ -268,7 +280,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#F4F4F4",
     paddingHorizontal: 10,
     paddingVertical: 4,
-    borderRadius: 20,
+    borderRadius: 20, 
     fontSize: 12,
     fontFamily: "Poppins",
     marginRight: 6,

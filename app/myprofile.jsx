@@ -6,6 +6,7 @@ import {
   ScrollView,
   StyleSheet,
   Image,
+  ActivityIndicator,
 } from "react-native";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -17,13 +18,21 @@ export default function MyProfile() {
   const router = useRouter();
   const [user, setUser] = useState(null);
   const [selectedTab, setSelectedTab] = useState("diabetes");
+  const [quiz, setQuiz] = useState(null);
+  const [quizLoading, setQuizLoading] = useState(false);
 
   useEffect(() => {
     const loadUser = async () => {
       try {
         const stored = await AsyncStorage.getItem("userDetails");
         if (stored) {
-          setUser(JSON.parse(stored));
+          const userObj = JSON.parse(stored);
+          setUser(userObj);
+
+          // Fetch quiz data
+          if (userObj?.phone) {
+            fetchQuiz(userObj.phone);
+          }
         }
       } catch (e) {
         console.error("Failed to load user details", e);
@@ -32,11 +41,24 @@ export default function MyProfile() {
     loadUser();
   }, []);
 
-  const diagnoses = [
-    "Male Pattern Hair Loss, Stage-2",
-    "Male Pattern Hair Loss, Stage-2",
-    "Male Pattern Hair Loss, Stage-2",
-  ];
+  const fetchQuiz = async (phone) => {
+    setQuizLoading(true);
+    try {
+      // Replace with your API base URL
+      const res = await fetch(
+        `${process.env.EXPO_PUBLIC_API_BASE_URL || "https://your.api.url"}/quiz/${phone}`
+      );
+      if (res.ok) {
+        const data = await res.json();
+        setQuiz(data);
+      } else {
+        setQuiz(null); // quiz not found
+      }
+    } catch (e) {
+      setQuiz(null);
+    }
+    setQuizLoading(false);
+  };
 
   // Calculate age if available
   const age =
@@ -60,12 +82,11 @@ export default function MyProfile() {
           <TouchableOpacity
             style={styles.editIcon}
             onPress={() => router.push("/editprofile")}
-          > 
+          >
             <Feather name="edit" size={22} color="black" />
           </TouchableOpacity>
 
           <View style={styles.avatarSection}>
-            {/* <View style={styles.avatarPlaceholder} /> */}
             {user?.avatar ? (
               <Image
                 source={{ uri: user.avatar }}
@@ -86,8 +107,7 @@ export default function MyProfile() {
             <Text style={styles.name}>{user?.name || "Guest"}</Text>
             <Text style={styles.ageGender}>
               {user?.yearOfBirth
-                ? `${new Date().getFullYear() - user.yearOfBirth}, ${user?.gender
-                }`
+                ? `${new Date().getFullYear() - user.yearOfBirth}, ${user?.gender}`
                 : ""}
             </Text>
           </View>
@@ -116,37 +136,21 @@ export default function MyProfile() {
         {/* Tabs */}
         <View style={styles.tabsRow}>
           <TouchableOpacity
-            style={
-              selectedTab === "diabetes"
-                ? styles.activeTab
-                : styles.inactiveTab
-            }
+            style={selectedTab === "diabetes" ? styles.activeTab : styles.inactiveTab}
             onPress={() => setSelectedTab("diabetes")}
           >
             <Text
-              style={
-                selectedTab === "diabetes"
-                  ? styles.activeTabText
-                  : styles.inactiveTabText
-              }
+              style={selectedTab === "diabetes" ? styles.activeTabText : styles.inactiveTabText}
             >
               My Diabetes Profile
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={
-              selectedTab === "diet"
-                ? styles.activeTab
-                : styles.inactiveTab
-            }
+            style={selectedTab === "diet" ? styles.activeTab : styles.inactiveTab}
             onPress={() => setSelectedTab("diet")}
           >
             <Text
-              style={
-                selectedTab === "diet"
-                  ? styles.activeTabText
-                  : styles.inactiveTabText
-              }
+              style={selectedTab === "diet" ? styles.activeTabText : styles.inactiveTabText}
             >
               My Diet Profile
             </Text>
@@ -156,30 +160,64 @@ export default function MyProfile() {
         {/* Tab Content */}
         {selectedTab === "diabetes" ? (
           <View style={styles.diagnosisSection}>
-            {diagnoses.map((diag, index) => (
-              <View key={index} style={{ marginVertical: 6 }}>
+            {quizLoading ? (
+              <ActivityIndicator style={{ marginVertical: 20 }} />
+            ) : quiz ? (
+              // Quiz found: show HBA1c etc.
+              <View style={{ marginVertical: 6 }}>
                 <View style={styles.diagnosisHeader}>
                   <View style={styles.diagnosisLabel}>
-                    {/* <Ionicons name="add-circle" size={26} color="#9D57FF" /> */}
-                    <Ionicons name="hourglass" size={26} color="#9D57FF" />
-
-
                     <Text style={styles.diagnosisLabelText}>
-                      Current Diagnosis
+                      Your HBA1c Level
                     </Text>
                   </View>
                 </View>
                 <View style={styles.diagnosisCard}>
-                  <Text style={styles.diagnosisText}>{diag}</Text>
+                  <Text style={styles.diagnosisText}>
+                    {quiz.hba1c ? `HBA1c: ${quiz.hba1c}` : "Not Available"}
+                  </Text>
+                  {/* You can add more quiz details here */}
                 </View>
               </View>
-            ))}
+            ) : (
+              // Quiz not found: show "Take Diabetic Quiz" button
+              <TouchableOpacity
+                style={{
+                  marginVertical: 16,
+                  padding: 16,
+                  backgroundColor: "#9D57FF",
+                  borderRadius: 8,
+                  alignItems: "center",
+                }}
+                onPress={() => router.push("/test")}
+              >
+                <Text style={{ color: "white", fontWeight: "600", fontSize: 16 }}>
+                  Take Diabetic Quiz
+                </Text>
+              </TouchableOpacity>
+            )}
           </View>
         ) : (
           <View style={styles.dietProfileBox}>
-            <Text style={{ fontSize: 14, fontWeight: "500", color: "#111827" }}>
-              This is your diet profile.
+            <Text style={{ fontSize: 14, fontWeight: "500", color: "#111827", marginBottom: 18 }}>
+              Connect with your health Expert
             </Text>
+            <TouchableOpacity
+              style={{
+                paddingHorizontal: 20,
+                paddingVertical: 12,
+                borderRadius: 6,
+                backgroundColor: "#4F46E5",
+              }}
+              onPress={() => {
+                // open support chat, call, etc.
+                router.push("/connect-expert");
+              }}
+            >
+              <Text style={{ color: "#fff", fontWeight: "600", fontSize: 16 }}>
+                Connect Now
+              </Text>
+            </TouchableOpacity>
           </View>
         )}
 
@@ -202,6 +240,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     marginBottom: 16,
+    marginTop: 16,
   },
   headerTitle: {
     fontSize: 24,

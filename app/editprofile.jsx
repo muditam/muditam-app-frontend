@@ -17,7 +17,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import * as ImagePicker from 'expo-image-picker';
 
 export default function EditProfileScreen() {
-  const [language, setLanguage] = useState("English");
+  const [preferredLanguage, setpreferredLanguage] = useState("English");
   const [alternateEmail, setAlternateEmail] = useState("");
   const [alternatePhone, setAlternatePhone] = useState("");
   const [image, setImage] = useState(null);
@@ -41,7 +41,7 @@ export default function EditProfileScreen() {
         const userData = JSON.parse(stored);
         setUser(userData);
         setOriginalUser(userData); // snapshot for comparison
-        setLanguage(userData.language || "English");
+        setpreferredLanguage(userData.langpreferredLanguageuage || "English");
       }
     };
     loadUser();
@@ -50,17 +50,17 @@ export default function EditProfileScreen() {
   // Track if anything changed (image or profile fields)
   const hasChanges = useMemo(() => {
     if (!originalUser) return false;
-    const { avatar: origAvatar, language: origLang, name: origName, email: origEmail } = originalUser;
+    const { avatar: origAvatar, preferredLanguage: origLang, name: origName, email: origEmail } = originalUser;
     return (
       image !== null ||
       user.avatar !== origAvatar ||
-      language !== origLang ||
+      preferredLanguage !== origLang ||
       user.name !== origName ||
       user.email !== origEmail ||
       alternateEmail.length > 0 ||
       alternatePhone.length > 0
     );
-  }, [image, user, language, alternateEmail, alternatePhone, originalUser]);
+  }, [image, user, preferredLanguage, alternateEmail, alternatePhone, originalUser]);
 
   const pickImage = () => {
     Alert.alert('Upload Photo', 'Choose an option', [
@@ -99,7 +99,7 @@ export default function EditProfileScreen() {
       formData.append('email', user.email);
       formData.append('yearOfBirth', user.yearOfBirth);
       formData.append('gender', user.gender);
-      formData.append('language', language);
+      formData.append('preferredLanguage', preferredLanguage);
 
       if (image && !image.startsWith('https://')) {
         const fileName = image.split('/').pop();
@@ -195,9 +195,9 @@ export default function EditProfileScreen() {
 
           <Label text="Preferred Language" />
           <View style={styles.pickerWrapper}>
-            <Picker selectedValue={language} onValueChange={(val) => {
-              setLanguage(val);
-              setUser({ ...user, language: val });
+            <Picker selectedValue={preferredLanguage} onValueChange={(val) => {
+              setpreferredLanguage(val);
+              setUser({ ...user, preferredLanguage: val });
             }} style={styles.picker} dropdownIconColor="#999">
               <Picker.Item label="English" value="English" />
               <Picker.Item label="Hindi" value="Hindi" />
@@ -206,8 +206,19 @@ export default function EditProfileScreen() {
           </View>
 
           <Label text="Alternate Contact Information" />
-          <TextInput style={styles.input} placeholder="example@gmail.com" value={alternateEmail} onChangeText={setAlternateEmail} />
-          <TextInput style={styles.input} placeholder="Enter phone number without country code" value={alternatePhone} onChangeText={setAlternatePhone} keyboardType="phone-pad" />
+          <TextInput style={styles.input} placeholder="example@gmail.com" value={alternateEmail} onChangeText={setAlternateEmail} /> 
+          <TextInput
+            style={styles.input}
+            placeholder="Enter phone number without country code"
+            value={alternatePhone}
+            onChangeText={text => {
+              // Only keep numbers and max 10 digits
+              const cleaned = text.replace(/[^0-9]/g, '').slice(0, 10);
+              setAlternatePhone(cleaned);
+            }}
+            keyboardType="phone-pad"
+            maxLength={10}
+          />
         </View>
 
         <TouchableOpacity
@@ -243,7 +254,7 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: "row",
     alignItems: "center",
-    marginTop: 4,
+    marginTop: 16,
     marginBottom: 8,
   },
   headerTitle: {

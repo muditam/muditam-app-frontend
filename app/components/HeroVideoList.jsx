@@ -27,7 +27,7 @@ const videos = [
   },
   {
     id: "2",
-    thumbnail:
+    thumbnail: 
       "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/3_0b563148-da79-4a3b-95e6-1f5720ab00a7.png?v=1722316842",
     url: "https://cdn.shopify.com/videos/c/o/v/c1d7b744e7324a5e882bda4cd515780c.mp4",
     quote: "Results are best, my hair is back on my head",
@@ -118,7 +118,7 @@ export default function HeroVideoList() {
       <Text style={{
         fontSize: 21, fontWeight: 700, marginLeft: 16, marginBottom: 16,
       }}>Results That Speaks</Text>
-      <FlatList
+      <FlatList 
         data={videos}
         keyExtractor={(item) => item.id}
         renderItem={renderItem}

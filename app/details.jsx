@@ -10,8 +10,9 @@ import {
   Image,
   ActivityIndicator,
   Platform,
+  KeyboardAvoidingView,
+  Modal,
 } from "react-native";
-import DropDownPicker from "react-native-dropdown-picker";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -20,22 +21,16 @@ export default function UserProfileForm() {
   const router = useRouter();
   const { phone: phoneParam } = useLocalSearchParams();
   const [phone, setPhone] = useState(phoneParam || "");
-  const [loadingPhone, setLoadingPhone] = useState(!phoneParam);
+  const [loadingPhone, setLoadingPhone] = useState(!phoneParam); 
   const [name, setName] = useState("");
-  const [yearOfBirth, setYearOfBirth] = useState(null);
+  const [yearOfBirth, setYearOfBirth] = useState("");
   const [gender, setGender] = useState("");
-  const [email, setEmail] = useState("");
+  const [preferredLanguage, setPreferredLanguage] = useState("");
+  const [email, setEmail] = useState(""); 
   const [loadingSubmit, setLoadingSubmit] = useState(false);
 
-  // For DropDownPicker
-  const [open, setOpen] = useState(false);
-  const years = Array.from(
-    { length: 80 },
-    (_, i) => `${new Date().getFullYear() - i}`
-  );
-  const [yearItems, setYearItems] = useState(
-    years.map((year) => ({ label: year, value: year }))
-  );
+  const [yearModalVisible, setYearModalVisible] = useState(false);
+  const yearList = Array.from({ length: 2011 - 1960 }, (_, i) => `${1960 + i}`);
 
   useEffect(() => {
     if (!phoneParam) {
@@ -58,22 +53,22 @@ export default function UserProfileForm() {
   }, [phoneParam]);
 
   const handleSubmit = async () => {
-    if (!name || !yearOfBirth || !gender || !phone) {
+    if (!name || !yearOfBirth || !gender || !preferredLanguage || !phone) {
       Alert.alert("Missing Fields", "Please fill all required fields.");
       return;
     }
+
+    if (email && !/^[\w.-]+@(?:gmail\.com|yahoo\.com|new\.com)$/i.test(email)) {
+      Alert.alert("Invalid Email", "Please enter a valid email address.");
+      return;
+    }
+
     try {
       setLoadingSubmit(true);
       const res = await fetch("https://muditam-app-backend.onrender.com/api/user", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          phone,
-          name,
-          yearOfBirth,
-          gender,
-          email,
-        }),
+        body: JSON.stringify({ phone, name, yearOfBirth, gender, email, preferredLanguage }),
       });
 
       if (res.ok) {
@@ -94,114 +89,139 @@ export default function UserProfileForm() {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
         <ActivityIndicator size="large" color="#A855F7" />
-        <Text style={{ marginTop: 12, fontSize: 16 }}>
-          Loading your phone number...
-        </Text>
+        <Text style={{ marginTop: 12, fontSize: 16 }}>Loading your phone number...</Text>
       </View>
     );
   }
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
-      <ScrollView contentContainerStyle={styles.container} nestedScrollEnabled={true}>
-        <View style={styles.card}>
-          <TouchableOpacity
-            onPress={() => router.back()}
-            style={{
-              paddingTop: 5,
-              marginLeft: -5,
-              marginBottom: -9,
-            }}
-          >
-            <Image
-              source={{
-                uri: "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/Group_23.png?v=1747130916",
-              }}
-              style={{ width: 28, height: 28 }}
-              resizeMode="contain"
-            />
-          </TouchableOpacity>
-
-          <Text style={styles.label}>What’s your Name?</Text>
-          <TextInput
-            placeholderTextColor="#B5B5B5"
-            style={styles.input}
-            placeholder="Enter your Name"
-            value={name}
-            onChangeText={setName}
-          />
-
-          <Text style={styles.label}>What’s your Year of Birth?</Text>
-          <View style={styles.dropdownWrapper}>
-            <DropDownPicker
-              open={open}
-              value={yearOfBirth}
-              items={yearItems}
-              setOpen={setOpen}
-              setValue={setYearOfBirth}
-              setItems={setYearItems}
-              placeholder="Select your year of birth"
-              style={styles.dropdown}
-              dropDownContainerStyle={styles.dropdownBox}
-              listMode={Platform.OS === "android" ? "MODAL" : "SCROLLVIEW"}
-              modalProps={{
-                animationType: "fade",
-                hardwareAccelerated: true,
-              }}
-              modalTitle="Select Year of Birth"
-              nestedScrollEnabled={true}
-            />
-          </View>
-
-          <Text style={styles.label}>What’s your Gender?</Text>
-          <View style={styles.genderRow}>
-            <TouchableOpacity
-              style={[
-                styles.genderButton,
-                gender === "Male" && styles.genderSelected,
-              ]}
-              onPress={() => setGender("Male")}
-            >
-              <Text style={styles.genderIcon}>♂</Text>
-              <Text style={styles.genderText}>Male</Text>
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }}>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 50 : 0}
+      >
+        <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
+          <View style={styles.card}>
+            <TouchableOpacity onPress={() => router.back()} style={{ paddingTop: 5, marginLeft: -5, marginBottom: -9 }}>
+              <Image
+                source={{ uri: "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/Group_23.png?v=1747130916" }}
+                style={{ width: 28, height: 28 }}
+                resizeMode="contain"
+              />
             </TouchableOpacity>
+
+            <Text style={styles.label}>What’s your Name?</Text>
+            <TextInput
+              placeholderTextColor="#B5B5B5"
+              style={styles.input}
+              placeholder="Enter your Name"
+              value={name}
+              onChangeText={setName}
+            />
+
+            <Text style={styles.label}>What’s your Year of Birth?</Text>
             <TouchableOpacity
-              style={[
-                styles.genderButton,
-                gender === "Female" && styles.genderSelected,
-              ]}
-              onPress={() => setGender("Female")}
+              onPress={() => setYearModalVisible(true)}
+              style={styles.customPicker}
             >
-              <Text style={styles.genderIcon}>♀</Text>
-              <Text style={styles.genderText}>Female</Text>
+              <Text style={yearOfBirth ? styles.customPickerText : styles.placeholderText}>
+                {yearOfBirth || "Select your year of birth"}
+              </Text>
             </TouchableOpacity>
-          </View>
 
-          <Text style={styles.label}>What’s your Email? (optional)</Text>
-          <TextInput
-            placeholderTextColor="#B5B5B5"
-            style={styles.input}
-            placeholder="Enter your email address"
-            value={email}
-            keyboardType="email-address"
-            onChangeText={setEmail}
-          />
+            <Modal
+              animationType="slide"
+              transparent={true}
+              visible={yearModalVisible}
+              onRequestClose={() => setYearModalVisible(false)}
+            >
+              <View style={styles.modalOverlay}>
+                <View style={styles.modalContent}>
+                  <Text style={styles.modalTitle}>Select Year of Birth</Text>
+                  <ScrollView contentContainerStyle={{ paddingBottom: 20 }}>
+                    {yearList.map((year) => (
+                      <TouchableOpacity
+                        key={year}
+                        onPress={() => {
+                          setYearOfBirth(year);
+                          setYearModalVisible(false);
+                        }}
+                        style={styles.modalItem}
+                      >
+                        <Text style={styles.modalItemText}>{year}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                  <TouchableOpacity onPress={() => setYearModalVisible(false)} style={styles.closeButton}>
+                    <Text style={styles.closeButtonText}>Close</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </Modal>
 
-          <Text style={styles.infoText}>
-            We keep your personal data safe and secure.
-          </Text>
+            <Text style={styles.label}>What’s your Gender?</Text>
+            <View style={styles.genderRow}>
+              <TouchableOpacity
+                style={[styles.genderButton, gender === "Male" && styles.genderSelected]}
+                onPress={() => setGender("Male")}
+              >
+                <Text style={styles.genderIcon}>♂</Text>
+                <Text style={styles.genderText}>Male</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.genderButton, gender === "Female" && styles.genderSelected]}
+                onPress={() => setGender("Female")}
+              >
+                <Text style={styles.genderIcon}>♀</Text>
+                <Text style={styles.genderText}>Female</Text>
+              </TouchableOpacity>
+            </View>
 
-          <TouchableOpacity
-            style={styles.submitButton}
-            onPress={handleSubmit}
-            disabled={loadingSubmit}
-          >
-            <Text style={styles.submitText}>
-              {loadingSubmit ? "Submitting..." : "Submit"}
+            {/* Preferred Language */}
+            <Text style={styles.label}>Preferred Language</Text>
+            <View style={styles.languageRow}>
+              <TouchableOpacity
+                style={[styles.languageButton, preferredLanguage === "English" && styles.languageSelected]}
+                onPress={() => setPreferredLanguage("English")}
+              >
+                <Text style={styles.languageText}>English</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.languageButton, preferredLanguage === "Hindi" && styles.languageSelected]}
+                onPress={() => setPreferredLanguage("Hindi")}
+              >
+                <Text style={styles.languageText}>Hindi</Text>
+              </TouchableOpacity>
+            </View>
+
+            <Text style={styles.label}>What’s your Email? (optional)</Text>
+            <TextInput
+              placeholderTextColor="#B5B5B5"
+              style={styles.input}
+              placeholder="Enter your email address"
+              value={email}
+              keyboardType="email-address"
+              onChangeText={setEmail}
+              autoCapitalize="none"
+            />
+
+            <Text style={styles.infoText}>
+              We keep your personal data safe and secure.
             </Text>
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
+
+            <TouchableOpacity
+              style={styles.submitButton}
+              onPress={handleSubmit}
+              disabled={loadingSubmit}
+            >
+              <Text style={styles.submitText}>
+                {loadingSubmit ? "Submitting..." : "Submit"}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
@@ -230,33 +250,66 @@ const styles = StyleSheet.create({
     backgroundColor: "#F6F6F6",
     fontSize: 16,
   },
-  dropdownWrapper: {
-    zIndex: 1000, 
-    elevation: 1000,  
-    marginBottom: 30,
-    position: 'relative',
-  },
-  dropdown: {
+  customPicker: {
     borderWidth: 1,
     borderRadius: 4,
+    padding: 12,
     backgroundColor: "#F6F6F6",
-    fontSize: 16,
-    minHeight: 45,
+    marginBottom: 20,
   },
-  dropdownBox: {
-    borderWidth: 1,
-    borderRadius: 4,
+  customPickerText: {
+    fontSize: 16,
+    color: "#000",
+  },
+  placeholderText: {
+    fontSize: 16,
+    color: "#999",
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.4)",
+    justifyContent: "flex-end",
+  },
+  modalContent: {
     backgroundColor: "#fff",
-    maxHeight: 180,
-    marginTop: 2,
+    padding: 16,
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    maxHeight: "60%",
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+    marginBottom: 12,
+    textAlign: "center",
+  },
+  modalItem: {
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "#eee",
+  },
+  modalItemText: {
+    fontSize: 16,
+    color: "#000",
+    textAlign: "center",
+  },
+  closeButton: {
+    marginTop: 12,
+    alignItems: "center",
+    paddingVertical: 10,
+    backgroundColor: "#9D57FF",
+    borderRadius: 8,
+  },
+  closeButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
   },
   genderRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     marginTop: 10,
     marginBottom: 15,
-    zIndex: 500,
-    elevation: 500,
   },
   genderButton: {
     flex: 1,
@@ -284,6 +337,30 @@ const styles = StyleSheet.create({
     color: "#B5B5B5",
     fontSize: 16,
   },
+  languageRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 15,
+  },
+  languageButton: {
+    flex: 1,
+    borderWidth: 1,
+    borderRadius: 4,
+    marginRight: 16,
+    backgroundColor: "#F6F6F6",
+    paddingVertical: 10,
+    alignItems: "center",
+  },
+  languageSelected: {
+    backgroundColor: "#e9d5ff",
+    borderColor: "#9D57FF",
+    borderWidth: 2,
+  },
+  languageText: {
+    fontSize: 16,
+    color: "#222",
+    fontWeight: "600",
+  },
   infoText: {
     fontSize: 17,
     marginTop: 30,
@@ -301,7 +378,6 @@ const styles = StyleSheet.create({
   submitText: {
     color: "#fff",
     fontWeight: "600",
-    fontSize: 18,
+    fontSize: 18, 
   },
 });
-

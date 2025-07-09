@@ -4,7 +4,7 @@ import FontAwesome from "@expo/vector-icons/FontAwesome";
 
 
 export default function ChatWithUsSection() {
-  const whatsappNumber = "8989174741";
+  const whatsappNumber = "9625368707";
   const openWhatsApp = () => {
     const url = `https://wa.me/91${whatsappNumber}`;
     Linking.openURL(url);
@@ -17,7 +17,7 @@ export default function ChatWithUsSection() {
         <View className="flex-row justify-between items-center">
           <View className="flex-1 pr-2">
             <Text className="font-semibold text-xl text-base mb-1">
-              Chat with a Diabetic Expert
+              Chat with a Diabetes Expert
             </Text>
             <Text className="text-md text-[#667085]">
               Get all your queries resolved in{" "}

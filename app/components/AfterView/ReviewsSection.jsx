@@ -17,48 +17,66 @@ const { width } = Dimensions.get("window");
 const reviews = [
   {
     id: "1",
-    name: "Bilal Ahmed Shah",
+    name: "Vikas, 60",
     location: "Jaipur",
     rating: 5,
     fullText:
-      "My friends used to tease me all the time about hair loss but now I am glad that my hair is full. I feel much more confident now. My family is also happy, a big thank you to the Muditam team.",
-    avatar: "https://randomuser.me/api/portraits/men/1.jpg",
+      "I had been diabetic for 7 years, and nothing was really working. But after starting Muditam’s supplements and following their diet, my sugar levels started coming down within a month. I feel more energetic and finally hopeful.",
+    avatar: "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/M-6.png?v=1751975429",
   },
   {
     id: "2",
-    name: "Ravi Kumar",
-    rating: 4,
-    location: "Jaipur",
+    name: "Neha, 52",
+    rating: 5,
+    location: "Mumbai",
     fullText:
-      "After trying so many products, Muditam finally gave me results. I can see real growth in just two months and I’m truly impressed by their plan and support.",
-    avatar: "",
+      "I started Karela Jamun Fizz along with the diet plan, and it became a part of my morning routine. My sugar started to remain more stable. I don’t feel heavy or tired after meals anymore. Feels like my body is finally recovering!",
+    avatar: "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/F-6.png?v=1751975430",
   },
   {
     id: "3",
-    name: "Sneha R.",
-    location: "Jaipur",
+    name: "Manoj, 58",
+    location: "Lucknow",
     rating: 5,
     fullText:
-      "My hair feels so much healthier and thicker. Thanks to the doctor team and customized plan, I feel amazing and confident again!",
-    avatar: "https://randomuser.me/api/portraits/men/3.jpg",
+      "Medicine to shuru se jab se sugar hui h kha hi rha tha lekin sugar jyada hi aati thi. Jab maine Muditam ka supplement liya aur saath mein diet follow kiya tab jaake farak dikhna shuru hua. Sugar readings ab stable hai. Thakaan bhi kam ho gayi hai.",
+    avatar: "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/M-7.png?v=1751975430",
   },
   {
     id: "4",
-    name: "Suresh Yadav",
+    name: "Priya, 55",
     rating: 5,
-    location: "Jaipur",
+    location: "Bangaluru",
     fullText:
-      "The support team is quick and helpful. Muditam works and it’s not a scam like others. I’ve recommended it to my friends as well.",
-    avatar: "invalid-url",
+      "I’ve tried many things over the years, but no change in sugar. I started treatment for my high sugars with Muditam last year and now my sugar is absolutely normal. I take only 1 tablet daily and the regular follow-ups helps me to stay on track.",
+    avatar: "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/F-2.png?v=1751975430",
   },
   {
     id: "5",
-    name: "Pooja Singh",
-    rating: 4,
-    location: "Jaipur",
+    name: "Alok, 61",
+    rating: 5,
+    location: "Chandigarh",
     fullText:
-      "Great results in just one month. Their diet and supplement combo is perfect. And I love how convenient it is to follow their plan.",
-    avatar: "https://randomuser.me/api/portraits/men/3.jpg",
+      "arlier, even after eating small meals, no rice, my sugar would still rise. But with Muditam’s plan - right supplements and food changes - things are all better now. My HbA1c was 9.4% when I started, and in 2 months it is down to 8.1% and I’m planning to continue it until it comes below 7%.",
+    avatar: "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/M-4.png?v=1751975430",
+  },
+  {
+    id: "6",
+    name: "Kamla, 63",
+    rating: 5,
+    location: "Indore",
+    fullText:
+      "Before Muditam, sugar always up-down. Now I take my supplement regular and eat what expert said. Feeling more strong, not sleepy after lunch. Sugar also coming in better range.",
+    avatar: "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/F-5.png?v=1751975430",
+  },
+  {
+    id: "7",
+    name: "Sanjana",
+    rating: 5,
+    location: "Delhi",
+    fullText:
+      "I wasn’t even looking for a solution when a friend told me about Muditam. I just gave it a try casually. But within 2 months, my sugar came down, and that tired feeling went away. I did research after using them, all the ingredients they have used are backed by strong scientific evidence. And IT WORKS!! This is the Best Solution for Diabetes management!!",
+    avatar: "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/F-4.png?v=1751975430",
   },
 ];
 

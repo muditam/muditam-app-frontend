@@ -10,8 +10,8 @@ import {
   Dimensions,
   Animated,
   ScrollView,
-  SafeAreaView, 
-  useWindowDimensions, 
+  SafeAreaView,
+  useWindowDimensions,
   Platform,
   StatusBar,
 } from "react-native";
@@ -19,10 +19,21 @@ import { useRouter } from "expo-router";
 import { useCart } from "../contexts/CartContext";
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { FontAwesomeIcon, Ionicons } from "@expo/vector-icons"; // for cart icon
-import { Feather } from "@expo/vector-icons";
+import { Feather, Ionicons } from "@expo/vector-icons";
 import { Modal } from "react-native";
 
+// 1. Define the custom order
+const PRODUCT_ORDER = [
+  "karela jamun fizz",
+  "liver fix",
+  "sugar defend pro",
+  "vasant kusmakar ras",
+  "power gut",
+  "shilajit with gold",
+  "heart defend pro",
+  "chandraprabha vati",
+  "performance forever",
+];
 
 export default function Products() {
   const [products, setProducts] = useState([]);
@@ -32,28 +43,54 @@ export default function Products() {
   const router = useRouter();
   const { addToCart, cartItems, incrementItem, decrementItem } = useCart();
 
-
-  const categories = ["All", "Diabetes", "Liver", "Gut", "Sleep"];
-  const [selectedCategory, setSelectedCategory] = useState("All");
-
-
+  const categories = ["All", "Diabetes", "Liver", "Gut", "MenHealth", "Energy"];
+  const [selectedCategory, setSelectedCategory] = useState("All"); 
+ 
   const categoryToProductsMap = {
-    diabetes: ["karela jamun fizz", "sugar defend pro", "vasant kusmakar ras"],
+    diabetes: [
+      "karela jamun fizz",
+      "sugar defend pro",
+      "vasant kusmakar ras",
+      "chandraprabha vati",
+    ],
     liver: ["liver fix", "heart defend pro"],
     gut: ["power gut"],
-    sleep: ["stress and sleep"],
+    menhealth: ["performance forever", "shilajit with gold"],
+    energy: ["liver fix"],
   };
 
 
+  // 2. Sort the products using the custom order
+  const sortProducts = (prods) => {
+    return [...prods].sort((a, b) => {
+      const nameA = a.title?.toLowerCase();
+      const nameB = b.title?.toLowerCase();
+      const indexA = PRODUCT_ORDER.indexOf(nameA);
+      const indexB = PRODUCT_ORDER.indexOf(nameB);
+
+      // If both found, sort by custom order
+      if (indexA !== -1 && indexB !== -1) {
+        return indexA - indexB;
+      }
+      // If only A found, A comes first
+      if (indexA !== -1) return -1;
+      // If only B found, B comes first
+      if (indexB !== -1) return 1;
+      // Neither found, sort alphabetically
+      return nameA.localeCompare(nameB);
+    });
+  };
+
   const filteredProducts =
     selectedCategory === "All"
-      ? products
-      : products.filter((p) =>
-          categoryToProductsMap[selectedCategory.toLowerCase()]?.includes(
-            p.title.toLowerCase()
+      ? sortProducts(products)
+      : sortProducts(
+          products.filter((p) =>
+            categoryToProductsMap[selectedCategory.toLowerCase()]?.includes(
+              p.title.toLowerCase()
+            )
           )
         );
-
 
   useEffect(() => {
     fetch("https://muditam-app-backend.onrender.com/api/shopify/products")
@@ -65,7 +102,6 @@ export default function Products() {
       .finally(() => setLoading(false));
   }, []);
 
-
   const handlePress = (item) => {
     router.push({
       pathname: "/productPage",
@@ -73,18 +109,15 @@ export default function Products() {
     });
   };
 
-
   const handleAddToCart = (item) => {
     addToCart(item);
     setShowPopup(true);
-
 
     Animated.timing(popupAnim, {
       toValue: 0,
       duration: 300,
       useNativeDriver: true,
     }).start();
-
 
     setTimeout(() => {
       Animated.timing(popupAnim, {
@@ -95,11 +128,9 @@ export default function Products() {
     }, 5000);
   };
 
-
   const handleIncrement = (item) => {
     incrementItem(item.id);
   };
-
 
   const handleDecrement = (item) => {
     const qty = getItemQuantity(item.id);
@@ -113,17 +144,14 @@ export default function Products() {
   const { width } = useWindowDimensions();
   const cardWidth = (width - 48) / 2;
 
-
   const getItemQuantity = (productId) => {
     const item = cartItems.find((cartItem) => cartItem.id === productId);
     return item?.quantity || 0;
   };
 
-
   const handleViewCart = () => {
     router.push("/cart");
   };
-
 
   if (loading) {
     return (
@@ -133,9 +161,8 @@ export default function Products() {
     );
   }
 
-
   return (
-    <SafeAreaView style={styles.safeArea}> 
+    <SafeAreaView style={styles.safeArea}>
       <View style={[styles.headerContainer, styles.safeHeader]}>
         <TouchableOpacity
           onPress={() => router.back()}
@@ -144,7 +171,6 @@ export default function Products() {
           <Feather name="arrow-left" size={24} color="black" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>All Products</Text>
-
 
         <TouchableOpacity
           onPress={handleViewCart}
@@ -159,9 +185,7 @@ export default function Products() {
         </TouchableOpacity>
       </View>
 
-
       <View style={styles.grayLine} />
-
 
       <ScrollView
         horizontal
@@ -195,17 +219,17 @@ export default function Products() {
         })}
       </ScrollView>
 
-
       <FlatList
         data={filteredProducts}
         numColumns={2}
-        keyExtractor={(item) => item.id.toString()} 
-        contentContainerStyle={{ 
-          paddingHorizontal: 16, 
+        keyExtractor={(item) => item.id.toString()}
+        contentContainerStyle={{
+          paddingHorizontal: 16,
           paddingBottom: 10,
+          paddingTop: 0,
         }}
-        style={{ flexGrow: 1 }} 
-        columnWrapperStyle={{ justifyContent: "space-between", }}
+        style={{ flexGrow: 1 }}
+        columnWrapperStyle={{ justifyContent: "space-between" }}
         renderItem={({ item }) => {
           const quantity = getItemQuantity(item.id);
           return (
@@ -220,7 +244,6 @@ export default function Products() {
                   <Text style={styles.productPrice}>₹&nbsp;{item.price}</Text>
                 </View>
               </TouchableOpacity>
-
 
               {quantity > 0 ? (
                 <View style={styles.counterContainer}>
@@ -258,7 +281,6 @@ export default function Products() {
         }}
       />
 
-
       {showPopup && (
         <Animated.View
           style={[
@@ -286,9 +308,7 @@ export default function Products() {
   );
 }
 
-
 const cardWidth = (Dimensions.get("window").width - 48) / 2;
-
 
 const styles = StyleSheet.create({
   safeArea: {
@@ -297,7 +317,7 @@ const styles = StyleSheet.create({
     paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
   },
   safeHeader: {
-    marginTop: Platform.OS === "android" ? 0 : 0, 
+    marginTop: Platform.OS === "android" ? 0 : 0,
   },
   loaderContainer: {
     flex: 1,
@@ -307,7 +327,6 @@ const styles = StyleSheet.create({
   listContainer: {
     padding: 16,
   },
- 
   productCard: {
     width: cardWidth,
     marginBottom: 16,
@@ -354,7 +373,7 @@ const styles = StyleSheet.create({
   },
   cartButtonText: {
     color: "#fff",
-    fontWeight: 500,
+    fontWeight: "500",
     fontSize: 14,
   },
   counterContainer: {
@@ -377,8 +396,6 @@ const styles = StyleSheet.create({
     color: "#000",
     marginHorizontal: 10,
   },
-
-
   viewCartBtn: {
     backgroundColor: "#E4D0FF",
     paddingVertical: 8,
@@ -389,8 +406,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     overflow: "hidden",
   },
-
-
   headerContainer: {
     flexDirection: "row",
     paddingHorizontal: 16,
@@ -448,51 +463,37 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     marginVertical: 16,
   },
-
-
   categoryTabActive: {
     backgroundColor: "#9D57FF",
     borderColor: "#9D57FF",
     height: 36,
   },
-
-
   categoryTabInactive: {
     height: 36,
   },
-
-
   categoryTextActive: {
     color: "white",
     textAlign: "center",
   },
-
-
   categoryTextInactive: {
     textAlign: "center",
   },
-
-
   popupContainer: {
-  backgroundColor: "#fff",
-  flexDirection: "row",
-  justifyContent: "space-between",
-  alignItems: "center",
-  paddingVertical: 18,
-  paddingHorizontal: 18,
-  elevation: 8,
-  shadowColor: "#000",
-  shadowOpacity: 0.1,
-  shadowRadius: 8,
-  paddingBottom: Platform.OS === "ios" ? 24 : 18,
-},
-
+    backgroundColor: "#fff",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: 18,
+    paddingHorizontal: 18,
+    elevation: 8,
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    paddingBottom: Platform.OS === "ios" ? 24 : 18,
+  },
   popupText: {
     fontSize: 14,
     color: "#000",
     fontWeight: "500",
   },
 });
-
-
-

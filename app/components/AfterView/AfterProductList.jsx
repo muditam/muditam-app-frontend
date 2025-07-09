@@ -123,13 +123,13 @@ export default function AfterProductList({ setTotalPrice, totalPrice, setSelecte
         <View style={styles.line1} />
 
         <View style={styles.row}>
-          <Text style={styles.itemText}>1-Month Customised Kit</Text>
+          <Text style={styles.itemText}>1-Month Customized Kit</Text>
           <Text style={styles.priceText}>₹{totalPrice.toFixed(2)}</Text>
         </View>
 
         <View style={styles.row}>
           <View style={styles.leftContent}>
-            <Text style={styles.itemText}>Diabetic Coach Support</Text>
+            <Text style={styles.itemText}>Diabetes Coach Support</Text>
           </View>
           <Text style={styles.free}>Free</Text>
         </View>
@@ -150,14 +150,14 @@ export default function AfterProductList({ setTotalPrice, totalPrice, setSelecte
 
         <View style={styles.line1} />
         <View style={styles.row}>
-  <Text style={styles.summaryTitlee}>Total Payment</Text>
-  <Text style={styles.summaryTitlee}>₹{totalPrice.toFixed(2)}</Text>
-</View>
+          <Text style={styles.summaryTitlee}>Total Payment</Text>
+          <Text style={styles.summaryTitlee}>₹{totalPrice.toFixed(2)}</Text>
+        </View>
       </View>
 
       <View style={styles.giftSection}>
         <View style={styles.line2} />
-        <Text style={styles.giftHeading}>Free Gift’s For You</Text>
+        <Text style={styles.giftHeading}>Free Gifts For You</Text>
         <Image
           source={{
             uri: 'https://cdn.shopify.com/s/files/1/0734/7155/7942/files/Group_825.png?v=1747490503',
@@ -252,7 +252,7 @@ const styles = StyleSheet.create({
   },
   summaryBox: {
     borderWidth: 0.5,
-    paddingHorizontal: 30,
+    paddingHorizontal: 20,
     paddingVertical: 15,
     borderRadius: 12,
     marginHorizontal: 16,
@@ -313,7 +313,7 @@ const styles = StyleSheet.create({
     marginVertical: 10,
     width: '100%',
   },
-  giftSection: { 
+  giftSection: {
     marginVertical: 16,
   },
   giftHeading: {
@@ -325,7 +325,7 @@ const styles = StyleSheet.create({
   giftImage: {
     width: '90%',
     height: 100,
-    borderRadius: 8, 
+    borderRadius: 8,
     marginHorizontal: 16,
     marginBottom: 16,
   },

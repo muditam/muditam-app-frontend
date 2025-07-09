@@ -9,6 +9,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  Keyboard,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
@@ -22,6 +23,23 @@ export default function OtpScreen() {
   const [otp, setOtp] = useState(Array(6).fill(""));
   const inputs = useRef([]);
   const [timer, setTimer] = useState(10);
+  const [isKeyboardVisible, setKeyboardVisible] = useState(false);
+
+  useEffect(() => {
+    const keyboardDidShowListener = Keyboard.addListener(
+      "keyboardDidShow",
+      () => setKeyboardVisible(true)
+    );
+    const keyboardDidHideListener = Keyboard.addListener(
+      "keyboardDidHide",
+      () => setKeyboardVisible(false)
+    );
+
+    return () => {
+      keyboardDidShowListener.remove();
+      keyboardDidHideListener.remove();
+    };
+  }, []);
 
   useEffect(() => {
     if (timer > 0) {
@@ -48,7 +66,9 @@ export default function OtpScreen() {
       return;
     }
     try {
-      const response = await fetch(`https://muditam-app-backend.onrender.com/api/user/${phone}`);
+      const response = await fetch(
+        `https://muditam-app-backend.onrender.com/api/user/${phone}`
+      );
       console.log("Fetch status:", response.status);
       const text = await response.text();
       console.log("Response text:", text);
@@ -68,31 +88,44 @@ export default function OtpScreen() {
     }
   };
 
+  const handleResend = () => {
+    setOtp(Array(6).fill(""));
+    inputs.current[0].focus();
+    setTimer(10);
+  };
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "white" }}>
       <KeyboardAvoidingView
         style={{ flex: 1 }}
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20} 
       >
-        <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+        <ScrollView
+          contentContainerStyle={{
+            flexGrow: 1,
+            justifyContent: "flex-start",
+          }}
+          keyboardShouldPersistTaps="handled" 
+        >
           {/* Background Image */}
           <Image
             source={{
-              uri: "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/d1a366891736a5373bf01cd3edc35f9703dc4ae5.png?v=1747125024",
+              uri: "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/2_1_eb3f1b3c-1df9-4942-99b2-f001de984ddb.png?v=1751978207",
             }}
-            style={{ width: "100%", height: 460 }}
+            style={{ width: "100%", height: 450 }}
             resizeMode="cover"
           />
 
           {/* Back Button */}
           <TouchableOpacity
-            onPress={() => router.replace("/login")}
+            onPress={() => router.replace("/login")} 
             style={{
               position: "absolute",
               top: 10,
               left: 16,
               backgroundColor: "white",
-              borderRadius: 999, // perfect circle
+              borderRadius: 999,
               padding: 6,
               zIndex: 10,
             }}
@@ -109,7 +142,7 @@ export default function OtpScreen() {
           {/* Card */}
           <View
             style={{
-              marginTop: -180,
+              marginTop: isKeyboardVisible ? -260 : -180,
               marginHorizontal: 16,
               backgroundColor: "white",
               paddingTop: 40,
@@ -144,7 +177,7 @@ export default function OtpScreen() {
                   key={index}
                   ref={(ref) => (inputs.current[index] = ref)}
                   style={{
-                    width: 49,
+                    width: 47,
                     height: 47,
                     borderWidth: 0.9,
                     textAlign: "center",
@@ -155,6 +188,7 @@ export default function OtpScreen() {
                   keyboardType="number-pad"
                   value={digit}
                   onChangeText={(text) => handleChange(text, index)}
+                  onFocus={() => setKeyboardVisible(true)}
                 />
               ))}
             </View>
@@ -171,7 +205,9 @@ export default function OtpScreen() {
               }}
               onPress={handleSubmitOtp}
             >
-              <Text style={{ color: "white", fontWeight: "600", fontSize: 18 }}>
+              <Text
+                style={{ color: "white", fontWeight: "600", fontSize: 18 }}
+              >
                 Submit
               </Text>
             </TouchableOpacity>
@@ -186,14 +222,11 @@ export default function OtpScreen() {
             >
               <Text style={{ color: "#9CA3AF", fontSize: 16 }}>
                 Resend OTP in{" "}
-                <Text style={{ color: "#9CA3AF", fontWeight: "bold" }}>
+                <Text style={{ fontWeight: "bold" }}>
                   {timer > 0 ? `${timer} sec` : "0 sec"}
                 </Text>
               </Text>
-              <TouchableOpacity
-                disabled={timer > 0}
-                onPress={() => setTimer(10)}
-              >
+              <TouchableOpacity disabled={timer > 0} onPress={handleResend}>
                 <Text
                   style={{
                     fontSize: 16,

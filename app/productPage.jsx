@@ -196,7 +196,7 @@ const handleBuyNow = async () => {
       'https://cdn.shopify.com/s/files/1/0734/7155/7942/files/M-4_ff350861-df10-41aa-bdd2-ad67de371ea7.webp?v=1739450564',
       'https://cdn.shopify.com/s/files/1/0734/7155/7942/files/M-5_1d797925-8a93-4b34-bccd-cd7d6efe8016.webp?v=1739450711',
     ];
-  } else if (title === 'Chandraprabha Vati') {
+  } else if (title === 'Chandraprabha Vati') { 
     extraImages = [
       'https://cdn.shopify.com/s/files/1/0929/2323/2544/files/M-1_c2479531-6133-4579-b222-f520eb1abef5.webp?v=1738926000',
       'https://cdn.shopify.com/s/files/1/0929/2323/2544/files/M-2_825f30be-11ee-4635-8de6-ad2c5b1fe444.webp?v=1738926017',

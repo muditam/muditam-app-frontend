@@ -112,8 +112,8 @@ export default function AfterPurchase() {
         </LinearGradient>
 
         <View style={styles.sectionBlock}>
-          <Text style={styles.sectionLabel}>My Tasks</Text>
-          <TouchableOpacity style={styles.taskCard}>
+          <Text style={styles.sectionLabel}>My Tasks</Text>  
+          <TouchableOpacity style={styles.taskCard}> 
             <View style={styles.taskHighlight} />
             <Text style={styles.taskText}>Buy your next kit</Text>
             <Ionicons name="chevron-forward" size={20} color="black" />
@@ -272,6 +272,7 @@ const styles = StyleSheet.create({
     paddingVertical: 25,
   },
   reorderWrapper: {
+    
     paddingHorizontal: 16,
     marginTop: 8,
   },

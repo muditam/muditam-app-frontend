@@ -222,7 +222,7 @@ export default function HeightWeightScreen() {
 
           <Text
             style={{
-              fontSize: 20,
+              fontSize: 23,
               color: "white", 
               fontWeight: "600",
             }}

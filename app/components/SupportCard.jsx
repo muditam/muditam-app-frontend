@@ -4,20 +4,20 @@ import { FontAwesome, Feather } from '@expo/vector-icons';
 
 const SupportCard = () => {
   const handleWhatsApp = () => {
-    const phoneNumber = '8989174741';
+    const phoneNumber = '9625368707';
     const url = `https://wa.me/91${phoneNumber}`;
     Linking.openURL(url).catch(err => console.error("Couldn't open WhatsApp", err));
   };
 
   const handleCall = () => {
-    const phoneNumber = 'tel:8989174741';
+    const phoneNumber = 'tel:9625368707';
     Linking.openURL(phoneNumber).catch(err => console.error("Couldn't make call", err));
   };
 
-  return (
+  return ( 
     <>
-    <View style={styles.line2} />
-    <View style={styles.card}>
+    <View style={styles.line2} /> 
+    <View style={styles.card}> 
       {/* Top Content */}
       
       <View style={styles.topRow}>

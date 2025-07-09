@@ -14,12 +14,12 @@ const { width } = Dimensions.get('window');
 const reviews = [
   {
     id: '1',
-    name: 'Bilal Ahmed Shah',
+    name: 'Vikas, 60',
     rating: 5,
     shortText:
-      'My friends used to tease me all the time about hair loss but now I am glad that my hair is full. I feel much more confid...',
+      'I had been diabetic for 7 years, and nothing was really working. But after starting Muditam’s...',
     fullText:
-      'My friends used to tease me all the time about hair loss but now I am glad that my hair is full. I feel much more confident now. My family is also happy, a big thank you to the Muditam team.',
+      'I had been diabetic for 7 years, and nothing was really working. But after starting Muditam’s supplements and following their diet, my sugar levels started coming down within a month. I feel more energetic and finally hopeful.',
   },
   {
     id: '2',
@@ -50,6 +50,24 @@ const reviews = [
   },
   {
     id: '5',
+    name: 'Pooja Singh',
+    rating: 4,
+    shortText:
+      'Great results in just one month. Their diet and supplement combo is perfect...',
+    fullText:
+      'Great results in just one month. Their diet and supplement combo is perfect. And I love how convenient it is to follow their plan.',
+  },
+  {
+    id: '6',
+    name: 'Pooja Singh',
+    rating: 4,
+    shortText:
+      'Great results in just one month. Their diet and supplement combo is perfect...',
+    fullText:
+      'Great results in just one month. Their diet and supplement combo is perfect. And I love how convenient it is to follow their plan.',
+  },
+  {
+    id: '7',
     name: 'Pooja Singh',
     rating: 4,
     shortText:

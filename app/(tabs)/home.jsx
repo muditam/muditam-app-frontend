@@ -73,7 +73,7 @@ export default function HomeScreen() {
             <View style={{ alignItems: 'center', backgroundColor: '#F3F4F6' }}>
               <Image
                 source={{
-                  uri: 'https://cdn.shopify.com/s/files/1/0734/7155/7942/files/2ND_PAGE_TOP_BANNER.png?v=1750145299',
+                  uri: 'https://cdn.shopify.com/s/files/1/0734/7155/7942/files/1ST_HOMESCREEN_BANNER_2.png?v=1752044383',
                 }}
                 style={{
                   width: '100%',
@@ -88,7 +88,7 @@ export default function HomeScreen() {
                 backgroundColor: '#fff',
                 padding: 20,
                 borderRadius: 25,
-                marginTop: -15,
+                marginTop: -25,
                 marginBottom: 24,
               }}
             >
@@ -100,7 +100,7 @@ export default function HomeScreen() {
                   marginBottom: 16,
                 }}
               >
-                Your journey to better sugar control begins with a 2-minute quiz.
+                Your journey to better sugar control begins with a 2-minute quiz
               </Text>
 
               <TouchableOpacity

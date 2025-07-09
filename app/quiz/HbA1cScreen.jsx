@@ -173,7 +173,7 @@ const styles = StyleSheet.create({
     height: 100,
   },
   headerTitle: {
-    fontSize: 26,
+    fontSize: 23,
     fontWeight: '600',
     color: 'white', 
   },
