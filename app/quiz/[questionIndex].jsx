@@ -34,7 +34,7 @@ const questions = [
   },
   {
     id: 2,
-    question: "What is your current diabetic status?",
+    question: "What is your current diabetes status?",
     type: "choice",
     title: "Your Current Condition",
     options: [
@@ -84,14 +84,13 @@ const questions = [
       "301-400 mg/dL",
       "More than 400 mg/dL",
       "I am not aware",
-    ],
-    tips: "The sequence in which you eat your food can affect your post prandial sugars. And postprandial sugars are tested exactly 2 hours after your meal.",
+    ], 
   },
   {
     id: 6,
     question: "Do you have any other conditions other than diabetes?",
     type: "multi",
-    title: "Sysmptoms",
+    title: "Other Conditions",
     options: [
       "Hypertension",
       "High Cholesterol",
@@ -121,7 +120,6 @@ const questions = [
       "Constipation",
       "None",
     ],
-    tips: "The symptoms of diabetes can be reversed. It's important to take care of them in early stage and reverse them.",
   },
   {
     id: 8,
@@ -157,7 +155,7 @@ const questions = [
     id: 11,
     question: "How often do you eat or drink sugary foods?",
     type: "choice",
-    title: "Sugar Level",
+    title: "Sugar Consumption",
     options: [
       "Regularly - I can't resist sweet desserts or snacks",
       "Frequently - I consume sugar in tea or coffee (2 or more teaspoons of sugar daily)",
@@ -198,13 +196,11 @@ const questions = [
     id: 14,
     question: "Do you feel any change in your weight in last 6 months?",
     type: "choice",
-    title: "Weight",
+    title: "Weight Fluctuation",
     options: ["Recently Gained Weight", "Recently Lost Weight", "No Change"],
     tips: "85% of people with Diabetes are overweight and weight gain worsen the diabetes.",
   },
 ];
-
-
 
 
 export default function QuestionScreen() {
@@ -213,7 +209,7 @@ export default function QuestionScreen() {
   const router = useRouter();
 
   const [answers, setAnswers] = useState([]);
-  const [selectedOption, setSelectedOption] = useState([]);
+  const [selectedOption, setSelectedOption] = useState([]); 
   const [inputValue, setInputValue] = useState("");
 
   const currentQuestion = questions[index];

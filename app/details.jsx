@@ -30,7 +30,7 @@ export default function UserProfileForm() {
   const [loadingSubmit, setLoadingSubmit] = useState(false);
 
   const [yearModalVisible, setYearModalVisible] = useState(false);
-  const yearList = Array.from({ length: 2011 - 1960 }, (_, i) => `${1960 + i}`);
+  const yearList = Array.from({ length: 2011 - 1935 }, (_, i) => `${1935 + i}`);
 
   useEffect(() => {
     if (!phoneParam) {
@@ -58,7 +58,7 @@ export default function UserProfileForm() {
       return;
     }
 
-    if (email && !/^[\w.-]+@(?:gmail\.com|yahoo\.com|new\.com)$/i.test(email)) {
+    if (email && !/@/.test(email)) {
       Alert.alert("Invalid Email", "Please enter a valid email address.");
       return;
     }
@@ -139,19 +139,41 @@ export default function UserProfileForm() {
               <View style={styles.modalOverlay}>
                 <View style={styles.modalContent}>
                   <Text style={styles.modalTitle}>Select Year of Birth</Text>
-                  <ScrollView contentContainerStyle={{ paddingBottom: 20 }}>
+                  <ScrollView 
+                  contentContainerStyle={{ paddingBottom: 20 }}
+  ref={(scrollView) => {
+    if (scrollView && !yearOfBirth) {
+      const defaultIndex = yearList.findIndex((y) => y === "1965");
+      if (defaultIndex !== -1) {
+        setTimeout(() => {
+          scrollView.scrollTo({ y: defaultIndex * 44, animated: false });
+        }, 10);
+      }
+    }
+  }}
+                  >
                     {yearList.map((year) => (
-                      <TouchableOpacity
-                        key={year}
-                        onPress={() => {
-                          setYearOfBirth(year);
-                          setYearModalVisible(false);
-                        }}
-                        style={styles.modalItem}
-                      >
-                        <Text style={styles.modalItemText}>{year}</Text>
-                      </TouchableOpacity>
-                    ))}
+    <TouchableOpacity
+      key={year}
+      onPress={() => {
+        setYearOfBirth(year);
+        setYearModalVisible(false);
+      }}
+      style={[
+        styles.modalItem,
+        year === (yearOfBirth || "1965") && styles.modalItemSelected,
+      ]}
+    >
+      <Text
+        style={[
+          styles.modalItemText,
+          year === (yearOfBirth || "1965") && styles.modalItemTextSelected,
+        ]}
+      >
+        {year}
+      </Text>
+    </TouchableOpacity>
+  ))}
                   </ScrollView>
                   <TouchableOpacity onPress={() => setYearModalVisible(false)} style={styles.closeButton}>
                     <Text style={styles.closeButtonText}>Close</Text>
@@ -305,6 +327,14 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
   },
+  modalItemSelected: {
+  backgroundColor: "#e9d5ff",
+  borderRadius: 6,
+},
+modalItemTextSelected: {
+  fontWeight: "bold",
+  color: "#9D57FF",
+},
   genderRow: {
     flexDirection: "row",
     justifyContent: "space-between",

@@ -17,6 +17,8 @@ import { Ionicons, FontAwesome5, Entypo } from "@expo/vector-icons";
 import * as Notifications from "expo-notifications";
 import * as Device from "expo-device";
 import DateTimePicker from "@react-native-community/datetimepicker";
+import { Appearance } from "react-native";
+import { useColorScheme } from "react-native";
 
 
 Notifications.setNotificationHandler({
@@ -29,6 +31,11 @@ Notifications.setNotificationHandler({
 
 
 export default function MeScreen() {
+  const colorScheme = Appearance.getColorScheme();
+  const isDarkMode = theme === "dark";
+  const theme = useColorScheme();
+
+
   const router = useRouter();
   const [user, setUser] = useState(null);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
@@ -51,7 +58,7 @@ export default function MeScreen() {
 
   const saveReminder = async (type, time) => {
     try {
-      const res = await fetch("http://192.168.1.23:3001/api/reminder", {
+      const res = await fetch("https://muditam-app-backend.onrender.com/api/reminder", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ type, time, userId: user._id }),
@@ -176,15 +183,11 @@ export default function MeScreen() {
         lightColor: "#FF231F7C",
       });
     }
-
-
-    // ✅ Get Expo token
+ 
     const token = (await Notifications.getExpoPushTokenAsync()).data;
 
-
-    // ✅ Send token to backend
     try {
-      const res = await fetch("http://192.168.1.11:3001/api/user/save-token", {
+      const res = await fetch("https://muditam-app-backend.onrender.com/api/user/save-token", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId, expoPushToken: token }),
@@ -192,7 +195,7 @@ export default function MeScreen() {
 
 
       if (res.ok) {
-        console.log("✅ Token saved to backend");
+        console.log("Token saved to backend");
       } else {
         const errorText = await res.text();
         console.error("Failed to save token:", errorText);
@@ -298,7 +301,6 @@ export default function MeScreen() {
         {[
           { title: "All Products", route: "/products" },
           { title: "Terms & Policies", route: "/terms" },
-          { title: "Read More", route: "/read-more" },
         ].map((item, i) => (
           <TouchableOpacity
             key={i}
@@ -375,7 +377,8 @@ export default function MeScreen() {
                   value={reminderAllEnabled}
                   onValueChange={(val) => {
                     if (!val) {
-                      setShowConfirmOffModal(true);
+                      setTimeout(() => setShowConfirmOffModal(true), 300);
+                      setShowReminderSheet(false);
                     } else {
                       const updated = reminders.map((r) => ({
                         ...r,
@@ -427,7 +430,10 @@ export default function MeScreen() {
 
               {/* List of reminders for selected type */}
               <View style={{ height: 200 }}>
-                <ScrollView showsVerticalScrollIndicator={false}>
+                <ScrollView
+                  showsVerticalScrollIndicator={false}
+                  nestedScrollEnabled={true}
+                >
                   {reminders.filter((r) => r.type === reminderType).length ===
                   0 ? (
                     <Text
@@ -454,7 +460,10 @@ export default function MeScreen() {
                             borderWidth: 0.25,
                             borderRadius: 6,
                             marginBottom: 8,
+                            paddingVertical: Platform.OS === "ios" ? 5 : 0,
                             paddingHorizontal: 16,
+
+
                             justifyContent: "space-between",
                           }}
                         >
@@ -502,7 +511,7 @@ export default function MeScreen() {
                                   )
                                 );
                               }}
-                              trackColor={{ false: "#ccc", true: "#543087" }}
+                              trackColor={{ false: "#ccc", true: "#9D57FF" }}
                               thumbColor={reminder.enabled ? "#fff" : "#eee"}
                               ios_backgroundColor="#ccc"
                             />
@@ -532,7 +541,184 @@ export default function MeScreen() {
               </View>
 
 
-              {/* Add Reminder Button */}
+              {Platform.OS === "ios" && showTimePicker && (
+                <Modal
+                  transparent
+                  animationType="slide"
+                  visible={showTimePicker}
+                  onRequestClose={() => setShowTimePicker(false)}
+                >
+                  <View
+                    style={{
+                      flex: 1,
+                      justifyContent: "flex-end",
+                      backgroundColor: "rgba(0, 0, 0, 0.4)",
+                    }}
+                  >
+                    <View
+                      style={{
+                        // backgroundColor: "white",
+                        backgroundColor:
+                          theme === "dark" ? "rgba(0, 0, 0, 0.8)" : "#fff",
+                        paddingTop: 16,
+                        paddingBottom: 24,
+                        paddingHorizontal: 20,
+                        borderTopLeftRadius: 12,
+                        borderTopRightRadius: 12,
+                      }}
+                    >
+                      <Text
+                        style={{
+                          fontSize: 18,
+                          fontWeight: "600",
+                          marginBottom: 8,
+                          // color:"white",
+                          color: theme === "dark" ? "#fff" : "#000",
+                        }}
+                      >
+                        Select Time
+                      </Text>
+                      <DateTimePicker
+                        value={new Date(`1970-01-01T${newTime}:00`)}
+                        mode="time"
+                        display="spinner"
+                        onChange={(event, selectedDate) => {
+                          if (selectedDate) {
+                            const hours = selectedDate
+                              .getHours()
+                              .toString()
+                              .padStart(2, "0");
+                            const minutes = selectedDate
+                              .getMinutes()
+                              .toString()
+                              .padStart(2, "0");
+                            setNewTime(`${hours}:${minutes}`);
+                          }
+                        }}
+                        style={{ marginBottom: 20 }}
+                      />
+                      <View
+                        style={{
+                          flexDirection: "row",
+                          justifyContent: "space-between",
+                          gap: 12,
+                        }}
+                      >
+                        <TouchableOpacity
+                          style={{
+                            flex: 1,
+                            paddingVertical: 10,
+                            borderRadius: 8,
+                            borderColor: "#ccc",
+                            borderWidth: 1,
+                            alignItems: "center",
+                          }}
+                          onPress={() => setShowTimePicker(false)}
+                        >
+                          <Text style={{ fontSize: 16, color: "#333" }}>
+                            Cancel
+                          </Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          style={{
+                            flex: 1,
+                            paddingVertical: 10,
+                            borderRadius: 8,
+                            backgroundColor: "#9D57FF",
+                            alignItems: "center",
+                          }}
+                          onPress={() => {
+                            if (editingReminderId) {
+                              setReminders(
+                                reminders.map((r) =>
+                                  r.id === editingReminderId
+                                    ? { ...r, time: newTime }
+                                    : r
+                                )
+                              );
+                            } else {
+                              const newId =
+                                Date.now().toString() +
+                                Math.random().toString(36).slice(2, 7);
+                              setReminders([
+                                ...reminders,
+                                {
+                                  id: newId,
+                                  type: reminderType,
+                                  time: newTime,
+                                  enabled: true,
+                                },
+                              ]);
+                            }
+                            setShowTimePicker(false);
+                          }}
+                        >
+                          <Text style={{ color: "#fff", fontSize: 16 }}>
+                            OK
+                          </Text>
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  </View>
+                </Modal>
+              )}
+              {Platform.OS === "android" && showTimePicker && (
+                <DateTimePicker
+                  value={new Date(`1970-01-01T${newTime}:00`)}
+                  mode="time"
+                  display="default"
+                  onChange={(event, selectedDate) => {
+                    if (event.type === "dismissed") {
+                      setShowTimePicker(false);
+                      return;
+                    }
+
+
+                    if (selectedDate) {
+                      const hours = selectedDate
+                        .getHours()
+                        .toString()
+                        .padStart(2, "0");
+                      const minutes = selectedDate
+                        .getMinutes()
+                        .toString()
+                        .padStart(2, "0");
+                      const updatedTime = `${hours}:${minutes}`;
+                      setNewTime(updatedTime);
+
+
+                      if (editingReminderId) {
+                        setReminders(
+                          reminders.map((r) =>
+                            r.id === editingReminderId
+                              ? { ...r, time: updatedTime }
+                              : r
+                          )
+                        );
+                      } else {
+                        const newId =
+                          Date.now().toString() +
+                          Math.random().toString(36).slice(2, 7);
+                        setReminders([
+                          ...reminders,
+                          {
+                            id: newId,
+                            type: reminderType,
+                            time: updatedTime,
+                            enabled: true,
+                          },
+                        ]);
+                      }
+                    }
+
+
+                    setShowTimePicker(false);
+                  }}
+                />
+              )}
+
+
+              {/* buttons */}
               <View
                 style={{
                   display: "flex",
@@ -563,48 +749,6 @@ export default function MeScreen() {
 
 
           {/* Time Picker for Add/Edit */}
-          {showTimePicker && (
-            <DateTimePicker
-              value={new Date(`1970-01-01T${newTime}:00`)}
-              mode="time"
-              display={Platform.OS === "ios" ? "spinner" : "default"}
-              onChange={(event, selectedDate) => {
-                setShowTimePicker(false);
-                if (selectedDate) {
-                  const hours = selectedDate
-                    .getHours()
-                    .toString()
-                    .padStart(2, "0");
-                  const minutes = selectedDate
-                    .getMinutes()
-                    .toString()
-                    .padStart(2, "0");
-                  if (editingReminderId) {
-                    setReminders(
-                      reminders.map((r) =>
-                        r.id === editingReminderId
-                          ? { ...r, time: `${hours}:${minutes}` }
-                          : r
-                      )
-                    );
-                  } else {
-                    const newId =
-                      Date.now().toString() +
-                      Math.random().toString(36).slice(2, 7);
-                    setReminders([
-                      ...reminders,
-                      {
-                        id: newId,
-                        type: reminderType,
-                        time: `${hours}:${minutes}`,
-                        enabled: true,
-                      },
-                    ]);
-                  }
-                }
-              }}
-            />
-          )}
         </Modal>
 
 
@@ -739,6 +883,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     padding: 16,
+    backgroundColor: "#F7F0FF",
     marginBottom: 24,
     marginHorizontal: -16,
   },

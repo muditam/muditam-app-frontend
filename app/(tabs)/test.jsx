@@ -35,7 +35,7 @@ export default function TestTab() {
             <Feather name="arrow-left" size={24} color="white" />
           </Pressable> 
 
-          <Text style={{ color: "white", fontSize: 20, fontWeight: "600" }}>DIABETIC QUIZ</Text>
+          <Text style={{ color: "white", fontSize: 20, fontWeight: "600" }}>DIABETES QUIZ</Text>
 
           <Pressable onPress={() => router.back()} style={{ paddingHorizontal: 10 }}>
             <Feather name="x" size={24} color="white" />

@@ -1,5 +1,3 @@
-
-
 import React, { useRef, useEffect, useState } from "react";
 import {
   View,
@@ -15,22 +13,43 @@ import { Feather } from "@expo/vector-icons";
 import MaterialIcons from "react-native-vector-icons/MaterialIcons";
 import FontAwesome5 from "react-native-vector-icons/FontAwesome5";
 import faqData from "./Questions/Questions";
+import { SafeAreaView } from "react-native-safe-area-context";
+
 
 export default function NeedHelpFullScreen() {
   const route = useRoute();
   const navigation = useNavigation();
 
 
-  const { title: initialTitle } = route.params || {};
+  const { title: initialTitle } = route.params || {}; 
 
 
   const BOXES = [
-    { title: "FAQs", iconType: MaterialIcons, iconName: "help-outline" }, 
-    { title: "Diabetes Test", iconType: FontAwesome5, iconName: "vial" },
-    { title: "Diabetes Expert", iconType: Ionicons, iconName: "person-circle-outline" },
-    { title: "Diet Plan", iconType: MaterialIcons, iconName: "restaurant-menu" },
-    { title: "Payment Queries", iconType: MaterialIcons, iconName: "payment" },
-    { title: "Moneyback Guarantee", iconType: FontAwesome5, iconName: "hand-holding-usd" },
+    {
+      title: "Doctor Related",
+      iconType: MaterialIcons,
+      iconName: "help-outline",
+    },
+    {
+      title: "Expert Related",
+      iconType: Ionicons,
+      iconName: "person-circle-outline",
+    },
+    {
+      title: "Diet & Lifestyle",
+      iconType: MaterialIcons,
+      iconName: "restaurant-menu",
+    },
+    {
+      title: "App",
+      iconType: MaterialIcons,
+      iconName: "payment",
+    },
+    {
+      title: "Delivery & Support",
+      iconType: FontAwesome5,
+      iconName: "hand-holding-usd",
+    },
   ];
 
 
@@ -59,7 +78,7 @@ export default function NeedHelpFullScreen() {
 
   const renderFAQs = () => (
     <View>
-      <Text style={styles.heading}>{selectedTitle} Questions</Text>
+      <Text style={styles.heading}>{selectedTitle}&nbsp;Questions</Text>
       {faqs.map((item, index) => (
         <View key={index} style={styles.faqItem}>
           <Pressable
@@ -125,8 +144,8 @@ export default function NeedHelpFullScreen() {
 
 
   return (
-    <View style={styles.container}>
-      {/* Navbar with Back Button */}
+    <SafeAreaView style={{flex:1, backgroundColor:"#fff"}}>
+      <View style={styles.container}>
       <Pressable onPress={handleBackPress} style={styles.backButton}>
         <Feather name="arrow-left" size={24} color="black" />
         <Text style={styles.backText}>Questions</Text>
@@ -157,7 +176,9 @@ export default function NeedHelpFullScreen() {
                     size={24}
                     color={isActive ? "#9D57FF" : "#333"}
                   />
-                  <Text style={[styles.iconLabel, isActive && styles.activeText]}>
+                  <Text
+                    style={[styles.iconLabel, isActive && styles.activeText]}
+                  >
                     {item.title}
                   </Text>
                   {isActive && <View style={styles.activeLine} />}
@@ -174,6 +195,8 @@ export default function NeedHelpFullScreen() {
         {renderContent()}
       </ScrollView>
     </View>
+    </SafeAreaView>
+   
   );
 }
 
@@ -182,7 +205,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#fff",
-    paddingTop: 30,
+    paddingTop:16,
   },
 
 
@@ -237,7 +260,8 @@ const styles = StyleSheet.create({
   activeText: {
     color: "#9D57FF",
   },
- 
+
+
   contentContainer: {
     padding: 16,
     paddingBottom: 32,
@@ -278,7 +302,7 @@ const styles = StyleSheet.create({
   },
 
 
-   activeText: {
+  activeText: {
     color: "#9D57FF",
   },
 
@@ -306,7 +330,7 @@ const styles = StyleSheet.create({
   contentContainer: {
     paddingBottom: 100,
     paddingHorizontal: 16,
-    paddingVertical:20
+    paddingVertical: 20,
   },
 });
 

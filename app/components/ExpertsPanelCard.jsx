@@ -11,15 +11,15 @@ import {
 
 const expertImages = [
   "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/Deepti_Gupta.jpg?v=1752042232",
-  "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/Mansvi_Ahuja_43df45a0-54d7-42bd-af28-b6a09d30dd2b.jpg?v=1752042232",
+  "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/Mansvi_Ahuja-3.jpg?v=1752234951",
+  "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/Asha_Kaushik_dcfbef6c-11ee-4a37-9189-3ea8955171e7.jpg?v=1752234951",
   "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/Kunal_Choudhary_a718d502-b654-4bff-84d4-cbaee1d01994.jpg?v=1752042232",
   "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/Devanshi_Priyanka_28446acf-4095-44bd-a6ce-f1f12ba0e6b2.jpg?v=1752042233",
   "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/Sonal_Dubey_f0292e10-2ac2-4d92-8741-4620f2543ce2.jpg?v=1752042232",
   "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/Sidra_Qaseem.jpg?v=1752042232",
   "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/Saloni_Kumari.jpg?v=1752042233", 
   "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/Kritika_Khator.jpg?v=1752042232",
-  "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/Sahajpreet_Kaur.jpg?v=1752042233",
-  "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/Afrin_Rifat.jpg?v=1752042232", 
+  "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/Sahajpreet_Kaur.jpg?v=1752042233",  
 ];
 
 
@@ -43,7 +43,6 @@ export default function ExpertsPanel() {
               />
             </Pressable>
           </View>
-
 
           <View style={styles.avatarGrid}>
             {expertImages.map((url, index) => (

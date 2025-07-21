@@ -22,6 +22,7 @@ import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { Feather, Ionicons } from "@expo/vector-icons";
 import { Modal } from "react-native";
 
+
 // 1. Define the custom order
 const PRODUCT_ORDER = [
   "karela jamun fizz",
@@ -35,6 +36,7 @@ const PRODUCT_ORDER = [
   "performance forever",
 ];
 
+
 export default function Products() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -43,9 +45,11 @@ export default function Products() {
   const router = useRouter();
   const { addToCart, cartItems, incrementItem, decrementItem } = useCart();
 
+
   const categories = ["All", "Diabetes", "Liver", "Gut", "MenHealth", "Energy"];
-  const [selectedCategory, setSelectedCategory] = useState("All"); 
- 
+  const [selectedCategory, setSelectedCategory] = useState("All");
+
+
   const categoryToProductsMap = {
     diabetes: [
       "karela jamun fizz",
@@ -68,6 +72,7 @@ export default function Products() {
       const indexA = PRODUCT_ORDER.indexOf(nameA);
       const indexB = PRODUCT_ORDER.indexOf(nameB);
 
+
       // If both found, sort by custom order
       if (indexA !== -1 && indexB !== -1) {
         return indexA - indexB;
@@ -81,6 +86,7 @@ export default function Products() {
     });
   };
 
+
   const filteredProducts =
     selectedCategory === "All"
       ? sortProducts(products)
@@ -92,6 +98,7 @@ export default function Products() {
           )
         );
 
+
   useEffect(() => {
     fetch("https://muditam-app-backend.onrender.com/api/shopify/products")
       .then((res) => res.json())
@@ -102,6 +109,7 @@ export default function Products() {
       .finally(() => setLoading(false));
   }, []);
 
+
   const handlePress = (item) => {
     router.push({
       pathname: "/productPage",
@@ -109,15 +117,18 @@ export default function Products() {
     });
   };
 
+
   const handleAddToCart = (item) => {
     addToCart(item);
     setShowPopup(true);
+
 
     Animated.timing(popupAnim, {
       toValue: 0,
       duration: 300,
       useNativeDriver: true,
     }).start();
+
 
     setTimeout(() => {
       Animated.timing(popupAnim, {
@@ -128,9 +139,11 @@ export default function Products() {
     }, 5000);
   };
 
+
   const handleIncrement = (item) => {
     incrementItem(item.id);
   };
+
 
   const handleDecrement = (item) => {
     const qty = getItemQuantity(item.id);
@@ -141,17 +154,21 @@ export default function Products() {
     }
   };
 
+
   const { width } = useWindowDimensions();
   const cardWidth = (width - 48) / 2;
+
 
   const getItemQuantity = (productId) => {
     const item = cartItems.find((cartItem) => cartItem.id === productId);
     return item?.quantity || 0;
   };
 
+
   const handleViewCart = () => {
     router.push("/cart");
   };
+
 
   if (loading) {
     return (
@@ -161,16 +178,13 @@ export default function Products() {
     );
   }
 
+
   return (
     <SafeAreaView style={styles.safeArea}>
-      <View style={[styles.headerContainer, styles.safeHeader]}>
-        <TouchableOpacity
-          onPress={() => router.back()}
-          style={styles.backArrow}
-        >
-          <Feather name="arrow-left" size={24} color="black" />
-        </TouchableOpacity>
+      <View style={[styles.headerContainer]}>
+        
         <Text style={styles.headerTitle}>All Products</Text>
+
 
         <TouchableOpacity
           onPress={handleViewCart}
@@ -185,7 +199,9 @@ export default function Products() {
         </TouchableOpacity>
       </View>
 
+
       <View style={styles.grayLine} />
+
 
       <ScrollView
         horizontal
@@ -219,21 +235,27 @@ export default function Products() {
         })}
       </ScrollView>
 
-      <FlatList
-        data={filteredProducts}
-        numColumns={2}
-        keyExtractor={(item) => item.id.toString()}
+
+      <ScrollView
         contentContainerStyle={{
+          flexDirection: "row",
+          flexWrap: "wrap",
+          justifyContent: "space-between",
+          alignItems: "flex-start",
           paddingHorizontal: 16,
-          paddingBottom: 10,
-          paddingTop: 0,
+          paddingBottom: 150,
         }}
-        style={{ flexGrow: 1 }}
-        columnWrapperStyle={{ justifyContent: "space-between" }}
-        renderItem={({ item }) => {
+      >
+        {filteredProducts.map((item) => {
           const quantity = getItemQuantity(item.id);
           return (
-            <View style={[styles.productCard, { width: cardWidth }]}>
+            <View
+              key={item.id}
+              style={[
+                styles.productCard,
+                { width: cardWidth, marginBottom: 16 },
+              ]}
+            >
               <TouchableOpacity onPress={() => handlePress(item)}>
                 <Image
                   source={{ uri: item.image }}
@@ -241,9 +263,10 @@ export default function Products() {
                 />
                 <Text style={styles.productTitle}>{item.title}</Text>
                 <View style={styles.priceRow}>
-                  <Text style={styles.productPrice}>₹&nbsp;{item.price}</Text>
+                  <Text style={styles.productPrice}>₹ {item.price}</Text>
                 </View>
               </TouchableOpacity>
+
 
               {quantity > 0 ? (
                 <View style={styles.counterContainer}>
@@ -278,8 +301,9 @@ export default function Products() {
               )}
             </View>
           );
-        }}
-      />
+        })}
+      </ScrollView>
+
 
       {showPopup && (
         <Animated.View
@@ -308,17 +332,17 @@ export default function Products() {
   );
 }
 
+
 const cardWidth = (Dimensions.get("window").width - 48) / 2;
+
 
 const styles = StyleSheet.create({
   safeArea: {
-    flex: 1,
     backgroundColor: "#F7F2FF",
-    paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
+    paddingTop: 16,
   },
-  safeHeader: {
-    marginTop: Platform.OS === "android" ? 0 : 0,
-  },
+
+
   loaderContainer: {
     flex: 1,
     justifyContent: "center",
@@ -497,3 +521,6 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
 });
+
+
+

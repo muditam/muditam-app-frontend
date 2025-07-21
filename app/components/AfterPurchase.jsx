@@ -13,6 +13,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
+import { StatusBar } from 'expo-status-bar'; // <-- Import StatusBar
 import SupportCard from '../components/SupportCard';
 import NeedHelpSection from '../components/NeedHelpSection';
 import KitProgressSection from '../components/KitProgressSection';
@@ -53,6 +54,9 @@ export default function AfterPurchase() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
+      {/* Set the StatusBar to 'light' so icons are white (good for dark header) */}
+      <StatusBar style="light" backgroundColor="#9C4DF4" translucent={false} />
+
       <LinearGradient
         colors={['#9C4DF4', '#7C4DFF']}
         start={{ x: 0, y: 0 }}
@@ -83,38 +87,44 @@ export default function AfterPurchase() {
         >
           <View style={styles.userRow}>
             <View style={styles.profileRow}>
-             {avatar ? (
-  <Image
-    source={{ uri: avatar }}
-    style={styles.profileImage}
-    onError={() => {
-      console.warn("Failed to load avatar:", avatar);
-      setAvatar('');
-    }}
-  />
-) : (
-  <Image
-    source={{
-      uri: gender === 'Male'
-        ? 'https://cdn.shopify.com/s/files/1/0734/7155/7942/files/Male.png?v=1750153759'
-        : 'https://cdn.shopify.com/s/files/1/0734/7155/7942/files/Female_8b0512eb-3582-4d53-9609-4924bd169c3a.png?v=1750153759',
-    }}
-    style={styles.profileImage}
-  />
-)}
+              {avatar ? (
+                <Image
+                  source={{ uri: avatar }}
+                  style={styles.profileImage}
+                  onError={() => {
+                    console.warn("Failed to load avatar:", avatar);
+                    setAvatar('');
+                  }}
+                />
+              ) : (
+                <Image
+                  source={{
+                    uri: gender === 'Male'
+                      ? 'https://cdn.shopify.com/s/files/1/0734/7155/7942/files/Male.png?v=1750153759'
+                      : 'https://cdn.shopify.com/s/files/1/0734/7155/7942/files/Female_8b0512eb-3582-4d53-9609-4924bd169c3a.png?v=1750153759',
+                  }}
+                  style={styles.profileImage}
+                />
+              )}
 
               <View>
                 <Text style={styles.userName}>Hi {name}</Text>
-                <Text style={styles.userSubtitle}>Every day you’re a step closer to,{'\n'}healthier hair!</Text>
+                <Text style={styles.userSubtitle}>Every step you take today supports a{'\n'}healthier tomorrow.</Text> 
               </View>
             </View>
           </View>
         </LinearGradient>
 
         <View style={styles.sectionBlock}>
-          <Text style={styles.sectionLabel}>My Tasks</Text>  
-          <TouchableOpacity style={styles.taskCard}> 
-            <View style={styles.taskHighlight} />
+          <Text style={styles.sectionLabel}>My Tasks</Text>
+          <TouchableOpacity style={styles.taskCard}>
+             <Image
+    source={{
+      uri: 'https://cdn.shopify.com/s/files/1/0734/7155/7942/files/Buy_your_next_kit_1.png?v=1752652413',
+    }}
+    style={styles.taskHighlight}
+    resizeMode="cover"
+  />
             <Text style={styles.taskText}>Buy your next kit</Text>
             <Ionicons name="chevron-forward" size={20} color="black" />
           </TouchableOpacity>
@@ -137,20 +147,27 @@ export default function AfterPurchase() {
         </View>
 
         <View style={styles.line3} />
-         <View style={{ marginHorizontal: 16 }}>
+        <View style={{ marginHorizontal: 16 }}>
           <Text style={styles.sectionTitle}>Diet Plan</Text>
           <View style={styles.dietCard}>
-            <Image style={{backgroundColor:"#000", borderRadius:8,height:123, width:141}}></Image>
-            <View style={{display:"flex", flexDirection:"column"}}>
+
+            <Image
+              source={{
+                uri: "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/Drinking_8_glasses.png?v=1752651128",
+              }}
+              style={{ backgroundColor: "#000", borderRadius: 8, height: 123, width: 120, marginRight: 10 }}
+              resizeMode="cover"
+            />
+            <View style={{ display: "flex", flexDirection: "column" }}>
               <Text style={styles.dietText}>
-              Drinking 8 glasses of water{"\n"}daily will improve your{"\n"}skin
-              overnight
-            </Text>
-            <TouchableOpacity style={styles.planBtn} onPress={() => router.push('/my-plan')}>
-              <Text style={styles.planBtnText}>View My Plan</Text>
-            </TouchableOpacity>
+                Drinking 8 glasses of water{"\n"}daily will improve your{"\n"}skin
+                overnight
+              </Text>
+              <TouchableOpacity style={styles.planBtn} onPress={() => router.push('/my-plan')}>
+                <Text style={styles.planBtnText}>View My Plan</Text>
+              </TouchableOpacity>
             </View>
-           
+
           </View>
         </View>
         <View style={styles.line4} />
@@ -182,9 +199,9 @@ export default function AfterPurchase() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#fff', 
+    backgroundColor: '#fff',
   },
-  header: { 
+  header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -208,10 +225,10 @@ const styles = StyleSheet.create({
     // Removed paddingBottom
   },
   greetingBox1: {
-    padding: 1, 
+    padding: 1,
   },
   greetingBox: {
-    padding: 16, 
+    padding: 16,
   },
   userRow: {
     flexDirection: 'row',
@@ -255,7 +272,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     borderRadius: 10,
     borderColor: '#A3A3A3',
-    borderWidth: 1, 
+    borderWidth: 1,
   },
   taskHighlight: {
     width: 90,
@@ -272,7 +289,6 @@ const styles = StyleSheet.create({
     paddingVertical: 25,
   },
   reorderWrapper: {
-    
     paddingHorizontal: 16,
     marginTop: 8,
   },
@@ -322,23 +338,23 @@ const styles = StyleSheet.create({
     borderWidth: 0.25,
     borderRadius: 8,
     padding: 16,
-    paddingTop:20,
-    display:"flex",
-    flexDirection:"row",
-    justifyContent:"space-between"
+    paddingTop: 20,
+    display: "flex",
+    flexDirection: "row",
+    justifyContent: "space-between"
   },
   dietText: {
     fontSize: 14,
     color: "#000",
-    lineHeight:18,
-    marginBottom:10,
+    lineHeight: 18,
+    marginBottom: 10,
   },
   planBtn: {
     backgroundColor: "#9D57FF",
     paddingVertical: 15,
     borderRadius: 12,
     alignItems: "center",
-    width: 180,
+    width: 160,
   },
   planBtnText: {
     color: '#fff',

@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text, StyleSheet, ScrollView, Pressable } from "react-native";
+import { View, Text, StyleSheet, ScrollView, Pressable, Platform } from "react-native";
 import MaterialIcons from "react-native-vector-icons/MaterialIcons";
 import FontAwesome5 from "react-native-vector-icons/FontAwesome5";
 import Ionicons from "react-native-vector-icons/Ionicons";
@@ -8,39 +8,35 @@ import { router } from "expo-router";
 import { useNavigation } from "@react-navigation/native";
 
 
-
-
 const BOXES = [
-  { title: "FAQs", icon: <MaterialIcons name="help-outline" size={24} /> },
-  { title: "Diabetes Test", icon: <FontAwesome5 name="vial" size={22} /> },
   {
-    title: "Diabetes Expert",
-    icon: <Ionicons name="person-circle-outline" size={24} />,
+    title: "Doctor Related",
+    icon: <FontAwesome5 name="stethoscope" size={20} />,
   },
   {
-    title: "Diet Plan",
-    icon: <MaterialIcons name="restaurant-menu" size={24} />,
+    title: "Expert Related",
+    icon: <Ionicons name="people-circle-outline" size={24} />, 
   },
   {
-    title: "Payment Queries",
-    icon: <MaterialIcons name="payment" size={24} />,
+    title: "Diet & Lifestyle",
+    icon: <MaterialIcons name="fitness-center" size={24} />,
   },
   {
-    title: "Moneyback Guarantee",
-    icon: <FontAwesome5 name="hand-holding-usd" size={20} />,
+    title: "App",
+     icon: <FontAwesome5 name="mobile-alt" size={20} />,
+  },
+  {
+    title: "Delivery & Support",
+    icon: <FontAwesome5 name="truck" size={20} />,
   },
 ];
 
 
 export default function NeedHelp() {
+  const navigation = useNavigation();
 
 
-
-
-const navigation = useNavigation()
-
-
-const handleBoxPress = (title) => {
+  const handleBoxPress = (title) => {
     navigation.navigate("needHelpContent/NeedHelpFullScreen", { title });
   };
 
@@ -70,7 +66,7 @@ const handleBoxPress = (title) => {
 
 
             <View style={styles.iconRight}>
-              <Feather name="chevron-right" size={28} color="black" />
+              <Feather name="chevron-right" size={26} color="black" />
             </View>
           </Pressable>
         ))}
@@ -84,12 +80,15 @@ const styles = StyleSheet.create({
   wrapper: {
     paddingVertical: 20,
     backgroundColor: "#fff",
-    paddingLeft: 16,
   },
   heading: {
     fontSize: 20,
     fontWeight: "600",
-    marginBottom:20,
+    marginBottom: 20,
+    paddingLeft: 16,
+  },
+  scrollContent:{
+    paddingLeft:16,
   },
   helpBox: {
     flexDirection: "row",
@@ -97,13 +96,14 @@ const styles = StyleSheet.create({
     backgroundColor: "#E4D0FF",
     borderRadius: 10,
     paddingVertical: 10,
+    paddingVertical:Platform.OS=="ios"?10:6,
     paddingHorizontal: 4,
     marginRight: 12,
-    width: 158,
+    width:Platform.OS==="ios"?158:145,
   },
   iconLeft: {
-    marginRight: 8,
-    marginLeft: 8,
+    marginLeft:Platform.OS==="ios"?8:4,
+    marginRight:Platform.OS==="ios"?8:4,
   },
   content: {
     flex: 1,
@@ -119,6 +119,7 @@ const styles = StyleSheet.create({
   iconRight: {
     marginLeft: 10,
     alignSelf: "center",
+    size:Platform.OS==="ios"?24:20,
   },
 });
 

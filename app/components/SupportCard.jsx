@@ -5,12 +5,12 @@ import { FontAwesome, Feather } from '@expo/vector-icons';
 const SupportCard = () => {
   const handleWhatsApp = () => {
     const phoneNumber = '9625368707';
-    const url = `https://wa.me/91${phoneNumber}`;
+    const url = `https://wa.me/91${phoneNumber}?text=Hi%2C%20I%E2%80%99ve%20been%20using%20the%20Muditam%20app%20and%20would%20like%20to%20connect%20with%20my%20Diabetes%20Expert.`;
     Linking.openURL(url).catch(err => console.error("Couldn't open WhatsApp", err));
   };
 
   const handleCall = () => {
-    const phoneNumber = 'tel:9625368707';
+    const phoneNumber = 'tel:8989174741';
     Linking.openURL(phoneNumber).catch(err => console.error("Couldn't make call", err));
   };
 
@@ -23,7 +23,7 @@ const SupportCard = () => {
       <View style={styles.topRow}>
         <View style={styles.textContainer}>
           <Text style={styles.title}>We are here for you,{'\n'}always.</Text>
-          <Text style={styles.subtitle}>Talk to your diabetic coach for free.</Text>
+          <Text style={styles.subtitle}>Talk to your diabetes coach for free.</Text>
         </View>
         <Image
           source={{ uri: 'https://cdn.shopify.com/s/files/1/0734/7155/7942/files/Mask_group_3.png?v=1747143071' }}
@@ -40,7 +40,7 @@ const SupportCard = () => {
 
         <TouchableOpacity style={styles.callButton} onPress={handleCall}>
           <Feather name="phone" size={18} color="#000" />
-          <Text style={styles.callButtonText}>Book A Call</Text>
+          <Text style={styles.callButtonText}>Call Us</Text>
         </TouchableOpacity>
       </View>
     </View>

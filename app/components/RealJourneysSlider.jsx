@@ -28,14 +28,14 @@ const testimonials = [
   },
   {
     image:
-      "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/B-5.png?v=1751973930",
+      "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/B-1.png?v=1751973930",
     name: "Anita Nair",
     city: "Kochi",
     avatar:
       "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/F-7.png?v=1751973981",
     description:
       "I was so tired of trying different things. Sugar used to stay high all the time. With Muditam, I finally saw it come under control. Feeling light and more active now.",
-    symptoms: ["Low energy", "Heaviness", "High post-meal sugars"],
+    symptoms: ["Low Energy", "Heaviness", "High Post-Meal Sugars"],
   },
   {
     image:
@@ -46,17 +46,17 @@ const testimonials = [
       "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/M-9.png?v=1751973980",
     description:
       "My sugar was very high, my legs used to sleep if I ever used to sit down for more than 10 mins. No energy, wanted to sleep all day and only used to wake up for urination several times. Since I started this treatment, all my problems are gone. No ants running, more energy & sugar also in control. ",
-    symptoms: ["Nerve Tingling", "High HbA1c", "Frequent Urination"],
+    symptoms: ["Tingling Sensation", "High HbA1c", "Frequent Urination"],
   },
   {
     image:
-      "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/B-1.png?v=1751973930",
+      "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/B-5.png?v=1751973930",
     name: "Meena Gupta",
     city: "Delhi",
     avatar:
       "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/F-3.png?v=1751973980",
     description:
-      "I started with Karela Jamun Fizz, then added Sugar Defend. Within 2 months, sugar fasting is 97 from 190. First time it’s that low in years. My digestion has also improved",
+      "I started with Karela Jamun Fizz, then added Sugar Defend. Within 2 months, sugar fasting is 115 from 341. First time it’s that low in years. My digestion has also improved",
     symptoms: ["Bloating", "Indigestion", "High fasting sugar"],
   },
   {

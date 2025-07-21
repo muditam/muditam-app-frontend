@@ -179,8 +179,7 @@ export default function MyProfile() {
                   {/* You can add more quiz details here */}
                 </View>
               </View>
-            ) : (
-              // Quiz not found: show "Take Diabetic Quiz" button
+            ) : ( 
               <TouchableOpacity
                 style={{
                   marginVertical: 16,
@@ -192,7 +191,7 @@ export default function MyProfile() {
                 onPress={() => router.push("/test")}
               >
                 <Text style={{ color: "white", fontWeight: "600", fontSize: 16 }}>
-                  Take Diabetic Quiz
+                  Take Diabetes Quiz
                 </Text>
               </TouchableOpacity>
             )}

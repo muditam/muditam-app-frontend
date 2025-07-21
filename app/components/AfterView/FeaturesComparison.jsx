@@ -10,8 +10,8 @@ const features = [
   "Constant Expert Support",
   "Focus on Long - Term Solution",
   "Safe for Long - Term Use",
-  "No Side Effects",
-  "Regular Follow Ups",
+  "No Non-Side Effects",
+  "Regular Follow Ups", 
 ];
 
 

@@ -74,9 +74,6 @@ export default function ProductModal({ visible, onClose, product }) {
   }, [visible]);
     if (!visible) return null; 
 
-
-
-
   if (!product) return null;
 
 
@@ -107,18 +104,27 @@ export default function ProductModal({ visible, onClose, product }) {
   const getBottomImages = () => {
     if (product.title === "Karela Jamun Fizz") {
       return [
-        "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/M-2_d3d4895f-28fe-45df-8640-365005abf725.webp?v=1745412045",
-        "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/M_-_6.webp?v=1745412625",
+        "https://cdn.shopify.com/s/files/1/0929/2323/2544/files/M-1_4b8d43c3-b2b3-4c27-9df1-7270c5d4012c.webp?v=1740555333",
+      "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/M-2_d3d4895f-28fe-45df-8640-365005abf725.webp?v=1745412045",
+      "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/M-5_fe076b79-b7f7-474d-bfc4-2928b31cb68a.webp?v=1745412567",
+      "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/M_-_6.webp?v=1745412625",
+      "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/M-8_f195ea40-a9e7-4bb6-adf6-d92ccab291bc.webp?v=1745412710",
       ];
     } else if (product.title === "Sugar Defend Pro") {
       return [
-        "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/M-3_ad0469a5-6aa9-4088-8c1c-10d3c9f320e2.webp?v=1745412079",
-        "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/M-7_54340b79-637e-4f52-8375-ae78f80dfd28.webp?v=1745669047",
+        "https://cdn.shopify.com/s/files/1/0929/2323/2544/files/M-1_e77f04a5-968a-4206-ae74-e48f23609647.webp?v=1738920670",
+      "https://cdn.shopify.com/s/files/1/0929/2323/2544/files/M-2_d11114c1-24e3-4a50-9e7e-949de1fabbba.webp?v=1738920692",
+      "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/M-3_36d1d318-a5a8-4aff-99fc-2d73f338c7d1.webp?v=1739450395",
+      "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/M-4_ff350861-df10-41aa-bdd2-ad67de371ea7.webp?v=1739450564",
+      "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/M-5_1d797925-8a93-4b34-bccd-cd7d6efe8016.webp?v=1739450711",
       ];
     } else if (product.title === "Vasant Kusmakar Ras") {
       return [
-        "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/mobile_6_40cb18e5-16b6-4d9b-bc4a-ab78cb386cc9.webp?v=1739017517",
-        "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/M-2_996026e0-60d5-4217-acdd-00429cc1b966.webp?v=1739448980",
+        "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/M-1_998babf9-8572-45a0-9019-b29060eeef5c.webp?v=1739450842",
+      "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/M-2_0da906be-e92f-4dd4-b615-9fd1b2184659.webp?v=1739450918",
+      "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/M-3_18fd147a-a4f9-42da-80c3-7e5de9a27a9a.webp?v=1739450969",
+      "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/M-4_77dd8a80-e75c-4ddc-9707-c9518c8d7c58.webp?v=1739450996",
+      "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/M-5_d11c8316-c02c-493c-b6d5-2757336bf413.webp?v=1739451019",
       ];
     }
     return [];
@@ -152,10 +158,8 @@ export default function ProductModal({ visible, onClose, product }) {
             <Text style={styles.closeText}>✕</Text>
           </TouchableOpacity>
 
-
          <ScrollView>
             <Text style={styles.heading}>{product.title}</Text>
-
 
             {/* Carousel */}
             <ScrollView
@@ -413,6 +417,5 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
 });
-
 
 

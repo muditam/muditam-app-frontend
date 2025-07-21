@@ -11,35 +11,35 @@ import { FontAwesome } from "@expo/vector-icons";
 
 const faqs = [
   {
-    question: "How do I get started with Muditam?",
+    question: "What exactly does Muditam do?",
     answer:
-      "To get started, simply take the Diabetes Quiz in the app. Based on your answers, we’ll suggest a personalized plan and recommend the most suitable supplements.",
+      "Muditam helps you manage Type 2 Diabetes and Prediabetes using a holistic approach rooted in Ayurveda. This includes expert consultations, natural supplements, lifestyle changes, and regular progress tracking – all in one app.",
   },
   {
-    question: "What is included in the personalized plan?",
+    question: "Do I have to follow a strict diet?",
     answer:
-      "Your personalized plan includes diet recommendations, natural supplements, lifestyle modifications, and daily tracking to help you manage your blood sugar levels.",
+      "Not at all. Muditam promotes realistic and easy-to-follow eating habits. While supplements alone can help, following the dietary suggestions provided by our experts leads to far better outcomes. We offer food swaps, portion tips, and meal timings that work with your lifestyle and cultural preferences.",
   },
   {
-    question: "Can I use Muditam with my current medication?",
+    question: "How is the plan customized for me?",
     answer:
-      "Muditam's supplements are natural and safe. However, we always recommend consulting with your healthcare provider before adding any new supplements to your routine, especially if you’re on medication.",
+      "After you complete a short quiz in the app, our system carefully evaluates your responses - including your symptoms, daily routine, and health preferences. Based on this input, we create a personalized plan that includes the right Ayurvedic supplements, targeted food suggestions, and lifestyle practices designed to support your specific diabetes journey.",
   },
   {
-    question: "Do I get professional support?",
-    answer:"Yes, you have access to real human support from Ayurvedic doctors, clinical nutritionists, and health coaches who are available to guide you via the app and WhatsApp."
+    question: "How soon can I expect to see results?",
+    answer:"Most users begin to notice improvements such as better fasting sugar levels, reduced fatigue, and more stable blood sugar patterns within 3–6 weeks. With consistent effort and adherence to the plan, long-term results typically become visible in 2–3 months."
   },
   {
-    question: "Can I follow Muditam if I have dietary restrictions?",
-    answer:"Yes! Muditam offers flexible and customizable plans. Whether you follow a specific diet or have dietary restrictions, your plan will be tailored to fit your needs."
+    question: "Can I use Muditam if I’m already on diabetes medication?",
+    answer:"Yes. Most of our users take Muditam supplements alongside their regular medication. Our formulations are natural, gentle, and designed to complement your current treatment. However, if you have multiple health conditions or take several medications, we recommend consulting our experts for personalized guidance before starting your plan."
   },
   {
-    question: "How long will it take to see results?",
-    answer:"Results vary from person to person depending on lifestyle, commitment, and consistency. We recommend following your plan consistently for the best long-term outcomes."
+    question: "What kind of support will I receive?",
+    answer:"You’ll be supported by our team of experts throughout your journey. You can ask questions, get advice, or modify your plan at any time via WhatsApp or scheduled calls."
   },
   {
-    question: "Who can benefit from using Muditam?",
-    answer:"Muditam is suitable for anyone looking to manage Type 2 Diabetes or Prediabetes with a holistic, natural approach. Whether you’re new to diabetes management or looking for better ways to control it, Muditam can help."
+    question: "Are there any side effects of the supplements?",
+    answer:"Our supplements are made from well-researched Ayurvedic ingredients and are generally well-tolerated. If you have specific allergies or sensitivities, please inform our team so we can customize your plan accordingly."
   },
 ];
 

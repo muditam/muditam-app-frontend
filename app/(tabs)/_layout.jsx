@@ -1,4 +1,4 @@
-import { Tabs } from 'expo-router';
+import { Tabs, useRouter } from 'expo-router';
 import { FontAwesome5, MaterialIcons, Ionicons } from '@expo/vector-icons';
 import { View, Text } from 'react-native';
 import { useEffect, useState } from 'react';
@@ -13,8 +13,30 @@ export default function Layout() {
   const [quizCompleted, setQuizCompleted] = useState(false);
   const [hasPurchased, setHasPurchased] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [userReady, setUserReady] = useState(false);
 
+  const router = useRouter();
+
+  // 1. Check if user is logged in before showing Tabs!
   useEffect(() => {
+    const checkUser = async () => {
+      try {
+        const userDetails = await AsyncStorage.getItem('userDetails');
+        if (!userDetails) {
+          router.replace('/login');
+        } else {
+          setUserReady(true);
+        }
+      } catch (err) {
+        setUserReady(true); // fail-safe
+      }
+    };
+    checkUser();
+  }, []);
+
+  // 2. Fetch quiz/purchase status (as before)
+  useEffect(() => {
+    if (!userReady) return;
     const fetchStatus = async () => {
       try {
         const isCompleted = await checkQuizStatus();
@@ -31,9 +53,9 @@ export default function Layout() {
       }
     };
     fetchStatus();
-  }, []);
+  }, [userReady]);
 
-  if (loading) return null;
+  if (!userReady || loading) return null; // Avoid flash or UI until ready
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }} edges={['bottom', 'left', 'right']}>
@@ -81,6 +103,9 @@ export default function Layout() {
                 icon = <Ionicons name="bar-chart-outline" size={25} color={iconColor} />;
                 label = 'Diet Cart';
                 break;
+              default:
+                icon = null;
+                label = '';
             }
 
             return (
@@ -123,7 +148,6 @@ export default function Layout() {
         />
         <Tabs.Screen name="products" />
         <Tabs.Screen name="videos" />
-
         <Tabs.Screen
           name="me"
           options={{
@@ -140,4 +164,3 @@ export default function Layout() {
     </SafeAreaView>
   );
 }
- 

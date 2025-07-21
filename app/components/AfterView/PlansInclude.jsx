@@ -35,7 +35,7 @@ const features = [
   {
     title: 'Health Coach',
     image:
-      'https://cdn.shopify.com/s/files/1/0734/7155/7942/files/Health_Coach.png?v=1751969140',
+      'https://cdn.shopify.com/s/files/1/0734/7155/7942/files/Health_Coach_1.png?v=1752647814',
   },
 ];
 

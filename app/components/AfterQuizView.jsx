@@ -290,7 +290,7 @@ export default function AfterQuizView() {
                                 icon: 'https://cdn.shopify.com/s/files/1/0734/7155/7942/files/Foot_41be811d-646b-4908-a3e5-8a756ef8d134.png?v=1747394357',
                             },
                         ].map((item, index) => {
-                            const isSelected = selectedCause === item.label;
+                            const isSelected = selectedCause === item.label; 
 
                             return (
                                 <Pressable
