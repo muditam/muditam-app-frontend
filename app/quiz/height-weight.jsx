@@ -13,45 +13,55 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Feather } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import * as Haptics from "expo-haptics"; // <-- Import Haptics 
+import * as Haptics from "expo-haptics"; // <-- Import Haptics
+
 
 const ITEM_WIDTH = 12;
 const screenWidth = Dimensions.get("window").width;
 
+
 const generateInchLabels = () => {
   const list = [];
-  for (let feet = 4; feet <= 6; feet++) {
+  for (let feet = 4; feet <= 8; feet++) {
     for (let inch = 0; inch <= 11; inch++) {
       const totalInches = feet * 12 + inch;
-      if (totalInches >= 48 && totalInches <= 77) {
-        list.push({ label: `${feet}'${inch}"`, value: totalInches });
+      if (totalInches >= 48 && totalInches <= 96) {
+        const isFootStart = inch === 0;
+        list.push({
+          label: isFootStart ? `${feet}'0"` : "",
+          value: totalInches,
+          isMajor: isFootStart,
+        });
       }
     }
   }
   return list;
 };
 
-const generateNumericRange = (min, max, step = 2) => {
+
+const generateNumericRange = (min, max, step = 1) => {
   const range = [];
   for (let i = min; i <= max; i += step) {
-    range.push(Math.round(i * 10) / 10); // Keep one decimal if needed
+    range.push(Math.round(i * 10) / 10);
   }
   return range;
 };
 
+
 const generateLbsRange = () => {
   const range = [];
-  for (let i = 20; i <= 200; i++) {
-    range.push(Math.round(i * 2.20462));
+  for (let i = 44; i <= 441; i++) {
+    range.push(i);
   }
-  return Array.from(new Set(range));
+  return range;
 };
+
 
 const Ruler = ({ data, selectedValue, setSelectedValue, isInchFormat }) => {
   const flatListRef = useRef();
   const lastIndexRef = useRef(null);
 
-  // Scroll to selected index when unit/initial value changes
+
   useEffect(() => {
     const index = data.findIndex((item) =>
       typeof item === "object"
@@ -59,19 +69,25 @@ const Ruler = ({ data, selectedValue, setSelectedValue, isInchFormat }) => {
         : item === selectedValue
     );
     if (index !== -1) {
-      flatListRef.current?.scrollToIndex({ index, animated: false });
-      lastIndexRef.current = index;
+      const timer = setTimeout(() => {
+        flatListRef.current?.scrollToIndex({ index, animated: false });
+        lastIndexRef.current = index;
+      }, 10); // Delay ensures FlatList is rendered
+      return () => clearTimeout(timer);
     }
-  }, [data, selectedValue]);
+  }, [selectedValue]);
+
 
   // Haptic feedback on every value "tick"
   const handleScroll = (event) => {
     let x = event.nativeEvent.contentOffset.x;
     let index = Math.round(x / ITEM_WIDTH);
 
+
     // Clamp
     if (index < 0) index = 0;
     if (index >= data.length) index = data.length - 1;
+
 
     if (lastIndexRef.current !== index) {
       lastIndexRef.current = index;
@@ -82,6 +98,25 @@ const Ruler = ({ data, selectedValue, setSelectedValue, isInchFormat }) => {
     }
   };
 
+
+  const handleScrollEnd = (event) => {
+    let x = event.nativeEvent.contentOffset.x;
+    let index = Math.round(x / ITEM_WIDTH);
+
+
+    if (index < 0) index = 0;
+    if (index >= data.length) index = data.length - 1;
+
+
+    if (lastIndexRef.current !== index) {
+      lastIndexRef.current = index;
+      const val = data[index];
+      setSelectedValue(typeof val === "object" ? val.value : val);
+      Haptics.selectionAsync();
+    }
+  };
+
+
   return (
     <View style={{ position: "relative", height: 70 }}>
       <FlatList
@@ -90,7 +125,9 @@ const Ruler = ({ data, selectedValue, setSelectedValue, isInchFormat }) => {
         horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={{
-          paddingHorizontal: (screenWidth - ITEM_WIDTH) / 2 - ITEM_WIDTH / 2,
+          paddingHorizontal: (screenWidth - ITEM_WIDTH) / 2 - ITEM_WIDTH / 0.6,
+
+
           alignItems: "flex-end",
         }}
         snapToInterval={ITEM_WIDTH}
@@ -103,20 +140,27 @@ const Ruler = ({ data, selectedValue, setSelectedValue, isInchFormat }) => {
         keyExtractor={(item) =>
           (typeof item === "object" ? item.value : item).toString()
         }
-        onScroll={handleScroll}
+        // onScroll={handleScroll}
+        onMomentumScrollEnd={handleScrollEnd}
         scrollEventThrottle={16}
         renderItem={({ item }) => {
           const value = typeof item === "object" ? item.value : item;
           const label = typeof item === "object" ? item.label : item;
+          const isMajor =
+            typeof item === "object" && item.hasOwnProperty("isMajor")
+              ? item.isMajor
+              : value % 10 === 0;
+
 
           const isSelected = value === selectedValue;
-          const isMajor = value % 10 === 0;
+
 
           const tickColor = isSelected ? "#000" : isMajor ? "#000" : "#999";
           const tickHeight = isSelected ? 45 : isMajor ? 30 : 15;
           const tickWidth = isSelected ? 2 : 1;
           const labelColor = isSelected ? "#000" : "#999";
           const tickPadding = isSelected ? 4 : isMajor ? 4 : 8;
+
 
           return (
             <View
@@ -135,7 +179,7 @@ const Ruler = ({ data, selectedValue, setSelectedValue, isInchFormat }) => {
                     fontWeight: isSelected ? "bold" : "400",
                     width: 45,
                     textAlign: "center",
-                    display: isSelected ? "none" : "flex",
+                    opacity: isMajor ? 1 : 0,
                   }}
                 >
                   {label}
@@ -157,35 +201,40 @@ const Ruler = ({ data, selectedValue, setSelectedValue, isInchFormat }) => {
   );
 };
 
+
 export default function HeightWeightScreen() {
   const router = useRouter();
   const [heightUnit, setHeightUnit] = useState("inches");
   const [weightUnit, setWeightUnit] = useState("kg");
-  const [height, setHeight] = useState(60); // cm or inchValue
-  const [weight, setWeight] = useState(70); // kg or lbs
+  const [height, setHeight] = useState(60);
+  const [weight, setWeight] = useState(70);
   const inchLabels = generateInchLabels();
-  const cmRange = generateNumericRange(122, 196);
-  const kgRange = generateNumericRange(20, 200);
+  const cmRange = generateNumericRange(122, 244, 1);
+  const kgRange = generateNumericRange(30, 200, 1);
   const lbsRange = generateLbsRange();
 
-  // Height Toggle
+
   const toggleHeightUnit = (unit) => {
     if (unit === heightUnit) return;
 
+
     if (unit === "inches") {
-      const inches = Math.round(height / 2.54);
-      setHeight(inches);
+      const converted = Math.round(height / 2.54);
+      setHeight(Math.max(48, Math.min(96, converted)));
     } else {
-      const cm = Math.round(height * 2.54);
-      setHeight(cm);
+      const converted = Math.round(height * 2.54);
+      setHeight(Math.max(122, Math.min(244, converted)));
     }
+
 
     setHeightUnit(unit);
   };
 
+
   // Weight Toggle
   const toggleWeightUnit = (unit) => {
     if (unit === weightUnit) return;
+
 
     if (unit === "lbs") {
       const lbs = Math.round(weight * 2.20462);
@@ -197,8 +246,12 @@ export default function HeightWeightScreen() {
     setWeightUnit(unit);
   };
 
+
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }} edges={['top', 'bottom', 'left', 'right']}>
+    <SafeAreaView
+      style={{ flex: 1, backgroundColor: "#fff" }}
+      edges={["top", "bottom", "left", "right"]}
+    >
       <View style={{ flex: 1 }}>
         <ImageBackground
           source={{
@@ -220,15 +273,17 @@ export default function HeightWeightScreen() {
             <Feather name="arrow-left" size={24} color="white" />
           </Pressable>
 
+
           <Text
             style={{
               fontSize: 23,
-              color: "white", 
+              color: "white",
               fontWeight: "600",
             }}
           >
             MEASURE
           </Text>
+
 
           <Pressable
             onPress={() => router.back()}
@@ -237,6 +292,7 @@ export default function HeightWeightScreen() {
             <Feather name="x" size={24} color="white" />
           </Pressable>
         </ImageBackground>
+
 
         <View style={{ marginHorizontal: 18 }}>
           <Text
@@ -250,6 +306,7 @@ export default function HeightWeightScreen() {
             Select your height and weight
           </Text>
 
+
           <View
             style={{
               height: 3,
@@ -259,15 +316,23 @@ export default function HeightWeightScreen() {
             }}
           />
 
+
           {/* HEIGHT */}
           <View style={[styles.rulerBox, { backgroundColor: "#D6EBEB" }]}>
             <Text style={styles.selectedValue}>
-              {heightUnit === "cm"
-                ? height
-                : inchLabels.find((i) => i.value === height)?.label}
-              <Text style={styles.unit}> {heightUnit}</Text>
+              {heightUnit === "cm" ? (
+                <>
+                  {height}
+                  <Text style={styles.unit}> cm</Text>
+                </>
+              ) : (
+                `${Math.floor(height / 12)}'${height % 12}"`
+              )}
             </Text>
+
+
             <Ruler
+              key={heightUnit}
               data={heightUnit === "cm" ? cmRange : inchLabels}
               selectedValue={height}
               setSelectedValue={setHeight}
@@ -281,13 +346,20 @@ export default function HeightWeightScreen() {
             />
           </View>
 
+
           {/* WEIGHT */}
           <View style={[styles.rulerBox, { backgroundColor: "#F6F3BA" }]}>
             <Text style={styles.selectedValue}>
               {weight}
               <Text style={styles.unit}> {weightUnit}</Text>
             </Text>
+            {/* <Ruler
+              data={weightUnit === "kg" ? kgRange : lbsRange}
+              selectedValue={weight}
+              setSelectedValue={setWeight}
+            /> */}
             <Ruler
+              key={weightUnit}
               data={weightUnit === "kg" ? kgRange : lbsRange}
               selectedValue={weight}
               setSelectedValue={setWeight}
@@ -302,6 +374,7 @@ export default function HeightWeightScreen() {
           </View>
         </View>
 
+
         <TouchableOpacity
           style={styles.nextButton}
           onPress={async () => {
@@ -310,7 +383,7 @@ export default function HeightWeightScreen() {
                 "userVitals",
                 JSON.stringify({ height, weight })
               );
-              router.push('/quiz/HbA1cScreen');
+              router.push("/quiz/HbA1cScreen");
             } catch (e) {
               console.error("Failed to save height/weight", e);
               router.push("/quiz/0");
@@ -323,6 +396,7 @@ export default function HeightWeightScreen() {
     </SafeAreaView>
   );
 }
+
 
 const UnitToggle = ({ options, value, onChange }) => {
   return (
@@ -351,6 +425,7 @@ const UnitToggle = ({ options, value, onChange }) => {
     </View>
   );
 };
+
 
 const styles = StyleSheet.create({
   rulerBox: {

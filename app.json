@@ -14,13 +14,12 @@
       "buildNumber": "1.0.0"
     },
     "android": {
-      "package": "com.madhurmuditam.muditam",
-      "versionCode": 2,
+      "package": "com.madhurmuditam.muditam", 
       "edgeToEdgeEnabled": true,
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "foregroundImage": "./assets/images/adaptive-icon.png", 
         "backgroundColor": "#ffffff"
-      }, 
+      },
       "permissions": []
     },
     "web": {
@@ -49,7 +48,7 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "b942d1ae-03e7-4847-bd6d-0eebeb9e14d8"
+        "projectId": "fde999e1-7ae9-45d3-83c2-33930fc4045e"
       }
     },
     "owner": "madhurmuditam"
