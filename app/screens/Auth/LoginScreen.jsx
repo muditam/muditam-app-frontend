@@ -25,30 +25,51 @@ export default function LoginScreen() {
   const [loading, setLoading] = useState(false);
 
   const handleGetOtp = async () => {
-    if (phoneNumber.length !== 10) {
-      return Alert.alert(
-        "Invalid Number",
-        "Please enter a 10-digit mobile number."
-      );
-    }
+  if (phoneNumber.length !== 10) {
+    return Alert.alert("Invalid Number", "Please enter a 10-digit mobile number.");
+  }
 
-    setLoading(true);
-    try {
+  setLoading(true);
+  try {
+    const response = await fetch("https://control.msg91.com/api/v5/otp", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        authkey: "451604A8TTLksfVyk06825bdc5P1",
+      },
+      body: JSON.stringify({
+        mobile: `91${phoneNumber}`,
+        sender: "MUDITM",
+        template_id: "6883510ad6fc0533183824b2",
+        otp_length: "6",
+        otp_expiry: "10"
+      }),
+    });
+
+    const data = await response.json();
+    console.log("OTP send response:", data);
+
+    if (data.type === "success") {
       await AsyncStorage.setItem("userPhone", phoneNumber);
       router.push({ pathname: "/otp", params: { phone: phoneNumber } });
-    } catch (err) {
-      Alert.alert("Error", "Something went wrong. Please try again.");
-    } finally {
-      setLoading(false);
+    } else {
+      Alert.alert("Error", "Failed to send OTP. Please try again.");
     }
-  };
+  } catch (err) {
+    console.error("Send OTP error:", err);
+    Alert.alert("Error", "Something went wrong. Please try again.");
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   const privacyContent = `Welcome to Muditam Ayurveda Private Limited (“we”, “our”, or “us”). This privacy policy (“Privacy Policy”) describes in detail how we collect, use, store, disclose, and protect your personal and sensitive personal data when you access or use our website www.muditam.com, mobile applications, or any other services, content, or products provided via our platform (“Platform”).
 By accessing our Platform or using any of our services, you confirm that you have read, understood, and consented to the collection, processing, storage, and transfer of your information as described herein. If you do not agree with the terms of this Privacy Policy, please do not use the Platform or avail of any Services.
 
 1. LEGAL BASIS
 This Privacy Policy is published in compliance with:
-Section 43A of the Information Technology Act, 2000
+Section 43A of the Information Technology Act, 2000 
 
 
 Rule 4 of the Information Technology (Reasonable Security Practices and Procedures and Sensitive Personal Information) Rules, 2011
@@ -541,7 +562,7 @@ For any complaints or grievances, please contact our Grievance Officer using the
                 placeholderTextColor="#666" // iOS-specific dull text fix
               />
             </View>
-
+ 
             {/* Get OTP Button */}
             <TouchableOpacity
               style={{

@@ -26,12 +26,48 @@ export default function MyPlanScreen() {
 
         if (!phone) {
           console.warn('No phone found in storage');
+          setLoading(false);
           return;
         }
 
-        const res = await fetch(`https://muditam-app-backend.onrender.com/api/shopify/purchased-products/${phone}`);
-        const data = await res.json();
-        setProducts(data || []);
+        // Fetch user data including purchasedProducts
+        const res = await fetch(`https://muditam-app-backend.onrender.com/api/user/${phone}`);
+        const user = await res.json();
+
+        if (!res.ok || !user) {
+          console.warn('User not found');
+          setLoading(false);
+          return;
+        }
+
+        // Fetch product details for purchased product IDs
+        const productIds = user.purchasedProducts?.map((p) => p.productId) || [];
+        if (productIds.length === 0) {
+          setLoading(false);
+          return;
+        }
+
+        const productsRes = await fetch(
+          'https://muditam-app-backend.onrender.com/api/shopify/products'
+        );
+        const allProducts = await productsRes.json();
+
+        // Filter products that match purchased product IDs
+        const purchasedProducts = allProducts
+          .filter((product) => productIds.includes(String(product.id)))
+          .map((product) => ({
+            id: product.id,
+            title: product.title,
+            image: product.image,
+            description: product.description,
+            dosage: product.title === 'Karela Jamun Fizz'
+              ? 'Take 1 tablet on an empty stomach in the morning & 1 tablet 30 minutes before dinner'
+              : product.title === 'Sugar Defend Pro'
+              ? 'Take 1 tablet after breakfast and 1 tablet after lunch'
+              : '', // default dosage if none
+          }));
+
+        setProducts(purchasedProducts);
       } catch (error) {
         console.error('Error fetching purchased products:', error);
       } finally {
@@ -61,55 +97,21 @@ export default function MyPlanScreen() {
         <View style={{ width: 24 }} />
       </View>
 
-      <ScrollView contentContainerStyle={{ padding: 16 }}>
-        {/* Digital Prescription */}
-        <Text style={styles.sectionTitle}>Your Digital Prescription</Text>
-        <View style={styles.prescriptionBox}>
-          <Text style={styles.expiredLabel}>Expired</Text>
-          <Text style={styles.prescriptionText}>
-            Your doctor recommended treatment plan
-          </Text>
-          <TouchableOpacity>
-            <Text style={styles.linkText}>View Prescription</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Horizontal Slider */}
-        {products.length > 0 && (
-          <>
-            <Text style={styles.sectionTitle}>How To Use My Kit</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 20 }}>
-              {products.slice(0, 3).map((item, index) => (
-                <View key={index} style={styles.sliderItem}>
-                  <Image source={{ uri: item.image }} style={styles.sliderImage} />
-                  <Text style={styles.sliderLabel}>{item.title}</Text>
-                </View>
-              ))}
-            </ScrollView>
-          </>
-        )}
-
+      <ScrollView contentContainerStyle={{ padding: 16 }}> 
         {/* Treatment Plan */}
         <Text style={styles.sectionTitle}>Your Treatment Plan</Text>
         {products.length === 0 ? (
-          <Text style={{ fontSize: 14, color: '#999' }}>No purchased products found.</Text>
+          <Text style={{ fontSize: 14, color: '#999' }}>No purchased products found.</Text> 
         ) : (
           products.map((item, idx) => (
             <View key={idx} style={styles.card}>
               <Image source={{ uri: item.image }} style={styles.cardImage} />
               <View style={{ flex: 1, marginLeft: 12 }}>
                 <Text style={styles.cardTitle}>{item.title}</Text>
-                <Text style={styles.cardDesc}>
-                  {item.description?.replace(/<[^>]+>/g, '')}
-                </Text>
-                <Text style={styles.cardDose}>Dosage info not available</Text>
-
-                <View style={styles.progressRow}>
-                  <Text style={styles.cardProgress}>Progress tracking coming soon</Text>
-                  <View style={styles.courseBadge}>
-                    <Text style={styles.courseBadgeText}>Course Completed</Text>
-                  </View>
-                </View>
+                {/* Dosage Info */}
+                {item.dosage ? (
+                  <Text style={styles.cardDose}>Dosage: {item.dosage}</Text>
+                ) : null}
               </View>
             </View>
           ))
@@ -119,6 +121,7 @@ export default function MyPlanScreen() {
   );
 }
 
+// Styles remain unchanged
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -149,54 +152,6 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     color: '#000',
   },
-  prescriptionBox: {
-    backgroundColor: '#F6F0FF',
-    padding: 16,
-    borderRadius: 12,
-    marginBottom: 20,
-    position: 'relative',
-  },
-  expiredLabel: {
-    position: 'absolute',
-    top: 8,
-    right: 12,
-    fontSize: 10,
-    color: '#fff',
-    backgroundColor: '#FFA726',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 12,
-    fontFamily: 'Poppins',
-  },
-  prescriptionText: {
-    fontSize: 14,
-    fontFamily: 'Poppins',
-    color: '#333',
-    marginBottom: 8,
-  },
-  linkText: {
-    fontSize: 14,
-    color: '#543287',
-    textDecorationLine: 'underline',
-    fontWeight: '600',
-    fontFamily: 'Poppins',
-  },
-  sliderItem: {
-    alignItems: 'center',
-    marginRight: 16,
-  },
-  sliderImage: {
-    width: 70,
-    height: 100,
-    resizeMode: 'contain',
-  },
-  sliderLabel: {
-    fontSize: 12,
-    marginTop: 6,
-    fontFamily: 'Poppins',
-    textAlign: 'center',
-    width: 80,
-  },
   card: {
     flexDirection: 'row',
     borderBottomWidth: 1,
@@ -225,28 +180,5 @@ const styles = StyleSheet.create({
     fontFamily: 'Poppins',
     color: '#333',
     marginTop: 4,
-  },
-  progressRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginTop: 4,
-  },
-  cardProgress: {
-    fontSize: 11,
-    fontFamily: 'Poppins',
-    color: '#888',
-  },
-  courseBadge: {
-    backgroundColor: '#E8DBFF',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 6,   
-  },
-  courseBadgeText: {
-    fontSize: 10,
-    fontWeight: '600',
-    color: '#6C2DBD',
-    fontFamily: 'Poppins',
   },
 });

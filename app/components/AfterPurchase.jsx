@@ -172,7 +172,7 @@ export default function AfterPurchase() {
         </View>
         <View style={styles.line4} />
 
-        <View style={{ paddingHorizontal: 16, marginTop: 10 }}>
+        {/* <View style={{ paddingHorizontal: 16, marginTop: 10 }}>
           <Text style={styles.sectionTitle}>Your Digital Prescription</Text>
           <View style={styles.prescriptionBox}>
             <Text style={styles.prescriptionText}>Your doctor recommended{'\n'}treatment plan</Text>
@@ -181,10 +181,10 @@ export default function AfterPurchase() {
             </TouchableOpacity>
           </View>
         </View>
-        <View style={styles.line4} />
+        <View style={styles.line4} /> */}
 
         {loadingProgress ? (
-          <ActivityIndicator size="large" color="#9C4DF4" style={{ marginTop: 16 }} />
+          <ActivityIndicator size="large" color="#9C4DF4" style={{ marginTop: 6 }} />
         ) : (
           <KitProgressSection
             currentKit={kitProgress.currentKit}

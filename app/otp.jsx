@@ -12,7 +12,7 @@ import {
   Keyboard,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter, useLocalSearchParams } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router"; 
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
@@ -61,38 +61,79 @@ export default function OtpScreen() {
   };
 
   const handleSubmitOtp = async () => {
-    if (!isOtpComplete) {
-      Alert.alert("Incomplete OTP", "Please enter all 6 digits.");
-      return;
-    }
-    try {
-      const response = await fetch(
-        `https://muditam-app-backend.onrender.com/api/user/${phone}`
-      );
-      console.log("Fetch status:", response.status);
-      const text = await response.text();
-      console.log("Response text:", text);
+  if (!isOtpComplete) {
+    Alert.alert("Incomplete OTP", "Please enter all 6 digits.");
+    return;
+  }
 
-      if (response.status === 200) {
-        const userData = JSON.parse(text);
+  try {
+    const fullOtp = otp.join("");
+    const response = await fetch(`https://control.msg91.com/api/v5/otp/verify?otp=${fullOtp}&mobile=91${phone}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        authkey: "451604A8TTLksfVyk06825bdc5P1",
+      },
+    });
+
+    const data = await response.json();
+    console.log("OTP verify response:", data);
+
+    if (data.type === "success") {
+      // Continue to fetch user data as before
+      const userRes = await fetch(`https://muditam-app-backend.onrender.com/api/user/${phone}`);
+      const userText = await userRes.text();
+
+      if (userRes.status === 200) {
+        const userData = JSON.parse(userText);
         await AsyncStorage.setItem("userDetails", JSON.stringify(userData));
         router.replace("/home");
-      } else if (response.status === 404) {
+      } else if (userRes.status === 404) {
         router.replace({ pathname: "/details", params: { phone } });
       } else {
-        Alert.alert("Error", "Unexpected response from server.");
+        Alert.alert("Error", "Unexpected server response.");
       }
-    } catch (error) {
-      console.error("Verify user failed:", error);
-      Alert.alert("Error", "Failed to verify user. Please try again.");
+    } else {
+      Alert.alert("Invalid OTP", data.message || "Please try again.");
     }
-  };
+  } catch (error) {
+    console.error("OTP verification failed:", error);
+    Alert.alert("Error", "Verification failed. Please try again.");
+  }
+};
 
-  const handleResend = () => {
-    setOtp(Array(6).fill(""));
-    inputs.current[0].focus();
-    setTimer(10);
-  };
+
+  const handleResend = async () => {
+  setOtp(Array(6).fill(""));
+  inputs.current[0].focus();
+  setTimer(10);
+
+  try {
+    const response = await fetch("https://control.msg91.com/api/v5/otp", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        authkey: "451604A8TTLksfVyk06825bdc5P1",
+      },
+      body: JSON.stringify({
+        mobile: `91${phone}`,
+        sender: "MUDITM",
+        template_id: "6883510ad6fc0533183824b2",
+        otp_length: "6",
+        otp_expiry: "10"
+      }),
+    });
+
+    const data = await response.json();
+    if (data.type !== "success") {
+      Alert.alert("Failed to resend OTP");
+    }
+  } catch (err) {
+    console.error("Resend OTP error:", err);
+    Alert.alert("Error", "Couldn't resend OTP");
+  }
+};
+
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "white" }}>
@@ -113,7 +154,7 @@ export default function OtpScreen() {
             source={{
               uri: "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/2_1_eb3f1b3c-1df9-4942-99b2-f001de984ddb.png?v=1751978207",
             }}
-            style={{ width: "100%", height: 450 }}
+            style={{ width: "100%", height: 400 }}
             resizeMode="cover"
           />
 
@@ -273,7 +314,7 @@ export default function OtpScreen() {
                 justifyContent: "center",
               }}
             >
-              <View style={{ flexDirection: "row", alignItems: "center" }}>
+              <View style={{ flexDirection: "row", alignItems: "center" }}> 
                 <Ionicons
                   name="people-outline"
                   size={23}
@@ -291,3 +332,4 @@ export default function OtpScreen() {
     </SafeAreaView>
   );
 }
+ 

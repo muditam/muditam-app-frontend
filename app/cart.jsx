@@ -153,7 +153,7 @@ export default function Cart() {
 
 
         <View >
-          <Text style={{ paddingHorizontal: 16, fontSize: 20, fontWeight: 500, paddingTop: 14, }}>
+          <Text style={{ paddingHorizontal: 16, fontSize: 20, fontWeight: 500, paddingTop: 14, }}> 
             Products in Cart
           </Text>
 

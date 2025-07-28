@@ -6,7 +6,7 @@ import { LinearGradient } from "expo-linear-gradient";
 
 const TOTAL_KITS = 5;
 
-
+ 
 const kitDescriptions = {
   1: {
     title: "Start Your Journey",
@@ -36,7 +36,7 @@ export default function KitProgressSection({
   completedKits = [],
 }) {
   return (
-    <View style={{ marginTop: 32 }}>
+    <View style={{ marginTop: 10 }}>
       <Text style={[styles.header, { color: "#000" }]}>
         Visible Results Will Take {TOTAL_KITS} Kits
       </Text>
@@ -90,7 +90,7 @@ export default function KitProgressSection({
             if (kitNum === currentKit) return null;
 
 
-            const isCompleted = completedKits.includes(kitNum);
+            const isCompleted = completedKits.includes(kitNum) || kitNum < currentKit;
             return (
               <View key={kitNum} style={styles.kitMiniCard}>
                 <View style={styles.kitMiniHeader}>

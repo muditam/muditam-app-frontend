@@ -8,7 +8,6 @@ import {
   Pressable,
 } from "react-native";
 
-
 const expertImages = [
   "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/Deepti_Gupta.jpg?v=1752042232",
   "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/Mansvi_Ahuja-3.jpg?v=1752234951",
@@ -21,7 +20,6 @@ const expertImages = [
   "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/Kritika_Khator.jpg?v=1752042232",
   "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/Sahajpreet_Kaur.jpg?v=1752042233",  
 ];
-
 
 export default function ExpertsPanel() {
   const navigation = useNavigation();

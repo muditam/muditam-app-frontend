@@ -93,7 +93,7 @@ const categorizedVideos = {
     {
       id: 1,
       title: "Have Family History of Diabetes?",
-      url: "https://cdn.shopify.com/videos/c/o/v/2f6515f7ab654e4aa6b6c228ff502934.mp4",
+      url: "https://cdn.shopify.com/videos/c/o/v/2f6515f7ab654e4aa6b6c228ff502934.mp4", 
       thumbnail:
         "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/2_2_13635ec1-2e0d-4e8c-a714-3bab150812b1.png?v=1752240085",
     },
@@ -295,29 +295,6 @@ const categorizedVideos = {
       url: "https://cdn.shopify.com/videos/c/o/v/7834cc140fe14d80a37f9756b4a83836.mp4",
       thumbnail:
         "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/5_4.png?v=1752242256",
-    },
-  ],
-  Supplements: [
-    {
-      id: 1,
-      title: "How to Manage Blood Sugar Naturally",
-      url: "https://cdn.shopify.com/videos/c/o/v/85d03f9b985b4c40bd5986aae0929cad.mp4",
-      thumbnail:
-        "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/6_527d324c-da6b-4954-80f6-8280a0d6c300.png?v=1722316967",
-    },
-    {
-      id: 2,
-      title: "Top 5 Ayurvedic Tips for Diabetes",
-      url: "https://cdn.shopify.com/videos/c/o/v/f2af7ed73649450dab62f6e3d7eeb061.mp4",
-      thumbnail:
-        "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/3_0b563148-da79-4a3b-95e6-1f5720ab00a7.png?v=1722316842",
-    },
-    {
-      id: 3,
-      title: "What is HbA1c? Explained!",
-      url: "https://cdn.shopify.com/videos/c/o/v/85d03f9b985b4c40bd5986aae0929cad.mp4",
-      thumbnail:
-        "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/6_527d324c-da6b-4954-80f6-8280a0d6c300.png?v=1722316967",
     },
   ],
 };

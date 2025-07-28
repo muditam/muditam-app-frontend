@@ -98,7 +98,6 @@ export default function Products() {
           )
         );
 
-
   useEffect(() => {
     fetch("https://muditam-app-backend.onrender.com/api/shopify/products")
       .then((res) => res.json())
@@ -109,7 +108,6 @@ export default function Products() {
       .finally(() => setLoading(false));
   }, []);
 
-
   const handlePress = (item) => {
     router.push({
       pathname: "/productPage",
@@ -117,18 +115,15 @@ export default function Products() {
     });
   };
 
-
   const handleAddToCart = (item) => {
     addToCart(item);
     setShowPopup(true);
-
 
     Animated.timing(popupAnim, {
       toValue: 0,
       duration: 300,
       useNativeDriver: true,
     }).start();
-
 
     setTimeout(() => {
       Animated.timing(popupAnim, {
@@ -144,7 +139,6 @@ export default function Products() {
     incrementItem(item.id);
   };
 
-
   const handleDecrement = (item) => {
     const qty = getItemQuantity(item.id);
     if (qty <= 1) {
@@ -153,7 +147,6 @@ export default function Products() {
       decrementItem(item.id);
     }
   };
-
 
   const { width } = useWindowDimensions();
   const cardWidth = (width - 48) / 2;

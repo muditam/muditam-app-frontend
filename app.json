@@ -37,7 +37,8 @@
         }
       ],
       "react-native-video",
-      "expo-font"
+      "expo-font",
+      "expo-video"
     ],
     "experiments": {
       "typedRoutes": true
@@ -47,6 +48,7 @@
       "eas": {
         "projectId": "3f6ae165-4d40-46d6-afd4-f0474c008183"
       }
-    }
+    },
+    "owner": "madhurmuditam"
   }
 }

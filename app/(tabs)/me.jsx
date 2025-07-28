@@ -122,17 +122,13 @@ export default function MeScreen() {
         const stored = await AsyncStorage.getItem("userDetails");
         if (!stored) return;
 
-
         const parsedUser = JSON.parse(stored);
         setUser(parsedUser);
         registerForPush(parsedUser._id);
 
-
-        const localReminders = await getRemindersFromStorage(parsedUser._id);
-
+        const localReminders = await getRemindersFromStorage(parsedUser._id); 
 
         setReminders(localReminders);
-
 
         if (localReminders.length && localReminders.some((r) => r.enabled)) {
           setReminderAllEnabled(true);
@@ -140,10 +136,9 @@ export default function MeScreen() {
           setReminderAllEnabled(false);
         }
       } catch (err) {
-        console.error("Error loading user/reminder", err);
+        console.error("Error loading reminder", err); 
       }
     };
-
 
     init();
   }, []);
@@ -270,7 +265,7 @@ export default function MeScreen() {
             onPress={() =>
               router.push({
                 pathname: "/needHelpContent/NeedHelpFullScreen",
-                params: { title: "FAQs" },
+                params: { title: "Doctor Related" },
               })
             }
           >
@@ -882,8 +877,7 @@ const styles = StyleSheet.create({
   profileBlock: {
     flexDirection: "row",
     alignItems: "center",
-    padding: 16,
-    backgroundColor: "#F7F0FF",
+    padding: 16, 
     marginBottom: 24,
     marginHorizontal: -16,
   },

@@ -10,18 +10,15 @@ export default function WelcomeScreen() {
 
   // Called when the video finishes playing
   const handlePlaybackStatusUpdate = async (status) => {
-    if (status.didJustFinish) {
+    if (status.didJustFinish && status.positionMillis > 0) {
       try {
         const userDetails = await AsyncStorage.getItem('userDetails');
-        if (userDetails) {
-          // User is logged in, go to home/tabs
-          router.replace('/home'); // Change '/home' to your actual Tabs or Home route
-        } else {
-          // Not logged in, go to login
+        if (userDetails) { 
+          router.replace('/home');  
+        } else { 
           router.replace('/login');
         }
-      } catch (e) {
-        // On error, fallback to login
+      } catch (e) { 
         router.replace('/login');
       }
     }

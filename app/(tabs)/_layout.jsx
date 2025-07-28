@@ -99,9 +99,9 @@ export default function Layout() {
                 icon = <MaterialIcons name="person-outline" size={25} color={iconColor} />;
                 label = 'You';
                 break;
-              case 'dietcart':
-                icon = <Ionicons name="bar-chart-outline" size={25} color={iconColor} />;
-                label = 'Diet Cart';
+              case 'history':
+                icon = <Ionicons name="time-outline" size={25} color={iconColor} />;
+                label = 'History';
                 break;
               default:
                 icon = null;
@@ -155,7 +155,7 @@ export default function Layout() {
           }}
         />
         <Tabs.Screen
-          name="dietcart"
+          name="history"
           options={{
             href: hasPurchased ? undefined : null,
           }}

@@ -15,11 +15,13 @@ import { encode as b64Encode } from 'base-64';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function GoKwikCheckout() {
-  const { cartId } = useLocalSearchParams();
+  const { cartId, total, products: productsString } = useLocalSearchParams();
   const router = useRouter();
   const webViewRef = useRef();
   const [isCartValid, setIsCartValid] = useState(true);
   const [webViewUrl, setWebViewUrl] = useState(null);
+
+  const products = productsString ? JSON.parse(productsString) : [];
 
   useEffect(() => {
     if (!cartId || cartId === 'undefined') {
@@ -97,15 +99,20 @@ export default function GoKwikCheckout() {
 
         const userDetails = await AsyncStorage.getItem('userDetails');
         const phone = JSON.parse(userDetails || '{}')?.phone;
+        const purchasedProductIds = products.map((item) => item.id);
 
-        if (phone) {
+
+        if (phone && purchasedProductIds.length > 0) {
           await AsyncStorage.setItem('hasPurchased', 'true');
 
           // ✅ 1. Mark as purchased
           await fetch('https://muditam-app-backend.onrender.com/api/user/mark-purchased', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ phone }),
+            headers: { 'Content-Type': 'application/json' }, 
+            body: JSON.stringify({
+              phone,
+              purchasedProductIds,
+            }),
           });
 
           // ✅ 2. Get current kit progress

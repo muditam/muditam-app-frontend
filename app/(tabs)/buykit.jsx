@@ -18,7 +18,7 @@ import FAQ from "../components/FAQ";
 import RealJourneysSlider from "../components/RealJourneysSlider";
 
 
-const width = Dimensions.get("window").width; 
+const width = Dimensions.get("window").width;
 const cardWidth = width - 32;
 
 
@@ -77,22 +77,22 @@ export default function BuyKit() {
         "Key Ingredients: Swarn Bhasma, Moti Bhasma, Rajat Bhasma, Abhrak Bhasma, etc",
     },
   };
-  
+
   // at top of your component file
-const infoItems = [
-  {
-    text: "Diabetologist\nApproved",
-    icon: "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/1_5.png?v=1752645672",
-  },
-  {
-    text: "Science\nBacked",
-    icon: "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/2_6.png?v=1752645672",
-  },
-  {
-    text: "Rooted in\nAyurveda",
-    icon: "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/3_4.png?v=1752645672",
-  },
-];
+  const infoItems = [
+    {
+      text: "Diabetologist\nApproved",
+      icon: "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/1_5.png?v=1752645672",
+    },
+    {
+      text: "Science\nBacked",
+      icon: "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/2_6.png?v=1752645672",
+    },
+    {
+      text: "Rooted in\nAyurveda",
+      icon: "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/3_4.png?v=1752645672",
+    },
+  ];
 
 
 
@@ -236,9 +236,8 @@ const infoItems = [
               <View key={product.id} style={styles.productDetailCard}>
                 {match && (
                   <View style={styles.titleTimingRow}>
-                    <Text style={styles.detailTitle}>{`${pIndex + 1}. ${
-                      match.title
-                    }`}</Text>
+                    <Text style={styles.detailTitle}>{`${pIndex + 1}. ${match.title
+                      }`}</Text>
                     <View style={styles.timingRow}>
                       {match.timing.map((t, i) => (
                         <Text key={i}>{t}</Text>
@@ -442,7 +441,7 @@ const infoItems = [
                 "Tailored plans to avoid sugar spikes",
             },
           ].map((item, index) => (
-            <View key={index} style={styles.benefitRow}> 
+            <View key={index} style={styles.benefitRow}>
               <View
                 style={{
                   flexDirection: "row",
@@ -498,7 +497,6 @@ const infoItems = [
                 (item) => item.first_variant_id && item.quantity > 0
               );
 
-
               if (validItems.length === 0) {
                 Alert.alert(
                   "No products selected",
@@ -506,7 +504,6 @@ const infoItems = [
                 );
                 return;
               }
-
 
               const response = await fetch(
                 "https://muditam-app-backend.onrender.com/api/shopify/create-cart",
@@ -517,9 +514,7 @@ const infoItems = [
                 }
               );
 
-
               const data = await response.json();
-
 
               if (!response.ok || !data.cartId) {
                 Alert.alert(
@@ -529,15 +524,31 @@ const infoItems = [
                 return;
               }
 
-
               const cartToken = data.cartId.split("/").pop();
 
+              await fetch("https://muditam-app-backend.onrender.com/api/user/kit-progress/update", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  phone: user.phone,
+                  newKitNumber: (user.currentKitNumber || 1) + 1, 
+                }),
+              });
+
+              const productsString = JSON.stringify(
+                validItems.map((item) => ({
+                  id: item.id,
+                  title: item.title,
+                  image: item.image.uri,
+                  description: item.description,
+                }))
+              );
 
               // Navigate to GoKwikCheckout
               const { router } = require("expo-router");
               router.push({
                 pathname: "/GoKwikCheckout",
-                params: { cartId: cartToken, total: totalPrice },
+                params: { cartId: cartToken, total: totalPrice, products: productsString, },
               });
             } catch (err) {
               console.error("Error launching checkout:", err);

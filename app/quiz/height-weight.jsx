@@ -13,7 +13,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Feather } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import * as Haptics from "expo-haptics"; // <-- Import Haptics
+import * as Haptics from "expo-haptics"; // <-- Import Haptics 
 
 const ITEM_WIDTH = 12;
 const screenWidth = Dimensions.get("window").width;

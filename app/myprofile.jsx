@@ -4,22 +4,24 @@ import {
   Text,
   TouchableOpacity,
   ScrollView,
+  Alert,
   StyleSheet,
   Image,
   ActivityIndicator,
+  Platform,
 } from "react-native";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Ionicons, Feather } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 
 export default function MyProfile() {
   const router = useRouter();
   const [user, setUser] = useState(null);
   const [selectedTab, setSelectedTab] = useState("diabetes");
-  const [quiz, setQuiz] = useState(null);
+  const [quiz, setQuiz] = useState(null); 
   const [quizLoading, setQuizLoading] = useState(false);
+
 
   useEffect(() => {
     const loadUser = async () => {
@@ -28,7 +30,6 @@ export default function MyProfile() {
         if (stored) {
           const userObj = JSON.parse(stored);
           setUser(userObj);
-
           // Fetch quiz data
           if (userObj?.phone) {
             fetchQuiz(userObj.phone);
@@ -45,9 +46,7 @@ export default function MyProfile() {
     setQuizLoading(true);
     try {
       // Replace with your API base URL
-      const res = await fetch(
-        `${process.env.EXPO_PUBLIC_API_BASE_URL || "https://your.api.url"}/quiz/${phone}`
-      );
+      const res = await fetch(`http://192.168.1.61:3001/api/quiz/${phone}`);
       if (res.ok) {
         const data = await res.json();
         setQuiz(data);
@@ -60,11 +59,45 @@ export default function MyProfile() {
     setQuizLoading(false);
   };
 
-  // Calculate age if available
-  const age =
-    user?.yearOfBirth && !isNaN(user.yearOfBirth)
-      ? new Date().getFullYear() - user.yearOfBirth
-      : "";
+  const handleDeleteAccount = () => {
+    Alert.alert(
+      "Delete Account",
+      "Are you sure you want to delete your account?",
+      [
+        {
+          text: "Cancel",
+          style: "cancel"
+        },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              const res = await fetch(`http://192.168.1.61:3001/api/user/delete`, {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ phone: user?.phone })
+              });
+              const result = await res.json();
+              if (result.success) {
+                await AsyncStorage.removeItem("userDetails");
+                router.replace("/login");
+              } else {
+                alert("Failed to delete account");
+              }
+            } catch (error) {
+              alert("An error occurred while deleting the account");
+            }
+          }
+        }
+      ]
+    );
+  };
+
+
+
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }}>
@@ -91,7 +124,9 @@ export default function MyProfile() {
               <Image
                 source={{ uri: user.avatar }}
                 style={styles.profileImage}
-                onError={() => console.warn("Failed to load avatar:", user.avatar)}
+                onError={() =>
+                  console.warn("Failed to load avatar:", user.avatar)
+                }
               />
             ) : (
               <Image
@@ -107,7 +142,8 @@ export default function MyProfile() {
             <Text style={styles.name}>{user?.name || "Guest"}</Text>
             <Text style={styles.ageGender}>
               {user?.yearOfBirth
-                ? `${new Date().getFullYear() - user.yearOfBirth}, ${user?.gender}`
+                ? `${new Date().getFullYear() - user.yearOfBirth}, ${user?.gender
+                }`
                 : ""}
             </Text>
           </View>
@@ -136,21 +172,33 @@ export default function MyProfile() {
         {/* Tabs */}
         <View style={styles.tabsRow}>
           <TouchableOpacity
-            style={selectedTab === "diabetes" ? styles.activeTab : styles.inactiveTab}
+            style={
+              selectedTab === "diabetes" ? styles.activeTab : styles.inactiveTab
+            }
             onPress={() => setSelectedTab("diabetes")}
           >
             <Text
-              style={selectedTab === "diabetes" ? styles.activeTabText : styles.inactiveTabText}
+              style={
+                selectedTab === "diabetes"
+                  ? styles.activeTabText
+                  : styles.inactiveTabText
+              }
             >
               My Diabetes Profile
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={selectedTab === "diet" ? styles.activeTab : styles.inactiveTab}
+            style={
+              selectedTab === "diet" ? styles.activeTab : styles.inactiveTab
+            }
             onPress={() => setSelectedTab("diet")}
           >
             <Text
-              style={selectedTab === "diet" ? styles.activeTabText : styles.inactiveTabText}
+              style={
+                selectedTab === "diet"
+                  ? styles.activeTabText
+                  : styles.inactiveTabText
+              }
             >
               My Diet Profile
             </Text>
@@ -160,74 +208,81 @@ export default function MyProfile() {
         {/* Tab Content */}
         {selectedTab === "diabetes" ? (
           <View style={styles.diagnosisSection}>
-            {quizLoading ? (
-              <ActivityIndicator style={{ marginVertical: 20 }} />
-            ) : quiz ? (
-              // Quiz found: show HBA1c etc.
-              <View style={{ marginVertical: 6 }}>
-                <View style={styles.diagnosisHeader}>
-                  <View style={styles.diagnosisLabel}>
-                    <Text style={styles.diagnosisLabelText}>
-                      Your HBA1c Level
+            <View style={styles.diagnosisSection}>
+              {quizLoading ? (
+                <ActivityIndicator style={{ marginVertical: 20 }} />
+              ) : quiz ? (
+                <View style={{ marginVertical: 6 }}>
+                  <View style={styles.diagnosisHeader}>
+                    <View style={styles.diagnosisLabel}>
+                      <Text style={styles.diagnosisLabelText}>
+                        Your Diabetes Profile
+                      </Text>
+                    </View>
+                  </View>
+                  <View style={styles.diagnosisCard}>
+                    <Text style={styles.diagnosisText}>
+                      {quiz.hba1c
+                        ? `HBA1c: ${quiz.hba1c}`
+                        : "HBA1c: Not Available"}
+                    </Text>
+                    <Text style={styles.diagnosisText}>
+                      {quiz.answers?.[2]
+                        ? `Diabetes Duration: ${quiz.answers[2]} years`
+                        : "Diabetes Duration: Not Available"}
                     </Text>
                   </View>
                 </View>
-                <View style={styles.diagnosisCard}>
-                  <Text style={styles.diagnosisText}>
-                    {quiz.hba1c ? `HBA1c: ${quiz.hba1c}` : "Not Available"}
+              ) : (
+                <TouchableOpacity
+                  style={{
+                    marginVertical: 16,
+                    padding: 16,
+                    backgroundColor: "#9D57FF",
+                    borderRadius: 8,
+                    alignItems: "center",
+                  }}
+                  onPress={() => router.push("/test")}
+                >
+                  <Text
+                    style={{ color: "white", fontWeight: "600", fontSize: 16 }}
+                  >
+                    Take Diabetes Quiz
                   </Text>
-                  {/* You can add more quiz details here */}
-                </View>
-              </View>
-            ) : ( 
-              <TouchableOpacity
-                style={{
-                  marginVertical: 16,
-                  padding: 16,
-                  backgroundColor: "#9D57FF",
-                  borderRadius: 8,
-                  alignItems: "center",
-                }}
-                onPress={() => router.push("/test")}
-              >
-                <Text style={{ color: "white", fontWeight: "600", fontSize: 16 }}>
-                  Take Diabetes Quiz
-                </Text>
-              </TouchableOpacity>
-            )}
+                </TouchableOpacity>
+              )}
+            </View>
           </View>
         ) : (
-          <View style={styles.dietProfileBox}>
-            <Text style={{ fontSize: 14, fontWeight: "500", color: "#111827", marginBottom: 18 }}>
-              Connect with your health Expert
-            </Text>
-            <TouchableOpacity
-              style={{
-                paddingHorizontal: 20,
-                paddingVertical: 12,
-                borderRadius: 6,
-                backgroundColor: "#4F46E5",
-              }}
-              onPress={() => {
-                // open support chat, call, etc.
-                router.push("/connect-expert");
-              }}
-            >
-              <Text style={{ color: "#fff", fontWeight: "600", fontSize: 16 }}>
-                Connect Now
+          <View style={{ marginVertical: 6 }}>
+            <View style={styles.diagnosisHeader}>
+              <View style={styles.diagnosisLabel}>
+                <Text style={styles.diagnosisLabelText}>Your Diet Profile</Text>
+              </View>
+            </View>
+            <View style={styles.diagnosisCard}>
+              <Text style={styles.diagnosisText}>
+                Connect with your Health Expert
               </Text>
-            </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.dietProfileButton}
+                onPress={() => router.push("/connect-expert")}
+              >
+                <Text style={styles.dietProfileButtonText}>Connect Now</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         )}
 
         {/* Delete Account */}
-        <TouchableOpacity style={styles.deleteAccount}>
+        <TouchableOpacity style={styles.deleteAccount} onPress={handleDeleteAccount}>
           <Text style={styles.deleteText}>Delete Account</Text>
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
   );
 }
+
 
 const styles = StyleSheet.create({
   container: {
@@ -243,6 +298,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 24,
+    fontSize: Platform.OS === "ios" ? 22 : 20,
     fontWeight: "600",
     marginLeft: 8,
   },
@@ -310,23 +366,26 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#252525",
     paddingVertical: 11,
+    paddingVertical: Platform.OS === "ios" ? 11 : 8,
     borderRadius: 50,
-    marginRight: 8,
   },
   activeTabText: {
     textAlign: "center",
     color: "white",
     fontSize: 16,
+    fontSize: Platform.OS === "ios" ? 16 : 15,
   },
   inactiveTab: {
     flex: 1,
     paddingVertical: 11,
+    paddingVertical: Platform.OS === "ios" ? 11 : 8,
     borderRadius: 50,
     marginRight: 8,
   },
   inactiveTabText: {
     textAlign: "center",
     fontSize: 16,
+    fontSize: Platform.OS === "ios" ? 16 : 15,
     fontWeight: "500",
   },
   diagnosisCard: {
@@ -340,7 +399,7 @@ const styles = StyleSheet.create({
   },
   diagnosisHeader: {
     position: "absolute",
-    top: -8,
+    top: -2,
     left: 20,
     zIndex: 1,
   },
@@ -353,7 +412,7 @@ const styles = StyleSheet.create({
     borderRadius: 50,
   },
   diagnosisLabelText: {
-    fontSize: 16,
+    fontSize: Platform.OS === "ios" ? 16 : 14,
     marginLeft: 3,
   },
   diagnosisText: {
@@ -367,8 +426,20 @@ const styles = StyleSheet.create({
     backgroundColor: "#F9F9F9",
     alignItems: "center",
   },
+  dietProfileButton: {
+    marginTop: 16,
+    backgroundColor: "#4F46E5",
+    paddingVertical: 10,
+    borderRadius: 6,
+    alignItems: "center",
+  },
+  dietProfileButtonText: {
+    color: "#fff",
+    fontWeight: "600",
+    fontSize: 16,
+  },
   deleteAccount: {
-    alignSelf: "flex-start",  
+    alignSelf: "flex-start",
     marginTop: 16,
     marginBottom: 24,
     paddingLeft: 2,
@@ -379,3 +450,6 @@ const styles = StyleSheet.create({
     textDecorationLine: "underline",
   },
 });
+
+
+
