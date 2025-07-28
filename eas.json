@@ -12,8 +12,8 @@
       "distribution": "internal"
     },
     "production": {
-       "android": {
-        "buildType": "aab"
+      "android": {
+        "buildType": "app-bundle"
       },
       "ios": {
         "simulator": false
