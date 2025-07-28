@@ -9,16 +9,19 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "bundleIdentifier": "com.madhurmuditam.muditam",
+      "supportsTablet": true,
+      "buildNumber": "1.0.0"
     },
     "android": {
+      "package": "com.madhurmuditam.muditam",
+      "versionCode": 2,
+      "edgeToEdgeEnabled": true,
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      },
-      "edgeToEdgeEnabled": true,
-      "permissions": [],
-      "package": "com.madhurmuditam.muditam"
+      }, 
+      "permissions": []
     },
     "web": {
       "bundler": "metro",

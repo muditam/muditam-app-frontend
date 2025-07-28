@@ -12,6 +12,12 @@
       "distribution": "internal"
     },
     "production": {
+       "android": {
+        "buildType": "aab"
+      },
+      "ios": {
+        "simulator": false
+      },
       "autoIncrement": true
     }
   },
