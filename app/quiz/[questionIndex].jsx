@@ -14,11 +14,11 @@ import {
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { Picker } from "@react-native-picker/picker";
 import { RadioButton } from "react-native-paper";
-import { Feather } from "@expo/vector-icons";
+import { Feather } from "@expo/vector-icons"; 
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView } from "react-native-safe-area-context"; 
 
-const questions = [
+const questions = [ 
   {
     id: 1,
     question: "Does anyone in your family have a history of diabetes?",

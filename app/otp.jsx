@@ -66,8 +66,27 @@ export default function OtpScreen() {
     return;
   }
 
+  const fullOtp = otp.join("");
+
+  // Handle test number override
+  if (phone === "1234567890" && fullOtp === "098765") {
+    const userRes = await fetch(`https://muditam-app-backend.onrender.com/api/user/${phone}`);
+    const userText = await userRes.text();
+
+    if (userRes.status === 200) {
+      const userData = JSON.parse(userText);
+      await AsyncStorage.setItem("userDetails", JSON.stringify(userData));
+      router.replace("/home");
+    } else if (userRes.status === 404) {
+      router.replace({ pathname: "/details", params: { phone } });
+    } else {
+      Alert.alert("Error", "Unexpected server response.");
+    }
+    return;
+  }
+
+  // Regular verification
   try {
-    const fullOtp = otp.join("");
     const response = await fetch(`https://control.msg91.com/api/v5/otp/verify?otp=${fullOtp}&mobile=91${phone}`, {
       method: "GET",
       headers: {
@@ -80,7 +99,6 @@ export default function OtpScreen() {
     console.log("OTP verify response:", data);
 
     if (data.type === "success") {
-      // Continue to fetch user data as before
       const userRes = await fetch(`https://muditam-app-backend.onrender.com/api/user/${phone}`);
       const userText = await userRes.text();
 
@@ -149,12 +167,11 @@ export default function OtpScreen() {
           }}
           keyboardShouldPersistTaps="handled" 
         >
-          {/* Background Image */}
           <Image
             source={{
               uri: "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/2_1_eb3f1b3c-1df9-4942-99b2-f001de984ddb.png?v=1751978207",
             }}
-            style={{ width: "100%", height: 400 }}
+            style={{ width: "100%", height: 430 }}
             resizeMode="cover"
           />
 

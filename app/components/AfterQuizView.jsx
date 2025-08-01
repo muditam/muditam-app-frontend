@@ -28,7 +28,7 @@ import ExpertsPanelCard from '../components/ExpertsPanelCard';
 import RealJourneysSlider from '../components/RealJourneysSlider';
 import NeedHelpSection from '../components/NeedHelpSection';
 
-const ROOT_CAUSES_CONFIG = [
+const ROOT_CAUSES_CONFIG = [ 
     {
         key: 'body_weight',
         label: 'Body Weight',
@@ -228,7 +228,7 @@ export default function AfterQuizView() {
                                     <View key={key} style={styles.causeItem}>
                                         <Image source={{ uri: cause.image }} style={styles.causeIcon} />
                                         <Text style={styles.causeLabel}>{cause.label}</Text>
-                                    </View>
+                                    </View> 
                                 );
                             })}
                         </View>
@@ -498,7 +498,7 @@ const styles = StyleSheet.create({
     },
     causeItem: {
         alignItems: 'center',
-        width: '23%',
+        width: '25%',
     },
     causeIcon: {
         width: 36,
