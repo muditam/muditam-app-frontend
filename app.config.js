@@ -1,13 +1,13 @@
 export default {
     expo: {
-        name: "muditam",
+        name: "Muditam Ayurveda",
         slug: "muditam",
         version: "1.0.0",
         orientation: "portrait",
         icon: "./assets/images/logo.png",
         scheme: "muditam",
         userInterfaceStyle: "automatic",
-        android: {
+        android: { 
             package: "com.madhurmuditam.muditam",
             adaptiveIcon: {
                 foregroundImage: "./assets/images/adaptive-icon.png", 

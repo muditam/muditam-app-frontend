@@ -70,7 +70,7 @@ export default function OtpScreen() {
 
   // Handle test number override
   if (phone === "1234567890" && fullOtp === "098765") {
-    const userRes = await fetch(`https://muditam-app-backend.onrender.com/api/user/${phone}`);
+    const userRes = await fetch(`https://muditam-app-backend.onrender.com/api/user/${phone}`); 
     const userText = await userRes.text();
 
     if (userRes.status === 200) {
