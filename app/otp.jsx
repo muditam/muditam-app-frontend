@@ -12,98 +12,60 @@ import {
   Keyboard,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter, useLocalSearchParams } from "expo-router"; 
+import { useRouter, useLocalSearchParams } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 
+// 🔧 Change this to your backend
+const API_BASE = "https://muditam-app-backend.onrender.com";
+
 export default function OtpScreen() {
   const router = useRouter();
   const { phone } = useLocalSearchParams();
+
   const [otp, setOtp] = useState(Array(6).fill(""));
   const inputs = useRef([]);
   const [timer, setTimer] = useState(10);
   const [isKeyboardVisible, setKeyboardVisible] = useState(false);
 
-  useEffect(() => {
-    const keyboardDidShowListener = Keyboard.addListener(
-      "keyboardDidShow",
-      () => setKeyboardVisible(true)
-    );
-    const keyboardDidHideListener = Keyboard.addListener(
-      "keyboardDidHide",
-      () => setKeyboardVisible(false)
-    );
+  // NEW: submitting flag, abort controller, in-session verified guard
+  const [submitting, setSubmitting] = useState(false);
+  const verifyAbort = useRef(null);
+  const otpVerifiedOnce = useRef(false);
 
+  useEffect(() => {
+    const show = Keyboard.addListener("keyboardDidShow", () => setKeyboardVisible(true));
+    const hide = Keyboard.addListener("keyboardDidHide", () => setKeyboardVisible(false));
     return () => {
-      keyboardDidShowListener.remove();
-      keyboardDidHideListener.remove();
+      show.remove();
+      hide.remove();
     };
   }, []);
 
   useEffect(() => {
     if (timer > 0) {
-      const countdown = setTimeout(() => setTimer(timer - 1), 1000);
-      return () => clearTimeout(countdown);
+      const id = setTimeout(() => setTimer((t) => t - 1), 1000);
+      return () => clearTimeout(id);
     }
   }, [timer]);
 
-  const isOtpComplete = otp.every((digit) => digit !== "");
+  const isOtpComplete = otp.every((d) => d !== "");
 
   const handleChange = (text, index) => {
-    const newOtp = [...otp];
-    newOtp[index] = text;
-    setOtp(newOtp);
-
-    if (text && index < 5) {
-      inputs.current[index + 1].focus();
-    }
+    const clean = (text || "").replace(/[^0-9]/g, "");
+    const next = [...otp];
+    next[index] = clean;
+    setOtp(next);
+    if (clean && index < 5) inputs.current[index + 1]?.focus();
   };
 
-  const handleSubmitOtp = async () => {
-  if (!isOtpComplete) {
-    Alert.alert("Incomplete OTP", "Please enter all 6 digits.");
-    return;
-  }
-
-  const fullOtp = otp.join("");
-
-  // Handle test number override
-  if (phone === "1234567890" && fullOtp === "098765") {
-    const userRes = await fetch(`https://muditam-app-backend.onrender.com/api/user/${phone}`); 
-    const userText = await userRes.text();
-
-    if (userRes.status === 200) {
-      const userData = JSON.parse(userText);
-      await AsyncStorage.setItem("userDetails", JSON.stringify(userData));
-      router.replace("/home");
-    } else if (userRes.status === 404) {
-      router.replace({ pathname: "/details", params: { phone } });
-    } else {
-      Alert.alert("Error", "Unexpected server response.");
-    }
-    return;
-  }
-
-  // Regular verification
-  try {
-    const response = await fetch(`https://control.msg91.com/api/v5/otp/verify?otp=${fullOtp}&mobile=91${phone}`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        authkey: "451604A8TTLksfVyk06825bdc5P1",
-      },
-    });
-
-    const data = await response.json();
-    console.log("OTP verify response:", data);
-
-    if (data.type === "success") {
-      const userRes = await fetch(`https://muditam-app-backend.onrender.com/api/user/${phone}`);
-      const userText = await userRes.text();
-
+  const proceedAfterVerification = async () => {
+    try {
+      const userRes = await fetch(`${API_BASE}/api/user/${phone}`);
+      const bodyText = await userRes.text();
       if (userRes.status === 200) {
-        const userData = JSON.parse(userText);
+        const userData = JSON.parse(bodyText);
         await AsyncStorage.setItem("userDetails", JSON.stringify(userData));
         router.replace("/home");
       } else if (userRes.status === 404) {
@@ -111,61 +73,98 @@ export default function OtpScreen() {
       } else {
         Alert.alert("Error", "Unexpected server response.");
       }
-    } else {
-      Alert.alert("Invalid OTP", data.message || "Please try again.");
+    } catch (e) {
+      console.error("Post-verify user fetch failed:", e);
+      Alert.alert("Network Error", "Please check connection and try again.");
+    } finally {
+      setSubmitting(false);
     }
-  } catch (error) {
-    console.error("OTP verification failed:", error);
-    Alert.alert("Error", "Verification failed. Please try again.");
-  }
-};
+  };
 
+  const handleSubmitOtp = async () => {
+    if (!isOtpComplete) {
+      Alert.alert("Incomplete OTP", "Please enter all 6 digits.");
+      return;
+    }
+    if (submitting) return; // block double taps
+
+    const fullOtp = otp.join("");
+
+    // If already verified in-session, skip re-verify (instant)
+    if (otpVerifiedOnce.current) {
+      setSubmitting(true);
+      await proceedAfterVerification();
+      return;
+    }
+
+    setSubmitting(true);
+
+    // Abort previous verify (if any) + set a hard timeout
+    verifyAbort.current?.abort();
+    verifyAbort.current = new AbortController();
+    const timeoutId = setTimeout(() => verifyAbort.current?.abort(), 12000); // 12s timeout
+
+    try {
+      const response = await fetch(`${API_BASE}/api/auth/otp/verify`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        signal: verifyAbort.current.signal,
+        body: JSON.stringify({ phone, otp: fullOtp }),
+      });
+
+      const data = await response.json();
+      // Backend normalizes both success + "already verified" to ok:true
+      if (response.ok && data?.ok) {
+        otpVerifiedOnce.current = true;
+        await proceedAfterVerification();
+      } else {
+        setSubmitting(false);
+        Alert.alert("Invalid OTP", data?.message || "Please try again.");
+      }
+    } catch (err) {
+      setSubmitting(false);
+      if (err?.name === "AbortError") {
+        Alert.alert("Timeout", "Verification took too long. Please try again.");
+      } else {
+        console.error("OTP verification failed:", err);
+        Alert.alert("Error", "Verification failed. Please try again.");
+      }
+    } finally {
+      clearTimeout(timeoutId);
+    }
+  };
 
   const handleResend = async () => {
-  setOtp(Array(6).fill(""));
-  inputs.current[0].focus();
-  setTimer(10);
+    setOtp(Array(6).fill(""));
+    inputs.current[0]?.focus();
+    setTimer(10);
 
-  try {
-    const response = await fetch("https://control.msg91.com/api/v5/otp", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        authkey: "451604A8TTLksfVyk06825bdc5P1",
-      },
-      body: JSON.stringify({
-        mobile: `91${phone}`,
-        sender: "MUDITM",
-        template_id: "6883510ad6fc0533183824b2",
-        otp_length: "6",
-        otp_expiry: "10"
-      }),
-    });
-
-    const data = await response.json();
-    if (data.type !== "success") {
-      Alert.alert("Failed to resend OTP");
+    try {
+      const response = await fetch(`${API_BASE}/api/auth/otp/send`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone }),
+      });
+      const data = await response.json();
+      if (!response.ok || !data?.ok) {
+        Alert.alert("Failed to resend OTP", data?.message || "");
+      }
+    } catch (err) {
+      console.error("Resend OTP error:", err);
+      Alert.alert("Error", "Couldn't resend OTP");
     }
-  } catch (err) {
-    console.error("Resend OTP error:", err);
-    Alert.alert("Error", "Couldn't resend OTP");
-  }
-};
-
+  };
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "white" }}>
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20} 
+        keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
       >
         <ScrollView
-          contentContainerStyle={{
-            flexGrow: 1,
-            justifyContent: "flex-start",
-          }}
-          keyboardShouldPersistTaps="handled" 
+          contentContainerStyle={{ flexGrow: 1, justifyContent: "flex-start" }}
+          keyboardShouldPersistTaps="handled"
         >
           <Image
             source={{
@@ -177,7 +176,7 @@ export default function OtpScreen() {
 
           {/* Back Button */}
           <TouchableOpacity
-            onPress={() => router.replace("/login")} 
+            onPress={() => router.replace("/login")}
             style={{
               position: "absolute",
               top: 10,
@@ -227,9 +226,7 @@ export default function OtpScreen() {
             </Text>
 
             {/* OTP Boxes */}
-            <View
-              style={{ flexDirection: "row", justifyContent: "space-between" }}
-            >
+            <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
               {otp.map((digit, index) => (
                 <TextInput
                   key={index}
@@ -253,9 +250,9 @@ export default function OtpScreen() {
 
             {/* Submit Button */}
             <TouchableOpacity
-              disabled={!isOtpComplete}
+              disabled={submitting || !isOtpComplete}
               style={{
-                backgroundColor: isOtpComplete ? "#9D57FF" : "#D1D5DB",
+                backgroundColor: submitting || !isOtpComplete ? "#D1D5DB" : "#9D57FF",
                 paddingVertical: 14,
                 marginTop: 20,
                 borderRadius: 10,
@@ -263,10 +260,8 @@ export default function OtpScreen() {
               }}
               onPress={handleSubmitOtp}
             >
-              <Text
-                style={{ color: "white", fontWeight: "600", fontSize: 18 }}
-              >
-                Submit
+              <Text style={{ color: "white", fontWeight: "600", fontSize: 18 }}>
+                {submitting ? "Please wait..." : "Submit"}
               </Text>
             </TouchableOpacity>
 
@@ -314,10 +309,7 @@ export default function OtpScreen() {
                 colors={["transparent", "#666666", "transparent"]}
                 start={{ x: 0, y: 0.5 }}
                 end={{ x: 1, y: 0.5 }}
-                style={{
-                  width: "95%",
-                  height: 0.5,
-                }}
+                style={{ width: "95%", height: 0.5 }}
               />
             </View>
 
@@ -331,16 +323,9 @@ export default function OtpScreen() {
                 justifyContent: "center",
               }}
             >
-              <View style={{ flexDirection: "row", alignItems: "center" }}> 
-                <Ionicons
-                  name="people-outline"
-                  size={23}
-                  color="black"
-                  style={{ marginRight: 8 }}
-                />
-                <Text style={{ fontSize: 16 }}>
-                  Trusted by 50,000+ Happy Users
-                </Text>
+              <View style={{ flexDirection: "row", alignItems: "center" }}>
+                <Ionicons name="people-outline" size={23} color="black" style={{ marginRight: 8 }} />
+                <Text style={{ fontSize: 16 }}>Trusted by 50,000+ Happy Users</Text>
               </View>
             </View>
           </View>
@@ -349,4 +334,3 @@ export default function OtpScreen() {
     </SafeAreaView>
   );
 }
- 

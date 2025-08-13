@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   View,
   Text,
@@ -12,10 +12,13 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import AsyncStorage from "@react-native-async-storage/async-storage"; 
 import LegalModal from "../../components/LegalModal";
 import { LinearGradient } from "expo-linear-gradient";
 import { StatusBar } from "expo-status-bar";
+
+// 🔧 point this to your API (same as OTP screen)
+const API_BASE = "https://muditam-app-backend.onrender.com";
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -23,53 +26,60 @@ export default function LoginScreen() {
   const [showTerms, setShowTerms] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState("");
   const [loading, setLoading] = useState(false);
+  const abortRef = useRef(null);
+
+  // Clean up: abort any in-flight request when screen unmounts
+  useEffect(() => {
+    return () => {
+      abortRef.current?.abort?.();
+    };
+  }, []);
 
   const handleGetOtp = async () => {
-  if (phoneNumber.length !== 10) {
-    return Alert.alert("Invalid Number", "Please enter a 10-digit mobile number.");
-  }
-
-  if (phoneNumber === "1234567890") {
-    await AsyncStorage.setItem("userPhone", phoneNumber);
-    router.push({ pathname: "/otp", params: { phone: phoneNumber } });
-    return;
-  }
-
-  setLoading(true);
-  try {
-    const response = await fetch("https://control.msg91.com/api/v5/otp", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        authkey: "451604A8TTLksfVyk06825bdc5P1",
-      },
-      body: JSON.stringify({
-        mobile: `91${phoneNumber}`,
-        sender: "MUDITM",
-        template_id: "6883510ad6fc0533183824b2",
-        otp_length: "6",
-        otp_expiry: "10"
-      }),
-    });
-
-    const data = await response.json();
-    console.log("OTP send response:", data);
-
-    if (data.type === "success") {
-      await AsyncStorage.setItem("userPhone", phoneNumber);
-      router.push({ pathname: "/otp", params: { phone: phoneNumber } });
-    } else {
-      Alert.alert("Error", "Failed to send OTP. Please try again.");
+    // normalize input (digits only, clamp to 10)
+    const clean = (phoneNumber || "").replace(/\D/g, "").slice(0, 10);
+    if (clean.length !== 10) {
+      return Alert.alert("Invalid Number", "Please enter a 10-digit mobile number.");
     }
-  } catch (err) {
-    console.error("Send OTP error:", err);
-    Alert.alert("Error", "Something went wrong. Please try again.");
-  } finally {
-    setLoading(false);
-  }
-};
 
+    if (loading) return; // prevent double-tap
+    setLoading(true);
 
+    // abort any previous send + set a hard timeout
+    abortRef.current?.abort();
+    abortRef.current = new AbortController();
+    const timeoutId = setTimeout(() => abortRef.current?.abort(), 12000); // 12s
+
+    try {
+      const res = await fetch(`${API_BASE}/api/auth/otp/send`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone: clean }),
+        signal: abortRef.current.signal,
+      });
+
+      const data = await res.json().catch(() => ({}));
+
+      if (res.ok && data?.ok) {
+        await AsyncStorage.setItem("userPhone", clean);
+        router.push({ pathname: "/otp", params: { phone: clean } });
+      } else {
+        Alert.alert("Error", data?.message || "Failed to send OTP. Please try again.");
+      }
+    } catch (err) {
+      if (err?.name === "AbortError") {
+        Alert.alert("Timeout", "Request took too long. Please try again.");
+      } else {
+        console.error("Send OTP error:", err);
+        Alert.alert("Error", "Something went wrong. Please try again.");
+      }
+    } finally {
+      clearTimeout(timeoutId);
+      setLoading(false);
+    }
+  };
+
+  // --- Legal contents (unchanged) ---
   const privacyContent = `Welcome to Muditam Ayurveda Private Limited (“we”, “our”, or “us”). This privacy policy (“Privacy Policy”) describes in detail how we collect, use, store, disclose, and protect your personal and sensitive personal data when you access or use our website www.muditam.com, mobile applications, or any other services, content, or products provided via our platform (“Platform”).
 By accessing our Platform or using any of our services, you confirm that you have read, understood, and consented to the collection, processing, storage, and transfer of your information as described herein. If you do not agree with the terms of this Privacy Policy, please do not use the Platform or avail of any Services.
 
@@ -489,26 +499,28 @@ For any complaints or grievances, please contact our Grievance Officer using the
                 placeholder="Enter your number"
                 maxLength={10}
                 value={phoneNumber}
-                onChangeText={setPhoneNumber}
+                onChangeText={(t) => {
+                  // ensure digits-only and clamp to 10
+                  const clean = (t || "").replace(/\D/g, "").slice(0, 10);
+                  setPhoneNumber(clean);
+                }}
                 placeholderTextColor="#666" // iOS-specific dull text fix
               />
             </View>
- 
+
             {/* Get OTP Button */}
             <TouchableOpacity
               style={{
                 backgroundColor:
-                  phoneNumber.length === 10 ? "#9D57FF" : "#D1D5DB",
+                  !loading && phoneNumber.length === 10 ? "#9D57FF" : "#D1D5DB",
                 paddingVertical: 14,
                 borderRadius: 10,
                 alignItems: "center",
               }}
               onPress={handleGetOtp}
-              disabled={loading}
+              disabled={loading || phoneNumber.length !== 10}
             >
-              <Text
-                style={{ color: "white", fontWeight: "600", fontSize: 18 }}
-              >
+              <Text style={{ color: "white", fontWeight: "600", fontSize: 18 }}>
                 {loading ? "Please wait..." : "Get OTP"}
               </Text>
             </TouchableOpacity>
@@ -527,10 +539,7 @@ For any complaints or grievances, please contact our Grievance Officer using the
                 colors={["transparent", "#666666", "transparent"]}
                 start={{ x: 0, y: 0.5 }}
                 end={{ x: 1, y: 0.5 }}
-                style={{
-                  width: "95%",
-                  height: 0.5,
-                }}
+                style={{ width: "95%", height: 0.5 }}
               />
             </View>
 
@@ -544,9 +553,7 @@ For any complaints or grievances, please contact our Grievance Officer using the
                 justifyContent: "center",
               }}
             >
-              <Text
-                style={{ fontSize: 16, color: "#B5B5B5", textAlign: "center" }}
-              >
+              <Text style={{ fontSize: 16, color: "#B5B5B5", textAlign: "center" }}>
                 By Signing in, I accept the
               </Text>
               <Text
