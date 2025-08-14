@@ -48,7 +48,7 @@ export default function LoginScreen() {
     // abort any previous send + set a hard timeout
     abortRef.current?.abort();
     abortRef.current = new AbortController();
-    const timeoutId = setTimeout(() => abortRef.current?.abort(), 12000); // 12s
+    const timeoutId = setTimeout(() => abortRef.current?.abort(), 25000); // 12s
 
     try {
       const res = await fetch(`${API_BASE}/api/auth/otp/send`, {
