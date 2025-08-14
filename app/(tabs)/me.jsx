@@ -58,7 +58,7 @@ export default function MeScreen() {
 
   const saveReminder = async (type, time) => {
     try {
-      const res = await fetch("https://muditam-app-backend-6a867f82b8dc.herokuapp.com/api/reminder", {
+      const res = await fetch("https://muditam-app-backend-ca1c8b03db09.herokuapp.com/api/reminder", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ type, time, userId: user._id }),
@@ -182,7 +182,7 @@ export default function MeScreen() {
     const token = (await Notifications.getExpoPushTokenAsync()).data;
 
     try {
-      const res = await fetch("https://muditam-app-backend-6a867f82b8dc.herokuapp.com/api/user/save-token", {
+      const res = await fetch("https://muditam-app-backend-ca1c8b03db09.herokuapp.com/api/user/save-token", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId, expoPushToken: token }),

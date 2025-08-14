@@ -31,7 +31,7 @@ export default function MyPlanScreen() {
         }
 
         // Fetch user data including purchasedProducts
-        const res = await fetch(`https://muditam-app-backend-6a867f82b8dc.herokuapp.com/api/user/${phone}`);
+        const res = await fetch(`https://muditam-app-backend-ca1c8b03db09.herokuapp.com/api/user/${phone}`);
         const user = await res.json();
 
         if (!res.ok || !user) {
@@ -48,7 +48,7 @@ export default function MyPlanScreen() {
         }
 
         const productsRes = await fetch(
-          'https://muditam-app-backend-6a867f82b8dc.herokuapp.com/api/shopify/products'
+          'https://muditam-app-backend-ca1c8b03db09.herokuapp.com/api/shopify/products'
         );
         const allProducts = await productsRes.json();
 

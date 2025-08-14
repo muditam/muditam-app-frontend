@@ -59,7 +59,7 @@ export default function HbA1cProgressView() {
       const phone = JSON.parse(user || '{}')?.phone;
       if (!phone) return;
 
-      const response = await fetch(`https://muditam-app-backend-6a867f82b8dc.herokuapp.com/api/quiz/${phone}`);
+      const response = await fetch(`https://muditam-app-backend-ca1c8b03db09.herokuapp.com/api/quiz/${phone}`);
       const data = await response.json();
 
       if (response.ok && data.hba1c) {

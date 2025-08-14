@@ -6,7 +6,7 @@ export const fetchKitProgress = async () => {
     const phone = JSON.parse(userData || '{}')?.phone;
     if (!phone) return { currentKit: 1, completedKits: [] };
 
-    const res = await fetch(`https://muditam-app-backend-6a867f82b8dc.herokuapp.com/api/user/kit-progress/${phone}`);
+    const res = await fetch(`https://muditam-app-backend-ca1c8b03db09.herokuapp.com/api/user/kit-progress/${phone}`);
     const data = await res.json();
     return data;
   } catch (err) {

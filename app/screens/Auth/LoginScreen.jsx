@@ -4,7 +4,7 @@ import {
   Text,
   TextInput,
   Image,
-  TouchableOpacity,
+  TouchableOpacity, 
   Alert,
   KeyboardAvoidingView,
   Platform,
@@ -16,9 +16,8 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import LegalModal from "../../components/LegalModal";
 import { LinearGradient } from "expo-linear-gradient";
 import { StatusBar } from "expo-status-bar";
-
-// 🔧 point this to your API (same as OTP screen)
-const API_BASE = "https://muditam-app-backend-6a867f82b8dc.herokuapp.com"; 
+ 
+const API_BASE = "https://muditam-app-backend-ca1c8b03db09.herokuapp.com"; 
 
 export default function LoginScreen() {
   const router = useRouter();

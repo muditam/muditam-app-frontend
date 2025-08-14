@@ -41,7 +41,7 @@ export const CartProvider = ({ children }) => {
           return;
         }
 
-        const res = await fetch(`https://muditam-app-backend-6a867f82b8dc.herokuapp.com/api/cart/${phone}`);
+        const res = await fetch(`https://muditam-app-backend-ca1c8b03db09.herokuapp.com/api/cart/${phone}`);
         const data = await res.json();
 
         if (res.ok && Array.isArray(data.items)) {
@@ -66,7 +66,7 @@ export const CartProvider = ({ children }) => {
       try {
         const validItems = cartItems.filter(isValidProduct);
 
-        await fetch(`https://muditam-app-backend-6a867f82b8dc.herokuapp.com/api/cart/save`, {
+        await fetch(`https://muditam-app-backend-ca1c8b03db09.herokuapp.com/api/cart/save`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ phone: userPhone, items: validItems }),

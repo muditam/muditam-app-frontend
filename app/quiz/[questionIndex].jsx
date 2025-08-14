@@ -256,7 +256,7 @@ export default function QuestionScreen() {
       const hba1cValue = await AsyncStorage.getItem("hba1c");
       const hba1c = hba1cValue ? JSON.parse(hba1cValue) : null;
 
-      const response = await fetch("https://muditam-app-backend-6a867f82b8dc.herokuapp.com/api/quiz/submit", {
+      const response = await fetch("https://muditam-app-backend-ca1c8b03db09.herokuapp.com/api/quiz/submit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ answers: finalAnswers, height, weight, hba1c, phone }),

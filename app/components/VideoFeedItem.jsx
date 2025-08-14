@@ -52,7 +52,7 @@ export default function VideoFeedItem({ video, isActive }) {
         if (phone && !canceled && isMounted.current) {
           setUserPhone(phone);
           const res = await axios.get(
-            `https://muditam-app-backend-6a867f82b8dc.herokuapp.com/api/user/video-feedback/${phone}`
+            `https://muditam-app-backend-ca1c8b03db09.herokuapp.com/api/user/video-feedback/${phone}`
           );
           if (!canceled && isMounted.current) {
             const existing = res.data.likedVideos.find((v) => v.videoId === video);
@@ -71,7 +71,7 @@ export default function VideoFeedItem({ video, isActive }) {
     if (!userPhone) return Alert.alert("Error", "User not logged in");
     try {
       await axios.post(
-        "https://muditam-app-backend-6a867f82b8dc.herokuapp.com/api/user/video-feedback",
+        "https://muditam-app-backend-ca1c8b03db09.herokuapp.com/api/user/video-feedback",
         {
           phone: userPhone,
           videoId: video,

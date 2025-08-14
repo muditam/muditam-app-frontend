@@ -18,7 +18,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 
 // 🔧 Change this to your backend
-const API_BASE = "https://muditam-app-backend-6a867f82b8dc.herokuapp.com"; 
+const API_BASE = "https://muditam-app-backend-ca1c8b03db09.herokuapp.com"; 
 
 export default function OtpScreen() { 
   const router = useRouter();

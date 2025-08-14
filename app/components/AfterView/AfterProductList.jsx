@@ -25,7 +25,7 @@ export default function AfterProductList({ setTotalPrice, totalPrice, setSelecte
         const stored = await AsyncStorage.getItem('hba1c');
         const hba1c = stored ? JSON.parse(stored) : null;
 
-        const res = await fetch('https://muditam-app-backend-6a867f82b8dc.herokuapp.com/api/shopify/products');
+        const res = await fetch('https://muditam-app-backend-ca1c8b03db09.herokuapp.com/api/shopify/products');
         const data = await res.json();
 
         let titlesToShow = [];

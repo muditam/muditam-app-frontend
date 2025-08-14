@@ -7,7 +7,7 @@ export const checkPurchaseStatus = async () => {
 
     if (!phone) return false;
 
-    const response = await fetch(`https://muditam-app-backend-6a867f82b8dc.herokuapp.com/api/user/purchase-status/${phone}`);
+    const response = await fetch(`https://muditam-app-backend-ca1c8b03db09.herokuapp.com/api/user/purchase-status/${phone}`);
 
     if (!response.ok) {
       console.warn(`Server responded with status: ${response.status}`);

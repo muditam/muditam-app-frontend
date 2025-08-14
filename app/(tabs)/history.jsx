@@ -12,7 +12,7 @@ export default function History() {
         const userDetails = await AsyncStorage.getItem('userDetails');
         if (userDetails) {
           const { phone } = JSON.parse(userDetails);
-          const response = await fetch(`https://muditam-app-backend-6a867f82b8dc.herokuapp.com/api/shopify/customer-history/${phone}`);
+          const response = await fetch(`https://muditam-app-backend-ca1c8b03db09.herokuapp.com/api/shopify/customer-history/${phone}`);
 
           if (response.ok) {
             const data = await response.json();

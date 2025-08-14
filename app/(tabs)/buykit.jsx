@@ -123,7 +123,7 @@ export default function BuyKit() {
 
 
         const res = await fetch(
-          "https://muditam-app-backend-6a867f82b8dc.herokuapp.com/api/shopify/products"
+          "https://muditam-app-backend-ca1c8b03db09.herokuapp.com/api/shopify/products"
         );
         const data = await res.json();
 
@@ -506,7 +506,7 @@ export default function BuyKit() {
               }
 
               const response = await fetch(
-                "https://muditam-app-backend-6a867f82b8dc.herokuapp.com/api/shopify/create-cart",
+                "https://muditam-app-backend-ca1c8b03db09.herokuapp.com/api/shopify/create-cart",
                 {
                   method: "POST",
                   headers: { "Content-Type": "application/json" },
@@ -526,7 +526,7 @@ export default function BuyKit() {
 
               const cartToken = data.cartId.split("/").pop();
 
-              await fetch("https://muditam-app-backend-6a867f82b8dc.herokuapp.com/api/user/kit-progress/update", {
+              await fetch("https://muditam-app-backend-ca1c8b03db09.herokuapp.com/api/user/kit-progress/update", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
