@@ -18,7 +18,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { StatusBar } from "expo-status-bar";
 
 // 🔧 point this to your API (same as OTP screen)
-const API_BASE = "https://muditam-app-backend.onrender.com"; 
+const API_BASE = "https://muditam-app-backend-6a867f82b8dc.herokuapp.com"; 
 
 export default function LoginScreen() {
   const router = useRouter();

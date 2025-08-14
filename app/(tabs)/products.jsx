@@ -99,7 +99,7 @@ export default function Products() {
         );
 
   useEffect(() => {
-    fetch("https://muditam-app-backend.onrender.com/api/shopify/products")
+    fetch("https://muditam-app-backend-6a867f82b8dc.herokuapp.com/api/shopify/products")
       .then((res) => res.json())
       .then((data) => setProducts(data))
       .catch((err) => {

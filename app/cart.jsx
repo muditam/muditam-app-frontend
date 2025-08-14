@@ -71,7 +71,7 @@ export default function Cart() {
 
 
   useEffect(() => {
-    fetch("https://muditam-app-backend.onrender.com/api/shopify/products")
+    fetch("https://muditam-app-backend-6a867f82b8dc.herokuapp.com/api/shopify/products")
       .then((res) => res.json())
       .then((data) => setProducts(data))
       .catch((err) => console.error("Error fetching products:", err));
@@ -114,7 +114,7 @@ export default function Cart() {
       }
 
       const response = await fetch(
-        "https://muditam-app-backend.onrender.com/api/shopify/create-cart",
+        "https://muditam-app-backend-6a867f82b8dc.herokuapp.com/api/shopify/create-cart",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

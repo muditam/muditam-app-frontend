@@ -65,7 +65,7 @@ export default function UserProfileForm() {
 
     try {
       setLoadingSubmit(true);
-      const res = await fetch("https://muditam-app-backend.onrender.com/api/user", {
+      const res = await fetch("https://muditam-app-backend-6a867f82b8dc.herokuapp.com/api/user", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ phone, name, yearOfBirth, gender, email, preferredLanguage }),

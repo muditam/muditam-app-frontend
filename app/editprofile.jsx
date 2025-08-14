@@ -111,7 +111,7 @@ export default function EditProfileScreen() {
         });
       }
 
-      const response = await fetch('https://muditam-app-backend.onrender.com/api/user/update', {
+      const response = await fetch('https://muditam-app-backend-6a867f82b8dc.herokuapp.com/api/user/update', {
         method: 'POST',
         headers: {
           'Content-Type': 'multipart/form-data',

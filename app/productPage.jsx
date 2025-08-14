@@ -82,7 +82,7 @@ export default function ProductPage() {
   useEffect(() => {
     if (productId) {
       fetch(
-        `https://muditam-app-backend.onrender.com/api/shopify/product/${productId}`
+        `https://muditam-app-backend-6a867f82b8dc.herokuapp.com/api/shopify/product/${productId}`
       )
         .then((res) => res.json())
         .then((data) => {
@@ -205,7 +205,7 @@ export default function ProductPage() {
 
     try {
       const response = await fetch(
-        "https://muditam-app-backend.onrender.com/api/shopify/create-cart",
+        "https://muditam-app-backend-6a867f82b8dc.herokuapp.com/api/shopify/create-cart",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
