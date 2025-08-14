@@ -18,9 +18,9 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 
 // 🔧 Change this to your backend
-const API_BASE = "https://muditam-app-backend.onrender.com";
+const API_BASE = "https://muditam-app-backend.onrender.com"; 
 
-export default function OtpScreen() {
+export default function OtpScreen() { 
   const router = useRouter();
   const { phone } = useLocalSearchParams();
 

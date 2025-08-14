@@ -18,7 +18,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { StatusBar } from "expo-status-bar";
 
 // 🔧 point this to your API (same as OTP screen)
-const API_BASE = "https://muditam-app-backend.onrender.com";
+const API_BASE = "https://muditam-app-backend.onrender.com"; 
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -64,7 +64,7 @@ export default function LoginScreen() {
         await AsyncStorage.setItem("userPhone", clean);
         router.push({ pathname: "/otp", params: { phone: clean } });
       } else {
-        Alert.alert("Error", data?.message || "Failed to send OTP. Please try again.");
+        Alert.alert("Error", data?.message || "Failed to send OTP. Please try again."); 
       }
     } catch (err) {
       if (err?.name === "AbortError") {
