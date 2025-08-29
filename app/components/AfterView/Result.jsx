@@ -68,8 +68,10 @@ export default function Result() {
                 <Text style={styles.month}>{item.month}</Text>
                 <Text style={styles.description}>{item.description}</Text>
               </View>
+              
             </View>
           ))}
+          <Text style={styles.predictionText}>*Predictions are for wellness insights only, not medical advice</Text>
         </View>
       </View>
     </ScrollView>
@@ -165,6 +167,12 @@ const styles = StyleSheet.create({
   description: {
     fontSize: 15,
     lineHeight: 20,
+  }, 
+  predictionText: {
+    textAlign: "left",
+    fontSize: 10, 
+    paddingVertical: 10,
+    marginTop: -35,
   },
 });
 

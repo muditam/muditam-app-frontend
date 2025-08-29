@@ -159,6 +159,7 @@ export default function TestTab() {
             <Text style={styles.nextButtonText}>START NOW</Text>
           </TouchableOpacity>
         </View>
+        <Text style={styles.predictionText}>*Predictions are for wellness insights only, not medical advice</Text>
       </View>
     </SafeAreaView>
   );
@@ -171,7 +172,7 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     alignItems: "center",
     elevation: 5,
-    paddingHorizontal: 50,
+    paddingHorizontal: 50, 
     alignSelf: "center",
     marginBottom: 40,
     marginTop: 40,
@@ -180,5 +181,10 @@ const styles = StyleSheet.create({
   nextButtonText: {
     color: "white",
     fontSize: 16,
+  },
+  predictionText: {
+    textAlign: "left",
+    fontSize: 10,
+    paddingHorizontal: 10, 
   },
 });
