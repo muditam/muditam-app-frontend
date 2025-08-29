@@ -44,8 +44,7 @@ Ayurvedic and nutritional supplements
 Progress tracking and app-based guidance
 
 Wellness and Predictions:
-Muditam provides general wellness predictions based on the information you provide, such as health data and lifestyle choices. These predictions are not clinically validated and are intended for general guidance. They should not be construed as medical advice or as a diagnosis. Always consult a healthcare professional for any medical concerns. The predictions are for informational purposes only, and Muditam disclaims all responsibility for any adverse health outcomes resulting from reliance on the predictions or any suggested wellness actions.
-Muditam does not provide emergency medical services or replace your physician’s clinical judgment. Our services are not intended to diagnose, treat, cure, or prevent any disease(s).
+Muditam provides general wellness predictions based on the information you provide, such as health data and lifestyle choices. These predictions are not clinically validated and are intended for general guidance only. The predictions are generated through algorithms that process user inputs, and are not supported by scientific or clinical research. They should not be used as a substitute for professional medical advice. Muditam disclaims all responsibility for any adverse health outcomes resulting from reliance on the predictions or any suggested wellness actions.
 
 4. NO DOCTOR-PATIENT RELATIONSHIP
 You understand that:
@@ -81,7 +80,7 @@ Expert review
 
 Feedback from external consultants
 
-Plans may include dietary changes, supplement schedules, lifestyle advice, and regular follow-ups. Muditam reserves the right to modify or reject plan enrollment based on internal guidelines. The wellness plans and predictions are based on general recommendations and should be treated as guidance, not as clinical advice.
+Plans may include dietary changes, supplement schedules, lifestyle advice, and regular follow-ups. Muditam reserves the right to modify or reject plan enrollment based on internal guidelines. Wellness recommendations, including diet and lifestyle suggestions, are algorithm-driven based on user input. These algorithms are derived from general wellness guidelines and principles, developed with input from qualified health professionals, including Ayurvedic doctors and nutritionists. Supplement recommendations are also algorithm-generated, but based on the logic established by health experts to ensure alignment with wellness practices.
 
 7. ACCOUNT CREATION
 To use key features, you must register for an account. You agree to:
@@ -109,7 +108,7 @@ Third-party couriers are considered your agents for delivery.
 Delivery timelines are indicative and not binding.
 Delays caused by events outside Muditam’s control will not be the basis for liability.
 
-11. USER RESPONSIBILITIES
+11. USER RESPONSIBILITIESy
 By using the Platform, you agree to:
 
 Share truthful, complete, and up-to-date information
@@ -135,7 +134,6 @@ For inactivity or misuse
 Your obligations (including indemnity, disclaimers, etc.) survive termination.
 
 14. DISCLAIMERS
-
 Muditam services, including the wellness predictions, are provided "as is" without warranties of any kind.
 
 We do not warrant uninterrupted access, completeness, accuracy, or reliability of services.
