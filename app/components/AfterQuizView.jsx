@@ -224,7 +224,7 @@ export default function AfterQuizView() {
                         <View style={[styles.rootCauses, showSlider && { justifyContent: 'flex-start' }]}>
                             {displayedCauses.map((key, index) => {
                                 const cause = getCauseData(key);
-                                return (
+                                return ( 
                                     <View key={key} style={styles.causeItem}>
                                         <Image source={{ uri: cause.image }} style={styles.causeIcon} />
                                         <Text style={styles.causeLabel}>{cause.label}</Text>
@@ -251,11 +251,9 @@ export default function AfterQuizView() {
                     </View>
                 </View>
 
-
-
-                {/* HbA1c Drop Bar */}
+ 
                 <View style={styles.hba1cContainer}>
-                    <Text style={styles.hba1cText}>HbA1c Drop Possibility 93%</Text>
+                    <Text style={styles.hba1cText}>93% Noticed Progress</Text>
 
                     <View style={styles.hba1cBarBg}>
                         <View style={styles.hba1cBarFill}>
@@ -472,7 +470,9 @@ const styles = StyleSheet.create({
     },
     rootCauses: {
         flexDirection: 'row',
-        justifyContent: 'space-between',
+        justifyContent: 'center',
+        flexWrap: 'wrap',
+        gap: 20,
     },
     profileRow: {
         flexDirection: 'row',
@@ -493,7 +493,7 @@ const styles = StyleSheet.create({
     },
     rootCausess: {
         flexDirection: 'row',
-        justifyContent: 'space-between',
+        justifyContent: 'space-evenly',
         marginTop: 8,
     },
     causeItem: {
@@ -501,9 +501,9 @@ const styles = StyleSheet.create({
         width: '25%',
     },
     causeIcon: {
-        width: 36,
+        width: 36, 
         height: 36,
-        marginBottom: 6,
+        marginBottom: 6, 
     },
     causeLabel: {
         fontSize: 12,

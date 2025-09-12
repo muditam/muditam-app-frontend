@@ -367,15 +367,9 @@ For inactivity or misuse
 Your obligations (including indemnity, disclaimers, etc.) survive termination.
 
 14. DISCLAIMERS
-Muditam services, including the wellness predictions, are provided "as is" without warranties of any kind.
+Muditam Ayurveda provides wellness insights and lifestyle recommendations for general informational purposes only. The app does not diagnose, treat, cure, or prevent any medical condition. Information and predictions are based on user inputs and general Ayurvedic principles, and are not a substitute for professional medical advice.
 
-We do not warrant uninterrupted access, completeness, accuracy, or reliability of services.
-
-We do not recommend or endorse any specific medical treatments or prescription drugs.
-
-The Platform is not a substitute for real-time or emergency healthcare services.
-
-The predictions provided by the app are for general wellness insights and lifestyle recommendations only. They are not intended for medical diagnosis or treatment. Users are encouraged to consult a qualified healthcare provider for any medical concerns.
+Always seek the guidance of a qualified healthcare provider with any questions regarding your health. Do not disregard or delay professional medical advice because of something you have read in this app. Muditam Ayurveda is not intended for emergency use.
 
 15. LIMITATION OF LIABILITY
 To the fullest extent permitted by law, Muditam is not liable for:
@@ -394,7 +388,7 @@ If you believe content on the Platform violates the law or your rights, contact 
 
 17. INDEMNITY
 You agree to indemnify and hold harmless Muditam, its officers, employees, and partners from any claims, liabilities, damages, or expenses arising from:
-
+ 
 Your use of the Platform
 
 Violation of the Terms

@@ -76,7 +76,7 @@ export default function HbA1cProgressView() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Results Expected in 90 Days</Text>
+      <Text style={styles.title}>Track Your Progress in 90 Days</Text>
 
       <View style={styles.imageSection}>
         <Image
