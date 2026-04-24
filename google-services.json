@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "900871379454",
+    "project_id": "muditam-app",
+    "storage_bucket": "muditam-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:900871379454:android:e463fc860d2cbb30d388af",
+        "android_client_info": {
+          "package_name": "com.madhurmuditam.muditam"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBGX4iBjt0GCQo6Ua2TkoC9iAcdyMf_jEg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

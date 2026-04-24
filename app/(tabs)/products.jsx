@@ -2,25 +2,22 @@ import React, { useEffect, useState, useRef } from "react";
 import {
   View,
   Text,
-  FlatList,
   Image,
   ActivityIndicator,
   StyleSheet,
   TouchableOpacity,
-  Dimensions,
   Animated,
   ScrollView,
   SafeAreaView,
   useWindowDimensions,
   Platform,
-  StatusBar,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { useCart } from "../contexts/CartContext";
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { Feather, Ionicons } from "@expo/vector-icons";
-import { Modal } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { getColumns, getContentWidth, getScreenPadding } from "../utils/responsive";
 
 
 // 1. Define the custom order
@@ -149,7 +146,12 @@ export default function Products() {
   };
 
   const { width } = useWindowDimensions();
-  const cardWidth = (width - 48) / 2;
+  const screenPadding = getScreenPadding(width);
+  const columns = getColumns(width);
+  const contentWidth = getContentWidth(width, 1120);
+  const cardGap = 16;
+  const innerWidth = contentWidth - screenPadding * 2;
+  const cardWidth = Math.max(170, (innerWidth - cardGap * (columns - 1)) / columns);
 
 
   const getItemQuantity = (productId) => {
@@ -199,7 +201,13 @@ export default function Products() {
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 8 }}
+        contentContainerStyle={{
+          paddingHorizontal: screenPadding,
+          paddingVertical: 8,
+          alignSelf: "center",
+          width: "100%",
+          maxWidth: contentWidth,
+        }}
       >
         {categories.map((cat) => {
           const isActive = cat === selectedCategory;
@@ -233,10 +241,14 @@ export default function Products() {
         contentContainerStyle={{
           flexDirection: "row",
           flexWrap: "wrap",
-          justifyContent: "space-between",
+          justifyContent: columns === 1 ? "center" : "flex-start",
           alignItems: "flex-start",
-          paddingHorizontal: 16,
+          gap: cardGap,
+          paddingHorizontal: screenPadding,
           paddingBottom: 150,
+          alignSelf: "center",
+          width: "100%",
+          maxWidth: contentWidth,
         }}
       >
         {filteredProducts.map((item) => {
@@ -308,7 +320,7 @@ export default function Products() {
               bottom: 0,
               left: 0,
               right: 0,
-              marginHorizontal: 16,
+              marginHorizontal: screenPadding,
               borderRadius: 8,
             },
           ]}
@@ -325,12 +337,9 @@ export default function Products() {
   );
 }
 
-
-const cardWidth = (Dimensions.get("window").width - 48) / 2;
-
-
 const styles = StyleSheet.create({
   safeArea: {
+    flex: 1,
     backgroundColor: "#F7F2FF",
     paddingTop: 16,
   },
@@ -345,7 +354,6 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   productCard: {
-    width: cardWidth,
     marginBottom: 16,
     backgroundColor: "#fff",
     borderRadius: 8,
@@ -358,7 +366,7 @@ const styles = StyleSheet.create({
   },
   productImage: {
     width: "100%",
-    height: 150,
+    height: 170,
     borderRadius: 8,
     marginBottom: 8,
   },
@@ -426,7 +434,7 @@ const styles = StyleSheet.create({
   headerContainer: {
     flexDirection: "row",
     paddingHorizontal: 16,
-    paddingTop: 24,
+    paddingTop: 12,
     paddingBottom: 12,
     alignItems: "center",
     justifyContent: "space-between",
@@ -444,7 +452,7 @@ const styles = StyleSheet.create({
     width: 40,
     alignItems: "center",
     justifyContent: "center",
-    marginRight: 25,
+    marginRight: 0,
   },
   cartBadge: {
     position: "absolute",
@@ -514,6 +522,3 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
 });
-
-
-

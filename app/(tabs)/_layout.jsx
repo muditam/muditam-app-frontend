@@ -1,6 +1,6 @@
 import { Tabs, useRouter } from 'expo-router';
 import { FontAwesome5, MaterialIcons, Ionicons } from '@expo/vector-icons';
-import { View, Text } from 'react-native';
+import { View, Text, useWindowDimensions } from 'react-native';
 import { useEffect, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -14,6 +14,7 @@ export default function Layout() {
   const [hasPurchased, setHasPurchased] = useState(false);
   const [loading, setLoading] = useState(true);
   const [userReady, setUserReady] = useState(false);
+  const { width } = useWindowDimensions();
 
   const router = useRouter();
 
@@ -27,12 +28,12 @@ export default function Layout() {
         } else {
           setUserReady(true);
         }
-      } catch (err) {
+      } catch (_err) {
         setUserReady(true); // fail-safe
       }
     };
     checkUser();
-  }, []);
+  }, [router]);
 
   // 2. Fetch quiz/purchase status (as before)
   useEffect(() => {
@@ -57,17 +58,23 @@ export default function Layout() {
 
   if (!userReady || loading) return null; // Avoid flash or UI until ready
 
+  const iconSize = width >= 768 ? 27 : width < 390 ? 22 : 25;
+  const tabLabelSize = width < 390 ? 9 : 10;
+  const tabBarHeight = width >= 768 ? 68 : width < 390 ? 56 : 60;
+  const tabPaddingTop = width < 390 ? 6 : 10;
+  const tabSlotWidth = width >= 768 ? 84 : width < 390 ? 54 : 68;
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }} edges={['bottom', 'left', 'right']}>
       <Tabs
         screenOptions={({ route }) => ({
           headerShown: false,
           tabBarStyle: {
-            height: 60,
+            height: tabBarHeight,
             backgroundColor: '#fff',
             borderTopWidth: 0.5,
             borderTopColor: '#e0e0e0',
-            paddingTop: 10,
+            paddingTop: tabPaddingTop,
           },
           tabBarShowLabel: false,
           tabBarIcon: ({ focused }) => {
@@ -76,31 +83,31 @@ export default function Layout() {
 
             switch (route.name) {
               case 'home':
-                icon = <Ionicons name="home-outline" size={25} color={iconColor} />;
+                icon = <Ionicons name="home-outline" size={iconSize} color={iconColor} />;
                 label = 'Home';
                 break;
               case 'buykit':
-                icon = <Ionicons name="cart-outline" size={25} color={iconColor} />;
+                icon = <Ionicons name="cart-outline" size={iconSize} color={iconColor} />;
                 label = 'Buy Kit';
                 break;
               case 'test':
-                icon = <FontAwesome5 name="file-alt" size={25} color={iconColor} />;
+                icon = <FontAwesome5 name="file-alt" size={iconSize} color={iconColor} />;
                 label = 'Start Quiz';
                 break;
               case 'products':
-                icon = <Ionicons name="bag-handle-outline" size={25} color={iconColor} />;
+                icon = <Ionicons name="bag-handle-outline" size={iconSize} color={iconColor} />;
                 label = 'Products';
                 break;
               case 'videos':
-                icon = <Ionicons name="videocam-outline" size={25} color={iconColor} />;
+                icon = <Ionicons name="videocam-outline" size={iconSize} color={iconColor} />;
                 label = 'Videos';
                 break;
               case 'me':
-                icon = <MaterialIcons name="person-outline" size={25} color={iconColor} />;
+                icon = <MaterialIcons name="person-outline" size={iconSize} color={iconColor} />;
                 label = 'You';
                 break;
               case 'history':
-                icon = <Ionicons name="time-outline" size={25} color={iconColor} />;
+                icon = <Ionicons name="time-outline" size={iconSize} color={iconColor} />;
                 label = 'History';
                 break;
               default:
@@ -109,11 +116,11 @@ export default function Layout() {
             }
 
             return (
-              <View style={{ width: 70, alignItems: 'center', justifyContent: 'center' }}>
+              <View style={{ width: tabSlotWidth, alignItems: 'center', justifyContent: 'center' }}>
                 <View style={{ padding: 2, borderRadius: 50, marginBottom: 0 }}>{icon}</View>
                 <Text
                   style={{
-                    fontSize: 10,
+                    fontSize: tabLabelSize,
                     color: iconColor,
                     fontWeight: focused ? '600' : '400',
                     textAlign: 'center',

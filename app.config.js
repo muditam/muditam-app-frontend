@@ -9,6 +9,7 @@ export default {
         userInterfaceStyle: "automatic",
         android: { 
             package: "com.madhurmuditam.muditam",
+            "googleServicesFile": "./google-services.json",
             adaptiveIcon: {
                 foregroundImage: "./assets/images/adaptive-icon.png", 
                 backgroundColor: "#ffffff"
@@ -41,6 +42,7 @@ export default {
             ],
             "expo-router",
             "expo-font",
+            "expo-notifications",
             "expo-video"
         ]
     }

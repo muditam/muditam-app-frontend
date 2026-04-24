@@ -6,6 +6,7 @@ import {
   StyleSheet,
   ImageBackground,
   Image,
+  useWindowDimensions,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router"; 
@@ -13,6 +14,11 @@ import { Feather } from '@expo/vector-icons';
 
 export default function TestTab() {
   const router = useRouter();
+  const { width } = useWindowDimensions();
+  const headerHeight = width < 390 ? 84 : width >= 768 ? 120 : 100;
+  const bodyHorizontal = width >= 768 ? 28 : 16;
+  const titleFont = width >= 768 ? 24 : 20;
+  const buttonWidth = width >= 768 ? 320 : width < 390 ? 220 : 260;
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }} edges={['top', 'bottom', 'left', 'right']}>
@@ -26,7 +32,7 @@ export default function TestTab() {
             justifyContent: "space-between",
             alignItems: "center",
             paddingHorizontal: 10,
-            height: 100,
+            height: headerHeight,
           }}
           resizeMode="cover"
         >
@@ -35,18 +41,18 @@ export default function TestTab() {
             <Feather name="arrow-left" size={24} color="white" />
           </Pressable> 
 
-          <Text style={{ color: "white", fontSize: 20, fontWeight: "600" }}>DIABETES QUIZ</Text>
+          <Text style={{ color: "white", fontSize: titleFont, fontWeight: "600" }}>DIABETES QUIZ</Text>
 
           <Pressable onPress={() => router.back()} style={{ paddingHorizontal: 10 }}>
             <Feather name="x" size={24} color="white" />
           </Pressable>
         </ImageBackground>
 
-        <View style={{ marginHorizontal: 16 }}>
+        <View style={{ marginHorizontal: bodyHorizontal }}>
           <View style={{ marginTop: 30 }}>
             <Text style={{ fontSize: 20 }}>
-              Here's to your first step towards a life liberated from diabetes!
-              Let's start strong together!
+              Here&apos;s to your first step towards a life liberated from diabetes!
+              Let&apos;s start strong together!
             </Text>
           </View>
 
@@ -138,7 +144,7 @@ export default function TestTab() {
                 resizeMode="cover"
               />
               <Text style={{ flex: 1, fontSize: 15 }}>
-                Get our expert's advice and personalised solution within 24 hrs
+                Get our expert&apos;s advice and personalised solution within 24 hrs
               </Text>
             </View>
           </View>
@@ -153,7 +159,7 @@ export default function TestTab() {
           }}
         >
           <TouchableOpacity
-            style={styles.nextButton}
+            style={[styles.nextButton, { width: buttonWidth }]}
             onPress={() => router.push("/quiz/height-weight")}
           >
             <Text style={styles.nextButtonText}>START NOW</Text>
@@ -172,7 +178,6 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     alignItems: "center",
     elevation: 5,
-    paddingHorizontal: 50, 
     alignSelf: "center",
     marginBottom: 40,
     marginTop: 40,

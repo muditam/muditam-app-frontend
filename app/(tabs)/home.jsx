@@ -19,12 +19,19 @@ import FAQ from '../components/FAQ';
 import AfterQuizView from '../components/AfterQuizView';
 import AfterPurchase from '../components/AfterPurchase';
 import { checkQuizStatus } from '../utils/checkQuizFromServer';
+import { getBannerHeight, getContentWidth, getScreenPadding, getFluidValue, useResponsive } from '../utils/responsive';
 
 export default function HomeScreen() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [quizCompleted, setQuizCompleted] = useState(false);
   const [hasPurchased, setHasPurchased] = useState(false);
+  const { width } = useResponsive();
+  const horizontalPadding = getScreenPadding(width);
+  const contentWidth = getContentWidth(width, 980);
+  const bannerHeight = getBannerHeight(width);
+  const headlineSize = Math.round(getFluidValue(width, 320, 1024, 17, 24));
+  const buttonTextSize = Math.round(getFluidValue(width, 320, 1024, 16, 18));
 
   useEffect(() => {
     const fetchStatus = async () => {
@@ -67,6 +74,7 @@ export default function HomeScreen() {
         data={[]} // just to enable scrolling
         keyExtractor={(item, index) => index.toString()}
         renderItem={null}
+        contentContainerStyle={{ paddingBottom: 24 }}
         ListHeaderComponent={
           <>
             {/* Top Image Section */}
@@ -77,7 +85,8 @@ export default function HomeScreen() {
                 }}
                 style={{
                   width: '100%',
-                  height: 260,
+                  maxWidth: contentWidth,
+                  height: bannerHeight,
                 }}
               />
             </View>
@@ -86,15 +95,18 @@ export default function HomeScreen() {
             <View
               style={{
                 backgroundColor: '#fff',
-                padding: 20,
+                padding: horizontalPadding,
                 borderRadius: 25,
                 marginTop: -25,
                 marginBottom: 24,
+                alignSelf: 'center',
+                width: '100%',
+                maxWidth: contentWidth,
               }}
             >
               <Text
                 style={{
-                  fontSize: 17,
+                  fontSize: headlineSize,
                   fontWeight: '600',
                   fontFamily: 'Poppins',
                   marginBottom: 16,
@@ -116,7 +128,7 @@ export default function HomeScreen() {
                   style={{
                     color: '#fff',
                     fontWeight: '600',
-                    fontSize: 16,
+                    fontSize: buttonTextSize,
                     fontFamily: 'Poppins',
                     textAlign: 'center',
                   }}

@@ -10,77 +10,83 @@ import {
   Switch,
   Linking,
   Platform,
+  Alert,
 } from "react-native";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Ionicons, FontAwesome5, Entypo } from "@expo/vector-icons";
-import * as Notifications from "expo-notifications";
 import * as Device from "expo-device";
 import DateTimePicker from "@react-native-community/datetimepicker";
-import { Appearance } from "react-native";
 import { useColorScheme } from "react-native";
 
-
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: true,
-    shouldSetBadge: false,
-  }),
-});
-
+// Conditionally handle expo-notifications (not available in Expo Go SDK 53+ on Android)
+let Notifications = null;
+try {
+  if (Platform.OS === "android" && __DEV__) {
+    console.warn(
+      "expo-notifications: Android Push notifications not available in Expo Go SDK 53+. Use a development build for full functionality."
+    );
+  } else {
+    Notifications = require("expo-notifications");
+    Notifications.setNotificationHandler({
+      handleNotification: async () => ({
+        shouldShowAlert: true,
+        shouldPlaySound: true,
+        shouldSetBadge: false,
+      }),
+    });
+  }
+} catch (e) {
+  console.warn("expo-notifications not available:", e.message);
+}
 
 export default function MeScreen() {
-  const colorScheme = Appearance.getColorScheme();
-  const isDarkMode = theme === "dark";
   const theme = useColorScheme();
-
 
   const router = useRouter();
   const [user, setUser] = useState(null);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [showReminderSheet, setShowReminderSheet] = useState(false);
-  const [reminderTime, setReminderTime] = useState("08:00");
   const [reminderAllEnabled, setReminderAllEnabled] = useState(true);
   const [showConfirmOffModal, setShowConfirmOffModal] = useState(false);
 
-
-  // new state
   const [reminderType, setReminderType] = useState("water");
   const [reminders, setReminders] = useState([]); // [{id, type, time, enabled}]
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [newTime, setNewTime] = useState("08:00");
   const [editingReminderId, setEditingReminderId] = useState(null);
 
-
   const getStorageKey = (userId) => `reminders_${userId}`;
-
 
   const saveReminder = async (type, time) => {
     try {
-      const res = await fetch("https://muditam-app-backend-ca1c8b03db09.herokuapp.com/api/reminder", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type, time, userId: user._id }),
-      });
+      if (!user?._id) return;
+
+      const res = await fetch(
+        "https://muditam-app-backend-ca1c8b03db09.herokuapp.com/api/reminder",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ type, time, userId: user._id }),
+        }
+      );
+
       if (res.ok) console.log("Reminder saved");
     } catch (e) {
       console.error("Saving reminder failed", e);
     }
   };
 
-
-  const saveRemindersToStorage = async (userId, reminders) => {
+  const saveRemindersToStorage = async (userId, nextReminders) => {
     try {
       await AsyncStorage.setItem(
         getStorageKey(userId),
-        JSON.stringify(reminders)
+        JSON.stringify(nextReminders)
       );
     } catch (e) {
       console.error("Failed to save reminders:", e);
     }
   };
-
 
   const getRemindersFromStorage = async (userId) => {
     try {
@@ -92,21 +98,22 @@ export default function MeScreen() {
     }
   };
 
-
   const handleSaveAllReminders = () => {
+    if (!user?._id) return;
+
     const filtered = reminders.filter((r) => r.type === reminderType);
     filtered.forEach((r) => saveReminder(r.type, r.time));
     saveRemindersToStorage(user._id, reminders);
     setShowReminderSheet(false);
   };
 
-
   const handleConfirmTurnOffReminders = () => {
+    if (!user?._id) return;
+
     const turnedOffReminders = reminders.map((r) => ({
       ...r,
       enabled: false,
     }));
-
 
     setReminders(turnedOffReminders);
     saveRemindersToStorage(user._id, turnedOffReminders);
@@ -114,7 +121,6 @@ export default function MeScreen() {
     setShowConfirmOffModal(false);
     setShowReminderSheet(false);
   };
-
 
   useEffect(() => {
     const init = async () => {
@@ -126,23 +132,18 @@ export default function MeScreen() {
         setUser(parsedUser);
         registerForPush(parsedUser._id);
 
-        const localReminders = await getRemindersFromStorage(parsedUser._id); 
-
+        const localReminders = await getRemindersFromStorage(parsedUser._id);
         setReminders(localReminders);
-
-        if (localReminders.length && localReminders.some((r) => r.enabled)) {
-          setReminderAllEnabled(true);
-        } else {
-          setReminderAllEnabled(false);
-        }
+        setReminderAllEnabled(
+          !!(localReminders.length && localReminders.some((r) => r.enabled))
+        );
       } catch (err) {
-        console.error("Error loading reminder", err); 
+        console.error("Error loading reminder", err);
       }
     };
 
     init();
   }, []);
-
 
   const registerForPush = async (userId) => {
     if (!Device.isDevice) {
@@ -150,44 +151,55 @@ export default function MeScreen() {
       return;
     }
 
-
-    const { status: existingStatus } =
-      await Notifications.getPermissionsAsync();
-    let finalStatus = existingStatus;
-
-
-    if (existingStatus !== "granted") {
-      const { status } = await Notifications.requestPermissionsAsync();
-      finalStatus = status;
-    }
-
-
-    if (finalStatus !== "granted") {
-      console.warn("🚫 Permission not granted for push notifications");
+    if (!Notifications) {
+      console.warn(
+        "⚠️ Notifications not available (Expo Go SDK 53+ limitation)"
+      );
       return;
     }
 
-
-    // ✅ Create Android notification channel
-    if (Platform.OS === "android") {
-      await Notifications.setNotificationChannelAsync("default", {
-        name: "default",
-        importance: Notifications.AndroidImportance.MAX,
-        sound: "default",
-        vibrationPattern: [0, 250, 250, 250],
-        lightColor: "#FF231F7C",
-      });
-    }
- 
-    const token = (await Notifications.getExpoPushTokenAsync()).data;
+    let token = "";
 
     try {
-      const res = await fetch("https://muditam-app-backend-ca1c8b03db09.herokuapp.com/api/user/save-token", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId, expoPushToken: token }),
-      });
+      const { status: existingStatus } =
+        await Notifications.getPermissionsAsync();
+      let finalStatus = existingStatus;
 
+      if (existingStatus !== "granted") {
+        const { status } = await Notifications.requestPermissionsAsync();
+        finalStatus = status;
+      }
+
+      if (finalStatus !== "granted") {
+        console.warn("Permission not granted for push notifications");
+        return;
+      }
+
+      if (Platform.OS === "android") {
+        await Notifications.setNotificationChannelAsync("default", {
+          name: "default",
+          importance: Notifications.AndroidImportance.MAX,
+          sound: "default",
+          vibrationPattern: [0, 250, 250, 250],
+          lightColor: "#FF231F7C",
+        });
+      }
+
+      token = (await Notifications.getExpoPushTokenAsync()).data;
+    } catch (err) {
+      console.warn("Failed to get push token:", err.message);
+      return;
+    }
+
+    try {
+      const res = await fetch(
+        "https://muditam-app-backend-ca1c8b03db09.herokuapp.com/api/user/save-token",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userId, expoPushToken: token }),
+        }
+      );
 
       if (res.ok) {
         console.log("Token saved to backend");
@@ -200,7 +212,6 @@ export default function MeScreen() {
     }
   };
 
-
   const handleLogoutConfirm = async () => {
     try {
       await AsyncStorage.removeItem("userDetails");
@@ -211,11 +222,24 @@ export default function MeScreen() {
     }
   };
 
+  const handleOpenCallScreen = () => {
+    if (!user?._id) {
+      Alert.alert("Please wait", "User details are still loading.");
+      return;
+    }
+
+    router.push({
+      pathname: "/callscreen",
+      params: {
+        userId: user._id,
+        language: "hi-IN",
+      },
+    });
+  };
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView style={styles.container}>
-        {/* Profile block */}
         <TouchableOpacity
           style={styles.profileBlock}
           onPress={() => router.push("/myprofile")}
@@ -225,8 +249,6 @@ export default function MeScreen() {
           <Entypo name="chevron-right" size={22} color="black" />
         </TouchableOpacity>
 
-
-        {/* Buy Kit Box */}
         <View style={styles.buyKitBox}>
           <View style={styles.row2}>
             <Ionicons
@@ -248,8 +270,6 @@ export default function MeScreen() {
           </TouchableOpacity>
         </View>
 
-
-        {/* Buttons Row */}
         <View style={styles.buttonsRow}>
           <TouchableOpacity
             style={styles.buttonItem}
@@ -260,6 +280,7 @@ export default function MeScreen() {
             </View>
             <Text style={styles.buttonText}>Sugar Drop</Text>
           </TouchableOpacity>
+
           <TouchableOpacity
             style={styles.buttonItem}
             onPress={() =>
@@ -274,6 +295,7 @@ export default function MeScreen() {
             </View>
             <Text style={styles.buttonText}>Help & Support</Text>
           </TouchableOpacity>
+
           <TouchableOpacity
             style={styles.buttonItem}
             onPress={() => {
@@ -289,10 +311,18 @@ export default function MeScreen() {
             </View>
             <Text style={styles.buttonText}>Chat With Us</Text>
           </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.buttonItem}
+            onPress={handleOpenCallScreen}
+          >
+            <View style={styles.iconCircle}>
+              <Ionicons name="call-outline" size={26} color="white" />
+            </View>
+            <Text style={styles.buttonText}>Call</Text>
+          </TouchableOpacity>
         </View>
 
-
-        {/* Links */}
         {[
           { title: "All Products", route: "/products" },
           { title: "Terms & Policies", route: "/terms" },
@@ -307,7 +337,6 @@ export default function MeScreen() {
           </TouchableOpacity>
         ))}
 
-
         <TouchableOpacity
           style={styles.linkRow}
           onPress={() => setShowReminderSheet(true)}
@@ -316,7 +345,6 @@ export default function MeScreen() {
           <Entypo name="chevron-right" size={20} color="black" />
         </TouchableOpacity>
 
-
         <TouchableOpacity
           onPress={() => setShowLogoutModal(true)}
           style={styles.linkRow}
@@ -324,7 +352,6 @@ export default function MeScreen() {
           <Text style={styles.linkText}>Logout</Text>
           <Entypo name="chevron-right" size={20} color="black" />
         </TouchableOpacity>
-
 
         <Modal
           visible={showReminderSheet}
@@ -341,7 +368,6 @@ export default function MeScreen() {
                 <Ionicons name="close" size={26} color="#543087" />
               </TouchableOpacity>
 
-
               <Text style={{ fontSize: 20, fontWeight: "600" }}>
                 Set Settings 🔔
               </Text>
@@ -355,7 +381,6 @@ export default function MeScreen() {
               >
                 We will send you push notifications daily to log your medicines
               </Text>
-
 
               <View
                 style={{
@@ -380,7 +405,9 @@ export default function MeScreen() {
                         enabled: true,
                       }));
                       setReminders(updated);
-                      saveRemindersToStorage(user._id, updated);
+                      if (user?._id) {
+                        saveRemindersToStorage(user._id, updated);
+                      }
                       setReminderAllEnabled(true);
                     }
                   }}
@@ -389,19 +416,17 @@ export default function MeScreen() {
                 />
               </View>
 
-
-              {/* Type selector as tabs */}
               <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}
                 contentContainerStyle={styles.optionGroup}
               >
                 {[
-                  { key: "water", icon: "water", label: "Water" },
-                  { key: "food", icon: "restaurant", label: "Food" },
-                  { key: "walk", icon: "walk", label: "Walk" },
-                  { key: "supplement", icon: "medkit", label: "Supplement" },
-                ].map(({ key, icon, label }) => (
+                  { key: "water", label: "Water" },
+                  { key: "food", label: "Food" },
+                  { key: "walk", label: "Walk" },
+                  { key: "supplement", label: "Supplement" },
+                ].map(({ key, label }) => (
                   <TouchableOpacity
                     key={key}
                     style={[
@@ -422,8 +447,6 @@ export default function MeScreen() {
                 ))}
               </ScrollView>
 
-
-              {/* List of reminders for selected type */}
               <View style={{ height: 200 }}>
                 <ScrollView
                   showsVerticalScrollIndicator={false}
@@ -457,15 +480,13 @@ export default function MeScreen() {
                             marginBottom: 8,
                             paddingVertical: Platform.OS === "ios" ? 5 : 0,
                             paddingHorizontal: 16,
-
-
                             justifyContent: "space-between",
                           }}
                         >
                           <TouchableOpacity
                             onPress={() => {
                               setEditingReminderId(reminder.id);
-                              setReminderTime(reminder.time);
+                              setNewTime(reminder.time);
                               setShowTimePicker(true);
                             }}
                             style={{
@@ -488,6 +509,7 @@ export default function MeScreen() {
                               {reminder.time}
                             </Text>
                           </TouchableOpacity>
+
                           <View
                             style={{
                               display: "flex",
@@ -535,7 +557,6 @@ export default function MeScreen() {
                 </ScrollView>
               </View>
 
-
               {Platform.OS === "ios" && showTimePicker && (
                 <Modal
                   transparent
@@ -552,7 +573,6 @@ export default function MeScreen() {
                   >
                     <View
                       style={{
-                        // backgroundColor: "white",
                         backgroundColor:
                           theme === "dark" ? "rgba(0, 0, 0, 0.8)" : "#fff",
                         paddingTop: 16,
@@ -567,12 +587,12 @@ export default function MeScreen() {
                           fontSize: 18,
                           fontWeight: "600",
                           marginBottom: 8,
-                          // color:"white",
                           color: theme === "dark" ? "#fff" : "#000",
                         }}
                       >
                         Select Time
                       </Text>
+
                       <DateTimePicker
                         value={new Date(`1970-01-01T${newTime}:00`)}
                         mode="time"
@@ -592,6 +612,7 @@ export default function MeScreen() {
                         }}
                         style={{ marginBottom: 20 }}
                       />
+
                       <View
                         style={{
                           flexDirection: "row",
@@ -614,6 +635,7 @@ export default function MeScreen() {
                             Cancel
                           </Text>
                         </TouchableOpacity>
+
                         <TouchableOpacity
                           style={{
                             flex: 1,
@@ -645,6 +667,7 @@ export default function MeScreen() {
                                 },
                               ]);
                             }
+
                             setShowTimePicker(false);
                           }}
                         >
@@ -657,6 +680,7 @@ export default function MeScreen() {
                   </View>
                 </Modal>
               )}
+
               {Platform.OS === "android" && showTimePicker && (
                 <DateTimePicker
                   value={new Date(`1970-01-01T${newTime}:00`)}
@@ -667,7 +691,6 @@ export default function MeScreen() {
                       setShowTimePicker(false);
                       return;
                     }
-
 
                     if (selectedDate) {
                       const hours = selectedDate
@@ -680,7 +703,6 @@ export default function MeScreen() {
                         .padStart(2, "0");
                       const updatedTime = `${hours}:${minutes}`;
                       setNewTime(updatedTime);
-
 
                       if (editingReminderId) {
                         setReminders(
@@ -706,14 +728,11 @@ export default function MeScreen() {
                       }
                     }
 
-
                     setShowTimePicker(false);
                   }}
                 />
               )}
 
-
-              {/* buttons */}
               <View
                 style={{
                   display: "flex",
@@ -731,7 +750,6 @@ export default function MeScreen() {
                   <Text style={styles.sheetSaveButtonText}>+ ADD</Text>
                 </TouchableOpacity>
 
-
                 <TouchableOpacity
                   style={styles.sheetSaveButton}
                   onPress={handleSaveAllReminders}
@@ -741,11 +759,7 @@ export default function MeScreen() {
               </View>
             </View>
           </View>
-
-
-          {/* Time Picker for Add/Edit */}
         </Modal>
-
 
         <Modal
           visible={showConfirmOffModal}
@@ -792,7 +806,7 @@ export default function MeScreen() {
               >
                 <TouchableOpacity
                   onPress={() => {
-                    setShowConfirmOffModal(false); // cancel
+                    setShowConfirmOffModal(false);
                   }}
                   style={{
                     paddingVertical: 6,
@@ -804,6 +818,7 @@ export default function MeScreen() {
                 >
                   <Text style={{ fontSize: 16 }}>Cancel</Text>
                 </TouchableOpacity>
+
                 <TouchableOpacity
                   onPress={handleConfirmTurnOffReminders}
                   style={{
@@ -820,8 +835,6 @@ export default function MeScreen() {
           </View>
         </Modal>
 
-
-        {/* Logout Confirmation Modal */}
         <Modal
           visible={showLogoutModal}
           transparent
@@ -862,7 +875,6 @@ export default function MeScreen() {
   );
 }
 
-
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
@@ -877,7 +889,7 @@ const styles = StyleSheet.create({
   profileBlock: {
     flexDirection: "row",
     alignItems: "center",
-    padding: 16, 
+    padding: 16,
     marginBottom: 24,
     marginHorizontal: -16,
   },
@@ -1031,8 +1043,6 @@ const styles = StyleSheet.create({
     color: "#A78BFA",
     fontWeight: "600",
   },
-
-
   sheetOverlay: {
     flex: 1,
     justifyContent: "flex-end",
@@ -1055,8 +1065,6 @@ const styles = StyleSheet.create({
     right: 10,
     zIndex: 10,
   },
-
-
   sheetSaveButton: {
     marginTop: 10,
     backgroundColor: "#9D57FF",
@@ -1113,6 +1121,3 @@ const styles = StyleSheet.create({
     paddingHorizontal: 50,
   },
 });
-
-
-

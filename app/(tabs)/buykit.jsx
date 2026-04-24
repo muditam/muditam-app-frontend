@@ -5,30 +5,32 @@ import {
   StyleSheet,
   Image,
   ScrollView,
-  Dimensions,
   TouchableOpacity,
   SafeAreaView,
   Platform,
   FlatList,
+  Alert,
+  useWindowDimensions,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Feather, FontAwesomeIcon } from "@expo/vector-icons";
-import { FontAwesome5 } from "@expo/vector-icons";
+import { Feather } from "@expo/vector-icons";
 import FAQ from "../components/FAQ";
 import RealJourneysSlider from "../components/RealJourneysSlider";
+import { getContentWidth, getScreenPadding } from "../utils/responsive";
 
-
-const width = Dimensions.get("window").width;
-const cardWidth = width - 32;
 
 
 export default function BuyKit() {
   const [user, setUser] = useState(null);
   const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [, setLoading] = useState(true);
   const [activeImageIndexes, setActiveImageIndexes] = useState({});
   const scrollRefs = useRef({});
   const [totalPrice, setTotalPrice] = useState(0);
+  const { width } = useWindowDimensions();
+  const screenPadding = getScreenPadding(width);
+  const contentWidth = getContentWidth(width, 980);
+  const cardWidth = Math.max(280, contentWidth - screenPadding * 2);
 
 
   const productDetails = {
@@ -171,14 +173,19 @@ export default function BuyKit() {
     <SafeAreaView style={styles.safeArea}>
       <ScrollView
         style={styles.container}
-        contentContainerStyle={{ paddingBottom: 40 }}
+        contentContainerStyle={{
+          paddingBottom: 40,
+          alignSelf: "center",
+          width: "100%",
+          maxWidth: contentWidth,
+        }}
       >
         <View style={styles.header}>
           <Text style={styles.headerText}>Get your Diabetes Kit</Text>
         </View>
 
 
-        <View style={styles.contentWrapper}>
+        <View style={[styles.contentWrapper, { paddingHorizontal: screenPadding - 4 }]}>
           <View style={styles.productRow}>
             {products.map((item, index) => (
               <View style={styles.productCard} key={index}>
@@ -266,7 +273,7 @@ export default function BuyKit() {
                     }));
                   }}
                   scrollEventThrottle={16}
-                  style={[styles.imageCarousel, { flexGrow: 0 }]}
+                  style={[styles.imageCarousel, { flexGrow: 0, width: cardWidth }]}
                   renderItem={({ item, index }) => (
                     <View
                       style={{
@@ -398,7 +405,7 @@ export default function BuyKit() {
           <Text style={styles.consultTitle}>Have Questions?</Text>
           <Text style={styles.consultSubtitle}>Talk to a Diabetes Expert</Text>
           <Text style={styles.consultDescription}>
-            We'll set up your online consult within 1 hour — no waiting
+            We&apos;ll set up your online consult within 1 hour - no waiting
           </Text>
           <View style={styles.divider} />
           <TouchableOpacity style={styles.consultButton}>
@@ -595,13 +602,13 @@ const styles = StyleSheet.create({
   },
   productRow: {
     flexDirection: "row",
-    justifyContent: "space-around",
+    justifyContent: "space-between",
     paddingVertical: 20,
-    marginHorizontal: 16,
+    marginHorizontal: 8,
   },
   productCard: {
     alignItems: "center",
-    width: width / 3 - 20,
+    width: "31%",
   },
   imageWrapper: {
     width: "100%",
@@ -642,13 +649,13 @@ const styles = StyleSheet.create({
   },
   infoRow: {
     flexDirection: "row",
-    justifyContent: "space-around",
+    justifyContent: "space-between",
     paddingHorizontal: 10,
     marginVertical: 6,
   },
   infoItem: {
     alignItems: "center",
-    width: width / 3 - 10,
+    width: "31%",
   },
   infoCircle: {
     width: 70,
@@ -695,12 +702,6 @@ const styles = StyleSheet.create({
   },
 
 
-  iconRow: {
-    flexDirection: "row",
-    gap: 50,
-    width: "100%",
-    margin: 16,
-  },
   iconCircleContainer: {
     width: 50,
     height: 50,
@@ -766,13 +767,13 @@ const styles = StyleSheet.create({
 
 
   imageCarousel: {
-    width: "100%",
+    alignSelf: "center",
     height: 359,
   },
 
 
   carouselImage: {
-    width: cardWidth * 0.9,
+    width: "92%",
     height: 359,
     borderRadius: 8,
     borderWidth: 0.5,

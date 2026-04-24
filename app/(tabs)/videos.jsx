@@ -2,27 +2,21 @@ import React, { useState, useCallback, useRef, useEffect } from "react";
 import {
   View,
   Text,
-  ScrollView,
   StyleSheet,
   ImageBackground,
   TouchableOpacity,
-  Dimensions,
   FlatList,
   Image,
   Platform,
+  useWindowDimensions,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Video } from "expo-av";
-import { router } from "expo-router";
 import Modal from "react-native-modal";
 import {
   useSafeAreaInsets,
   SafeAreaView,
 } from "react-native-safe-area-context";
-import { StatusBar } from "expo-status-bar";
-
-
-const { width, height } = Dimensions.get("window");
 
 
 // --- categorizedVideos data unchanged (paste yours here) ---
@@ -305,7 +299,10 @@ export default function Videos() {
   const [selectedVideoIndex, setSelectedVideoIndex] = useState(null);
   const [visibleIndex, setVisibleIndex] = useState(null);
   const flatListRef = useRef(null);
-  const insets = useSafeAreaInsets();
+  const { width, height } = useWindowDimensions();
+  const cardWidth = width >= 1024 ? 220 : width >= 768 ? 190 : 160;
+  const cardHeight = width >= 1024 ? 360 : width >= 768 ? 320 : 280;
+  const styles = createStyles(width, height, cardWidth, cardHeight);
 
 
   const onViewableItemsChanged = useRef(({ viewableItems }) => {
@@ -457,16 +454,19 @@ export default function Videos() {
       </View>
     );
   });
+  ReelVideo.displayName = "ReelVideo";
 
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }}>
-      <ScrollView showsVerticalScrollIndicator={false}>
-        <View style={styles.header}>
-          <Text style={styles.headerText}>Insights</Text>
-        </View>
-        {Object.entries(categorizedVideos).map(([category, videos]) => (
-          <View key={category} style={styles.categoryContainer}>
+      <View style={styles.header}>
+        <Text style={styles.headerText}>Insights</Text>
+      </View>
+      <FlatList
+        data={Object.entries(categorizedVideos)}
+        keyExtractor={([category]) => category}
+        renderItem={({ item: [category, videos] }) => (
+          <View style={styles.categoryContainer}>
             <Text style={styles.categoryTitle}>{category}</Text>
             <FlatList
               data={videos}
@@ -476,10 +476,12 @@ export default function Videos() {
                 renderVideoCard({ item, index, category })
               }
               showsHorizontalScrollIndicator={false}
+              nestedScrollEnabled={true}
             />
           </View>
-        ))}
-      </ScrollView>
+        )}
+        showsVerticalScrollIndicator={false}
+      />
 
 
       <Modal
@@ -527,7 +529,8 @@ export default function Videos() {
 }
 
 
-const styles = StyleSheet.create({
+const createStyles = (width, height, cardWidth, cardHeight) =>
+  StyleSheet.create({
   header: {
     flexDirection: "row",
     alignItems: "center",
@@ -549,7 +552,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   card: {
-    width: 160,
+    width: cardWidth,
     marginLeft: 10,
     marginBottom: 16,
     borderRadius: 11,
@@ -557,7 +560,7 @@ const styles = StyleSheet.create({
   },
   thumbnail: {
     width: "100%",
-    height: 280,
+    height: cardHeight,
     position: "relative",
     justifyContent: "center",
     alignItems: "center",

@@ -491,8 +491,8 @@ const styles = StyleSheet.create({
         padding: 16,
         borderRadius: 12,
     },
-    rootCausess: {
-        flexDirection: 'row',
+    rootCausess: { 
+        flexDirection: 'row', 
         justifyContent: 'space-evenly',
         marginTop: 8,
     },
@@ -511,7 +511,7 @@ const styles = StyleSheet.create({
         textAlign: 'center',
         fontFamily: 'Poppins',
     },
-    hba1cContainer: {
+    hba1cContainer: { 
         padding: 20,
         marginTop: -35,
         borderRadius: 30,
