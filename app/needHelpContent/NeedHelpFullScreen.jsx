@@ -302,11 +302,6 @@ const styles = StyleSheet.create({
   },
 
 
-  activeText: {
-    color: "#9D57FF",
-  },
-
-
   //1.
 
 
@@ -327,12 +322,6 @@ const styles = StyleSheet.create({
   },
 
 
-  contentContainer: {
-    paddingBottom: 100,
-    paddingHorizontal: 16,
-    paddingVertical: 20,
-  },
 });
-
 
 

@@ -18,8 +18,8 @@ import FooterImageSection from '../components/FooterImageSection';
 import FAQ from '../components/FAQ';
 import AfterQuizView from '../components/AfterQuizView';
 import AfterPurchase from '../components/AfterPurchase';
-import { checkQuizStatus } from '../utils/checkQuizFromServer';
-import { getBannerHeight, getContentWidth, getScreenPadding, getFluidValue, useResponsive } from '../utils/responsive';
+import { checkQuizStatus } from '../../utils/checkQuizFromServer';
+import { getBannerHeight, getContentWidth, getScreenPadding, getFluidValue, useResponsive } from '../../utils/responsive';
 
 export default function HomeScreen() {
   const router = useRouter();

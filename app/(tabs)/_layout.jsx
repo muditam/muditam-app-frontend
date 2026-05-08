@@ -6,8 +6,10 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import '../../global.css';
 
-import { checkQuizStatus } from '../utils/checkQuizFromServer';
-import { checkPurchaseStatus } from '../utils/checkPurchaseStatus';
+import { checkQuizStatus } from '../../utils/checkQuizFromServer';
+import { checkPurchaseStatus } from '../../utils/checkPurchaseStatus';
+import { setupNotificationResponseListener, syncPushNotificationsIfPermitted } from '../../utils/registerPushNotifications';
+import ChatWidget from '../components/ChatWidget';
 
 export default function Layout() {
   const [quizCompleted, setQuizCompleted] = useState(false);
@@ -18,6 +20,11 @@ export default function Layout() {
 
   const router = useRouter();
 
+  useEffect(() => {
+    const subscription = setupNotificationResponseListener();
+    return () => subscription?.remove?.();
+  }, []);
+
   // 1. Check if user is logged in before showing Tabs!
   useEffect(() => {
     const checkUser = async () => {
@@ -26,7 +33,11 @@ export default function Layout() {
         if (!userDetails) {
           router.replace('/login');
         } else {
+          const parsedUser = JSON.parse(userDetails);
           setUserReady(true);
+          syncPushNotificationsIfPermitted(parsedUser?._id).catch((error) => {
+            console.warn('Push sync failed:', error.message);
+          });
         }
       } catch (_err) {
         setUserReady(true); // fail-safe
@@ -168,6 +179,7 @@ export default function Layout() {
           }}
         />
       </Tabs>
+      <ChatWidget bottomOffset={tabBarHeight + 14} />
     </SafeAreaView>
   );
 }

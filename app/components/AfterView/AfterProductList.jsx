@@ -4,13 +4,11 @@ import {
   Text,
   Image,
   StyleSheet,
-  FlatList,
   TouchableOpacity,
   ActivityIndicator,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import ProductModal from './ProductModal';
-import { FontAwesome } from '@expo/vector-icons';
 
 
 export default function AfterProductList({ setTotalPrice, totalPrice, setSelectedProducts }) {
@@ -37,8 +35,9 @@ export default function AfterProductList({ setTotalPrice, totalPrice, setSelecte
           titlesToShow = ['Sugar Defend Pro', 'Vasant Kusmakar Ras'];
         }
 
-        const filtered = data.filter((p) => titlesToShow.includes(p.title));
-        setProducts(filtered);
+        const filtered = titlesToShow
+          .map((title) => data.find((product) => product.title === title))
+          .filter(Boolean);
 
         const enriched = filtered.map((p) => ({
           ...p,
@@ -50,7 +49,7 @@ export default function AfterProductList({ setTotalPrice, totalPrice, setSelecte
         setSelectedProducts(enriched);
 
         // Calculate total price
-        const total = filtered.reduce((acc, curr) => acc + parseFloat(curr.price), 0);
+        const total = enriched.reduce((acc, curr) => acc + parseFloat(curr.price), 0);
         setTotalPrice(total);
       } catch (err) {
         console.error('Error loading products or hba1c:', err);
@@ -111,11 +110,13 @@ export default function AfterProductList({ setTotalPrice, totalPrice, setSelecte
       {loading ? (
         <ActivityIndicator size="small" />
       ) : (
-        <FlatList
-          data={products}
-          renderItem={renderItem}
-          keyExtractor={(item) => item.id.toString()}
-        />
+        <View>
+          {products.map((item) => (
+            <View key={item.id?.toString()}>
+              {renderItem({ item })}
+            </View>
+          ))}
+        </View>
       )}
 
       <View style={styles.summaryBox}>
@@ -185,7 +186,6 @@ const styles = StyleSheet.create({
   },
   productCard: {
     backgroundColor: '#fff',
-    borderRadius: 4,
     padding: 10,
     flexDirection: 'row',
     alignItems: 'center',
@@ -330,6 +330,3 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
 });
-
-
-

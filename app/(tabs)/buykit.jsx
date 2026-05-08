@@ -16,7 +16,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Feather } from "@expo/vector-icons";
 import FAQ from "../components/FAQ";
 import RealJourneysSlider from "../components/RealJourneysSlider";
-import { getContentWidth, getScreenPadding } from "../utils/responsive";
+import { getContentWidth, getScreenPadding } from "../../utils/responsive";
 
 
 
@@ -30,7 +30,9 @@ export default function BuyKit() {
   const { width } = useWindowDimensions();
   const screenPadding = getScreenPadding(width);
   const contentWidth = getContentWidth(width, 980);
-  const cardWidth = Math.max(280, contentWidth - screenPadding * 2);
+  const cardWidth = contentWidth - screenPadding * 2;
+  const detailCardWidth = Math.max(240, cardWidth - 32);
+  const carouselHeight = Math.round(Math.min(359, Math.max(260, detailCardWidth * 1.12)));
 
 
   const productDetails = {
@@ -265,7 +267,7 @@ export default function BuyKit() {
                   showsHorizontalScrollIndicator={false}
                   onScroll={(e) => {
                     const index = Math.round(
-                      e.nativeEvent.contentOffset.x / cardWidth
+                      e.nativeEvent.contentOffset.x / detailCardWidth
                     );
                     setActiveImageIndexes((prev) => ({
                       ...prev,
@@ -273,11 +275,14 @@ export default function BuyKit() {
                     }));
                   }}
                   scrollEventThrottle={16}
-                  style={[styles.imageCarousel, { flexGrow: 0, width: cardWidth }]}
+                  style={[
+                    styles.imageCarousel,
+                    { flexGrow: 0, width: detailCardWidth, height: carouselHeight },
+                  ]}
                   renderItem={({ item, index }) => (
                     <View
                       style={{
-                        width: cardWidth,
+                        width: detailCardWidth,
                         alignItems: "center",
                         justifyContent: "center",
                       }}
@@ -286,7 +291,7 @@ export default function BuyKit() {
                         source={{ uri: item }}
                         style={[
                           styles.carouselImage,
-                          { width: cardWidth - 34 },
+                          { width: detailCardWidth - 20, height: carouselHeight },
                         ]}
                       />
                     </View>
@@ -491,7 +496,16 @@ export default function BuyKit() {
       </ScrollView>
 
 
-      <View style={styles.priceContainer}>
+      <View
+        style={[
+          styles.priceContainer,
+          {
+            paddingHorizontal: screenPadding,
+            left: Math.max((width - contentWidth) / 2, 0),
+            right: Math.max((width - contentWidth) / 2, 0),
+          },
+        ]}
+      >
         <View>
           <Text style={styles.price}>₹{totalPrice.toFixed(0)}</Text>
           <Text style={styles.tax}>Inclusive of all taxes</Text>
@@ -602,13 +616,17 @@ const styles = StyleSheet.create({
   },
   productRow: {
     flexDirection: "row",
-    justifyContent: "space-between",
+    justifyContent: "center",
+    flexWrap: "wrap",
+    gap: 10,
     paddingVertical: 20,
     marginHorizontal: 8,
   },
   productCard: {
     alignItems: "center",
-    width: "31%",
+    width: "30%",
+    minWidth: 86,
+    maxWidth: 150,
   },
   imageWrapper: {
     width: "100%",
@@ -680,6 +698,8 @@ const styles = StyleSheet.create({
   titleTimingRow: {
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "space-between",
+    flexWrap: "wrap",
     marginBottom: 16,
   },
   timingRow: {
@@ -719,6 +739,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
     // gap:60,
     justifyContent: "space-between",
+    flexWrap: "wrap",
     marginTop: 10,
   },
   iconItem: {
@@ -744,6 +765,8 @@ const styles = StyleSheet.create({
   iconLabel: {
     fontSize: 14,
     fontFamily: Platform.OS === "macos" ? "Poppins" : "System",
+    textAlign: "center",
+    maxWidth: 130,
   },
 
 
@@ -768,13 +791,11 @@ const styles = StyleSheet.create({
 
   imageCarousel: {
     alignSelf: "center",
-    height: 359,
   },
 
 
   carouselImage: {
     width: "92%",
-    height: 359,
     borderRadius: 8,
     borderWidth: 0.5,
     resizeMode: "contain",
@@ -822,17 +843,14 @@ const styles = StyleSheet.create({
   priceContainer: {
     position: "absolute",
     bottom: "0%",
-    left: 0,
-    right: 0,
     backgroundColor: "#F3E9FF",
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     paddingVertical: 8,
-    paddingRight: 16,
-    paddingLeft: 34,
     borderRadius: 0,
     elevation: 5,
+    gap: 12,
   },
   price: {
     fontSize: 20,
@@ -847,8 +865,10 @@ const styles = StyleSheet.create({
   buyButton: {
     backgroundColor: "#9D57FF",
     paddingVertical: 6,
-    paddingHorizontal: 40,
+    paddingHorizontal: 28,
     borderRadius: 4,
+    minWidth: 116,
+    alignItems: "center",
   },
   buyText: {
     color: "#fff",

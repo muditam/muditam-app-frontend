@@ -63,12 +63,10 @@ const styles = StyleSheet.create({
     color: "black",
     lineHeight: 20,
     fontWeight: "400", 
-    lineHeight: 20,
   },
 });
 
 
 export default Answer;
-
 
 

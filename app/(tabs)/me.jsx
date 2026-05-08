@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   SafeAreaView,
   View,
@@ -10,35 +10,12 @@ import {
   Switch,
   Linking,
   Platform,
-  Alert,
+  useColorScheme,
 } from "react-native";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Ionicons, FontAwesome5, Entypo } from "@expo/vector-icons";
-import * as Device from "expo-device";
 import DateTimePicker from "@react-native-community/datetimepicker";
-import { useColorScheme } from "react-native";
-
-// Conditionally handle expo-notifications (not available in Expo Go SDK 53+ on Android)
-let Notifications = null;
-try {
-  if (Platform.OS === "android" && __DEV__) {
-    console.warn(
-      "expo-notifications: Android Push notifications not available in Expo Go SDK 53+. Use a development build for full functionality."
-    );
-  } else {
-    Notifications = require("expo-notifications");
-    Notifications.setNotificationHandler({
-      handleNotification: async () => ({
-        shouldShowAlert: true,
-        shouldPlaySound: true,
-        shouldSetBadge: false,
-      }),
-    });
-  }
-} catch (e) {
-  console.warn("expo-notifications not available:", e.message);
-}
 
 export default function MeScreen() {
   const theme = useColorScheme();
@@ -88,7 +65,7 @@ export default function MeScreen() {
     }
   };
 
-  const getRemindersFromStorage = async (userId) => {
+  const getRemindersFromStorage = useCallback(async (userId) => {
     try {
       const stored = await AsyncStorage.getItem(getStorageKey(userId));
       return stored ? JSON.parse(stored) : [];
@@ -96,7 +73,7 @@ export default function MeScreen() {
       console.error("Failed to load reminders:", e);
       return [];
     }
-  };
+  }, []);
 
   const handleSaveAllReminders = () => {
     if (!user?._id) return;
@@ -130,7 +107,6 @@ export default function MeScreen() {
 
         const parsedUser = JSON.parse(stored);
         setUser(parsedUser);
-        registerForPush(parsedUser._id);
 
         const localReminders = await getRemindersFromStorage(parsedUser._id);
         setReminders(localReminders);
@@ -143,74 +119,7 @@ export default function MeScreen() {
     };
 
     init();
-  }, []);
-
-  const registerForPush = async (userId) => {
-    if (!Device.isDevice) {
-      console.warn("⚠️ Not a physical device");
-      return;
-    }
-
-    if (!Notifications) {
-      console.warn(
-        "⚠️ Notifications not available (Expo Go SDK 53+ limitation)"
-      );
-      return;
-    }
-
-    let token = "";
-
-    try {
-      const { status: existingStatus } =
-        await Notifications.getPermissionsAsync();
-      let finalStatus = existingStatus;
-
-      if (existingStatus !== "granted") {
-        const { status } = await Notifications.requestPermissionsAsync();
-        finalStatus = status;
-      }
-
-      if (finalStatus !== "granted") {
-        console.warn("Permission not granted for push notifications");
-        return;
-      }
-
-      if (Platform.OS === "android") {
-        await Notifications.setNotificationChannelAsync("default", {
-          name: "default",
-          importance: Notifications.AndroidImportance.MAX,
-          sound: "default",
-          vibrationPattern: [0, 250, 250, 250],
-          lightColor: "#FF231F7C",
-        });
-      }
-
-      token = (await Notifications.getExpoPushTokenAsync()).data;
-    } catch (err) {
-      console.warn("Failed to get push token:", err.message);
-      return;
-    }
-
-    try {
-      const res = await fetch(
-        "https://muditam-app-backend-ca1c8b03db09.herokuapp.com/api/user/save-token",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ userId, expoPushToken: token }),
-        }
-      );
-
-      if (res.ok) {
-        console.log("Token saved to backend");
-      } else {
-        const errorText = await res.text();
-        console.error("Failed to save token:", errorText);
-      }
-    } catch (err) {
-      console.error("Error sending token to backend:", err);
-    }
-  };
+  }, [getRemindersFromStorage]);
 
   const handleLogoutConfirm = async () => {
     try {
@@ -222,19 +131,8 @@ export default function MeScreen() {
     }
   };
 
-  const handleOpenCallScreen = () => {
-    if (!user?._id) {
-      Alert.alert("Please wait", "User details are still loading.");
-      return;
-    }
-
-    router.push({
-      pathname: "/callscreen",
-      params: {
-        userId: user._id,
-        language: "hi-IN",
-      },
-    });
+  const handleOpenBookTest = () => {
+    router.push("/book-test");
   };
 
   return (
@@ -314,12 +212,12 @@ export default function MeScreen() {
 
           <TouchableOpacity
             style={styles.buttonItem}
-            onPress={handleOpenCallScreen}
+            onPress={handleOpenBookTest}
           >
             <View style={styles.iconCircle}>
-              <Ionicons name="call-outline" size={26} color="white" />
+              <Ionicons name="flask-outline" size={26} color="white" />
             </View>
-            <Text style={styles.buttonText}>Call</Text>
+            <Text style={styles.buttonText}>Book Test</Text>
           </TouchableOpacity>
         </View>
 
@@ -794,7 +692,7 @@ export default function MeScreen() {
                 Turn Off Reminder?
               </Text>
               <Text style={{ fontSize: 16, color: "gray", marginBottom: 20 }}>
-                Are you sure you want to turn off reminders? You won't receive
+                Are you sure you want to turn off reminders? You won&apos;t receive
                 any alerts.
               </Text>
               <View

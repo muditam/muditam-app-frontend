@@ -3,13 +3,12 @@ import {
   View,
   Image,
   StyleSheet,
-  Dimensions,
   ActivityIndicator,
   FlatList,
   Text,
+  useWindowDimensions,
 } from 'react-native';
-
-const screenWidth = Dimensions.get('window').width;
+import { getContentWidth, getScreenPadding } from '../../../utils/responsive';
 
 const features = [
   {
@@ -40,22 +39,26 @@ const features = [
 ];
 
 export default function PlansInclude() {
+  const { width } = useWindowDimensions();
   const [imageHeight, setImageHeight] = useState(0);
+  const contentWidth = getContentWidth(width, 980);
+  const screenPadding = getScreenPadding(width);
+  const imageWidth = contentWidth - screenPadding * 2;
   const mainImageUrl =
     'https://cdn.shopify.com/s/files/1/0734/7155/7942/files/2_icon_36d455a0-f347-4ae4-90d2-5de41b50841d.png?v=1750145142';
 
   useEffect(() => {
     Image.getSize(
       mainImageUrl,
-      (width, height) => {
-        const calculatedHeight = (height / width) * screenWidth;
+      (sourceWidth, sourceHeight) => {
+        const calculatedHeight = (sourceHeight / sourceWidth) * imageWidth;
         setImageHeight(calculatedHeight);
       },
       (error) => {
         console.error('Failed to get image size:', error);
       }
     );
-  }, []);
+  }, [imageWidth]);
 
   if (!imageHeight) {
     return (
@@ -76,7 +79,14 @@ export default function PlansInclude() {
         horizontal
         keyExtractor={(item, index) => index.toString()}
         showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.featureSlider}
+        contentContainerStyle={[
+          styles.featureSlider,
+          {
+            paddingHorizontal: screenPadding,
+            width: '100%',
+            maxWidth: contentWidth,
+          },
+        ]}
         renderItem={({ item }) => (
           <View style={styles.featureBlock}>
             <Image
@@ -92,7 +102,7 @@ export default function PlansInclude() {
       {/* Main Image Section */}
       <Image
         source={{ uri: mainImageUrl }}
-        style={{ width: screenWidth, height: imageHeight }}
+        style={{ width: imageWidth, height: imageHeight }}
         resizeMode="contain"
       />
     </View>
@@ -119,7 +129,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   featureSlider: {
-    paddingHorizontal: 16,
     paddingBottom: 20,
   },
   featureBlock: {

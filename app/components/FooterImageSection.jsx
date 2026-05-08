@@ -1,24 +1,26 @@
 import React, { useState, useEffect } from 'react';
-import { View, Image, StyleSheet, Dimensions, ActivityIndicator } from 'react-native';
+import { View, Image, StyleSheet, ActivityIndicator, useWindowDimensions } from 'react-native';
+import { getContentWidth, getScreenPadding } from '../../utils/responsive';
 
-const screenWidth = Dimensions.get('window').width;
 const imageUrl = 'https://cdn.shopify.com/s/files/1/0734/7155/7942/files/footer.png?v=1750146666';
 
 export default function FooterImageSection() {
+  const { width } = useWindowDimensions();
   const [imageHeight, setImageHeight] = useState(0);
+  const imageWidth = getContentWidth(width, 980) - getScreenPadding(width) * 2;
 
   useEffect(() => {
     Image.getSize(
       imageUrl,
-      (width, height) => {
-        const calculatedHeight = (height / width) * screenWidth;
+      (sourceWidth, sourceHeight) => {
+        const calculatedHeight = (sourceHeight / sourceWidth) * imageWidth;
         setImageHeight(calculatedHeight);
       },
       (error) => {
         console.error('Failed to get image size:', error);
       }
     );
-  }, []);
+  }, [imageWidth]);
 
   if (!imageHeight) {
     return (
@@ -29,10 +31,10 @@ export default function FooterImageSection() {
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { width }]}>
       <Image
         source={{ uri: imageUrl }}
-        style={[styles.image, { height: imageHeight }]}
+        style={[styles.image, { width: imageWidth, height: imageHeight }]}
         resizeMode="contain"
       />
     </View>
@@ -41,13 +43,11 @@ export default function FooterImageSection() {
 
 const styles = StyleSheet.create({
   container: {
-    width: screenWidth,
     alignItems: 'center',
     marginTop: 10,
     marginBottom: 10,
   },
   image: {
-    width: screenWidth - 32,
     borderRadius: 12,
   },
   loadingContainer: {

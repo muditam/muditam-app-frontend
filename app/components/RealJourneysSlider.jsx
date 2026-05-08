@@ -5,13 +5,10 @@ import {
   Image,
   Animated,
   StyleSheet,
-  Dimensions,
-  FlatList,
   Platform,
+  useWindowDimensions,
 } from "react-native";
-
-
-const { width: screenWidth } = Dimensions.get("window");
+import { getContentWidth } from "../../utils/responsive";
 
 
 const testimonials = [
@@ -81,13 +78,9 @@ const loopedData = [
 
 
 const SPACING = 4;
-const CARD_WIDTH = screenWidth * 0.76;
-const ITEM_SIZE = CARD_WIDTH + SPACING;
-
-
-const TestimonialCard = ({ item, scale }) => (
-  <Animated.View style={[styles.card, { transform: [{ scale }] }]}>
-    <Image source={{ uri: item.image }} style={styles.mainImage} />
+const TestimonialCard = ({ item, scale, cardWidth }) => (
+  <Animated.View style={[styles.card, { width: cardWidth, transform: [{ scale }] }]}>
+    <Image source={{ uri: item.image }} style={[styles.mainImage, { height: Math.round(cardWidth * 0.56) }]} />
     <View style={{ paddingHorizontal: 16 }}>
       <View style={styles.profileContainer}>
         <Image source={{ uri: item.avatar }} style={styles.avatar} />
@@ -110,19 +103,23 @@ const TestimonialCard = ({ item, scale }) => (
 
 
 export default function RealJourneysSlider() {
+  const { width } = useWindowDimensions();
   const scrollX = useRef(new Animated.Value(0)).current;
   const flatListRef = useRef(null);
   const [activeIndex, setActiveIndex] = useState(1);
+  const contentWidth = getContentWidth(width, 980);
+  const cardWidth = Math.min(Math.max(width * 0.78, 260), Math.min(contentWidth - 48, 520));
+  const itemSize = cardWidth + SPACING;
 
 
   useEffect(() => {
     setTimeout(() => {
       flatListRef.current?.scrollToOffset({
-        offset: ITEM_SIZE,
+        offset: itemSize,
         animated: false,
       });
     }, 0);
-  }, []);
+  }, [itemSize]);
 
 
   useEffect(() => {
@@ -131,7 +128,7 @@ export default function RealJourneysSlider() {
 
 
       flatListRef.current?.scrollToOffset({
-        offset: nextIndex * ITEM_SIZE,
+        offset: nextIndex * itemSize,
         animated: true,
       });
 
@@ -141,22 +138,22 @@ export default function RealJourneysSlider() {
 
 
     return () => clearInterval(interval);
-  }, [activeIndex]);
+  }, [activeIndex, itemSize]);
 
 
   const handleMomentumEnd = (e) => {
-    let index = Math.round(e.nativeEvent.contentOffset.x / ITEM_SIZE);
+    let index = Math.round(e.nativeEvent.contentOffset.x / itemSize);
 
 
     if (index === 0) {
       flatListRef.current?.scrollToOffset({
-        offset: (testimonials.length) * ITEM_SIZE,
+        offset: (testimonials.length) * itemSize,
         animated: false,
       });
       setActiveIndex(testimonials.length);
     } else if (index === loopedData.length - 1) {
       flatListRef.current?.scrollToOffset({
-        offset: ITEM_SIZE,
+        offset: itemSize,
         animated: false,
       });
       setActiveIndex(1);
@@ -175,11 +172,11 @@ export default function RealJourneysSlider() {
         keyExtractor={(_, index) => index.toString()}
         horizontal
         showsHorizontalScrollIndicator={false}
-        snapToInterval={ITEM_SIZE}
+        snapToInterval={itemSize}
         decelerationRate="fast"
         bounces={false}
         contentContainerStyle={{
-          paddingHorizontal: (screenWidth - CARD_WIDTH) / 2,
+          paddingHorizontal: Math.max((width - cardWidth) / 2, 0),
         }}
         onScroll={Animated.event(
           [{ nativeEvent: { contentOffset: { x: scrollX } } }],
@@ -188,9 +185,9 @@ export default function RealJourneysSlider() {
         onMomentumScrollEnd={handleMomentumEnd}
         renderItem={({ item, index }) => {
           const inputRange = [
-            (index - 1) * ITEM_SIZE,
-            index * ITEM_SIZE,
-            (index + 1) * ITEM_SIZE,
+            (index - 1) * itemSize,
+            index * itemSize,
+            (index + 1) * itemSize,
           ];
           const scale = scrollX.interpolate({
             inputRange,
@@ -199,7 +196,7 @@ export default function RealJourneysSlider() {
           });
 
 
-          return <TestimonialCard item={item} scale={scale} />;
+          return <TestimonialCard item={item} scale={scale} cardWidth={cardWidth} />;
         }}
       />
     </View>
@@ -221,7 +218,6 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   card: {
-  width: CARD_WIDTH,
   marginHorizontal: SPACING / 2,
   backgroundColor: "#fff",
   borderRadius: 16,
@@ -236,7 +232,6 @@ const styles = StyleSheet.create({
 },
   mainImage: {
     width: "100%",
-    height: 170,
     borderTopLeftRadius: 16, 
     borderTopRightRadius: 16,     
     resizeMode: "cover",
@@ -287,6 +282,4 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
 });
-
-
 

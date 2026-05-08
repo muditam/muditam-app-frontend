@@ -4,15 +4,11 @@ import {
   Text,
   FlatList,
   Image,
-  Dimensions,
   TouchableOpacity,
+  useWindowDimensions,
 } from "react-native";
 import MaterialIcons from "react-native-vector-icons/MaterialIcons";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
-
-
-const { width } = Dimensions.get("window");
-
 
 const reviews = [
   {
@@ -126,9 +122,10 @@ export default function ReviewsSection() {
 
   const [activeIndex, setActiveIndex] = useState(0);
   const flatListRef = useRef(null);
+  const { width } = useWindowDimensions();
 
 
-  const cardWidth = 324;
+  const cardWidth = Math.min(Math.max(width - 48, 272), 360);
 
 
   const onScroll = (e) => {

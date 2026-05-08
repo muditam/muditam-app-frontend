@@ -10,12 +10,15 @@ import {
   Platform,
   ScrollView,
   Keyboard,
+  useWindowDimensions,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
+import { getContentWidth, getFluidValue, getScreenPadding } from "../utils/responsive";
+import { registerPushNotifications } from "../utils/registerPushNotifications";
 
 // 🔧 Change this to your backend
 const API_BASE = "https://muditam-app-backend-ca1c8b03db09.herokuapp.com"; 
@@ -23,6 +26,17 @@ const API_BASE = "https://muditam-app-backend-ca1c8b03db09.herokuapp.com";
 export default function OtpScreen() { 
   const router = useRouter();
   const { phone } = useLocalSearchParams();
+  const { width } = useWindowDimensions();
+  const screenPadding = getScreenPadding(width);
+  const contentWidth = getContentWidth(width, 720);
+  const heroHeight = Math.round(getFluidValue(width, 320, 1024, 320, 430));
+  const cardOverlap = Math.round(getFluidValue(width, 320, 1024, 130, 180));
+  const keyboardOverlap = Math.round(getFluidValue(width, 320, 768, 210, 260));
+  const cardPadding = Math.round(getFluidValue(width, 320, 768, 14, 22));
+  const headingSize = Math.round(getFluidValue(width, 320, 768, 22, 26));
+  const otpBoxSize = Math.round(
+    Math.min(47, Math.max(38, (Math.min(contentWidth, width) - screenPadding * 2 - cardPadding * 2 - 30) / 6))
+  );
 
   const [otp, setOtp] = useState(Array(6).fill(""));
   const inputs = useRef([]);
@@ -67,6 +81,9 @@ export default function OtpScreen() {
       if (userRes.status === 200) {
         const userData = JSON.parse(bodyText);
         await AsyncStorage.setItem("userDetails", JSON.stringify(userData));
+        registerPushNotifications(userData?._id).catch((error) => {
+          console.warn("Push registration failed:", error.message);
+        });
         router.replace("/home");
       } else if (userRes.status === 404) {
         router.replace({ pathname: "/details", params: { phone } });
@@ -170,7 +187,7 @@ export default function OtpScreen() {
             source={{
               uri: "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/2_1_eb3f1b3c-1df9-4942-99b2-f001de984ddb.png?v=1751978207",
             }}
-            style={{ width: "100%", height: 430 }}
+            style={{ width: "100%", height: heroHeight }}
             resizeMode="cover"
           />
 
@@ -199,11 +216,14 @@ export default function OtpScreen() {
           {/* Card */}
           <View
             style={{
-              marginTop: isKeyboardVisible ? -260 : -180,
-              marginHorizontal: 16,
+              marginTop: isKeyboardVisible ? -keyboardOverlap : -cardOverlap,
+              marginHorizontal: screenPadding,
+              alignSelf: "center",
+              width: "100%",
+              maxWidth: contentWidth - screenPadding * 2,
               backgroundColor: "white",
-              paddingTop: 40,
-              paddingHorizontal: 16,
+              paddingTop: cardPadding + 18,
+              paddingHorizontal: cardPadding,
               borderRadius: 20,
               shadowColor: "#000",
               shadowOffset: { width: 0, height: 2 },
@@ -217,23 +237,23 @@ export default function OtpScreen() {
               style={{
                 fontFamily: "Poppins",
                 fontWeight: "bold",
-                fontSize: 26,
+                fontSize: headingSize,
                 textAlign: "left",
-                marginBottom: 30,
+                marginBottom: Math.round(getFluidValue(width, 320, 768, 22, 30)),
               }}
             >
               Enter OTP
             </Text>
 
             {/* OTP Boxes */}
-            <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+            <View style={{ flexDirection: "row", justifyContent: "space-between", gap: 6 }}>
               {otp.map((digit, index) => (
                 <TextInput
                   key={index}
                   ref={(ref) => (inputs.current[index] = ref)}
                   style={{
-                    width: 47,
-                    height: 47,
+                    width: otpBoxSize,
+                    height: otpBoxSize,
                     borderWidth: 0.9,
                     textAlign: "center",
                     fontSize: 18,

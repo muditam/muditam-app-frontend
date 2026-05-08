@@ -9,6 +9,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  useWindowDimensions,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
@@ -16,11 +17,19 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import LegalModal from "../../components/LegalModal";
 import { LinearGradient } from "expo-linear-gradient";
 import { StatusBar } from "expo-status-bar";
+import { getContentWidth, getFluidValue, getScreenPadding } from "../../../utils/responsive";
  
 const API_BASE = "https://muditam-app-backend-ca1c8b03db09.herokuapp.com"; 
 
 export default function LoginScreen() {
   const router = useRouter();
+  const { width } = useWindowDimensions();
+  const screenPadding = getScreenPadding(width);
+  const contentWidth = getContentWidth(width, 720);
+  const heroHeight = Math.round(getFluidValue(width, 320, 1024, 320, 430));
+  const cardOverlap = Math.round(getFluidValue(width, 320, 1024, 130, 180));
+  const cardPadding = Math.round(getFluidValue(width, 320, 768, 14, 22));
+  const headingSize = Math.round(getFluidValue(width, 320, 768, 22, 26));
   const [showPrivacy, setShowPrivacy] = useState(false);
   const [showTerms, setShowTerms] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState("");
@@ -443,25 +452,28 @@ For any complaints or grievances, please contact our Grievance Officer using the
             source={{
               uri: "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/1_5b6c94fe-8228-4d5c-934d-62dde3ab6f26.png?v=1751977906",
             }}
-            style={{ width: "100%", height: 430 }}
+            style={{ width: "100%", height: heroHeight }}
             resizeMode="cover"
           />
 
           {/* Content Card */}
           <View
             style={{
-              marginTop: -180,
-              marginHorizontal: 16,
+              marginTop: -cardOverlap,
+              marginHorizontal: screenPadding,
+              alignSelf: "center",
+              width: "100%",
+              maxWidth: contentWidth - screenPadding * 2,
               backgroundColor: "white",
-              paddingTop: 40,
-              paddingHorizontal: 16,
+              paddingTop: cardPadding + 18,
+              paddingHorizontal: cardPadding,
               borderRadius: 20,
               shadowColor: "#000",
               shadowOffset: { width: 0, height: 2 },
               shadowOpacity: 0.1,
               shadowRadius: 6,
               elevation: 1.3,
-              paddingBottom: 90,
+              paddingBottom: Math.round(getFluidValue(width, 320, 768, 52, 90)),
             }}
           >
             {/* Heading */}
@@ -469,9 +481,9 @@ For any complaints or grievances, please contact our Grievance Officer using the
               style={{
                 fontFamily: "Poppins",
                 fontWeight: "bold",
-                fontSize: 26,
+                fontSize: headingSize,
                 textAlign: "left",
-                marginBottom: 30,
+                marginBottom: Math.round(getFluidValue(width, 320, 768, 22, 30)),
               }}
             >
               Kindly fill in the details:

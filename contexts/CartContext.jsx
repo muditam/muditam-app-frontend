@@ -36,7 +36,6 @@ export const CartProvider = ({ children }) => {
         }
 
         if (!phone) {
-          console.warn('Phone number not found in AsyncStorage.');
           setCartItems(parsedCart);
           return;
         }

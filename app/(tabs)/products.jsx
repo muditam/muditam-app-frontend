@@ -13,11 +13,11 @@ import {
   Platform,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { useCart } from "../contexts/CartContext";
+import { useCart } from "../../contexts/CartContext";
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { Ionicons } from "@expo/vector-icons";
-import { getColumns, getContentWidth, getScreenPadding } from "../utils/responsive";
+import { getColumns, getContentWidth, getScreenPadding } from "../../utils/responsive";
 
 
 // 1. Define the custom order

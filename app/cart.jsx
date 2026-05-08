@@ -7,21 +7,23 @@ import {
   StyleSheet,
   FlatList,
   Alert,
-  Dimensions,
   ScrollView,
+  useWindowDimensions,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { FontAwesome6, Ionicons, MaterialIcons } from "@expo/vector-icons";
-import { useCart } from "./contexts/CartContext";
-
-
-const { width } = Dimensions.get("window");
+import { useCart } from "../contexts/CartContext";
+import { getContentWidth, getScreenPadding } from "../utils/responsive";
 
 
 export default function Cart() {
   const router = useRouter();
   const { cartItems, incrementItem, decrementItem, addToCart } = useCart();
   const [products, setProducts] = useState([]);
+  const { width } = useWindowDimensions();
+  const screenPadding = getScreenPadding(width);
+  const contentWidth = getContentWidth(width, 980);
+  const recommendedCardWidth = Math.min(Math.max(width * 0.42, 150), 220);
 
   const productInfoMap = {
   "Karela Jamun Fizz": "Control blood sugar levels",
@@ -77,18 +79,6 @@ export default function Cart() {
       .catch((err) => console.error("Error fetching products:", err));
   }, []);
 
-  async function getShopifyCartToken() {
-    try {
-      const response = await fetch('https://muditam.myshopify.com/cart.js');
-      const data = await response.json();
-      const formattedCartId = `gid://shopify/Cart/${data.token}`;
-      return formattedCartId;
-    } catch (error) {
-      console.error('Error fetching Shopify cart token:', error);
-      return '';
-    }
-  }
-
   const handlePress = (item) => {
     router.push({
       pathname: "/productPage",
@@ -143,8 +133,15 @@ export default function Cart() {
   return (
 
     <View style={styles.container}>
-      <ScrollView style={{ marginBottom: 80 }}>
-        <View style={styles.header}>
+      <ScrollView
+        style={{ marginBottom: 80 }}
+        contentContainerStyle={{
+          alignSelf: "center",
+          width: "100%",
+          maxWidth: contentWidth,
+        }}
+      >
+        <View style={[styles.header, { paddingHorizontal: screenPadding }]}>
           <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
             <Ionicons name="arrow-back" size={24} />
           </TouchableOpacity>
@@ -153,7 +150,7 @@ export default function Cart() {
 
 
         <View >
-          <Text style={{ paddingHorizontal: 16, fontSize: 20, fontWeight: 500, paddingTop: 14, }}> 
+          <Text style={{ paddingHorizontal: screenPadding, fontSize: 20, fontWeight: 500, paddingTop: 14, }}>
             Products in Cart
           </Text>
 
@@ -161,7 +158,7 @@ export default function Cart() {
           <FlatList
             data={cartItems}
             keyExtractor={(item) => `cart-${item.id}`}
-            contentContainerStyle={styles.listContainer}
+            contentContainerStyle={[styles.listContainer, { paddingHorizontal: screenPadding }]}
             renderItem={({ item }) => (
               <View style={styles.card}>
                 <Image source={{ uri: item.image }} style={styles.image} />
@@ -199,10 +196,10 @@ export default function Cart() {
 
 
           <View >
-            <Text style={{ paddingVertical: 4, fontSize: 20, fontWeight: 500, paddingLeft: 16, }}>
+            <Text style={{ paddingVertical: 4, fontSize: 20, fontWeight: 500, paddingLeft: screenPadding }}>
               Recommended Add-ons
             </Text>
-            <Text style={{ color: "#7D7D7D", fontSize: 14, paddingLeft: 16, }}>
+            <Text style={{ color: "#7D7D7D", fontSize: 14, paddingLeft: screenPadding, paddingRight: screenPadding }}>
               Others with similar conditions also bought these products
             </Text>
 
@@ -212,13 +209,13 @@ export default function Cart() {
               keyExtractor={(item) => `rec-${item.id}`}
               horizontal
               showsHorizontalScrollIndicator={false}
-              contentContainerStyle={{ paddingHorizontal: 16 }}
+              contentContainerStyle={{ paddingHorizontal: screenPadding }}
 
 
               renderItem={({ item }) => {
                 const quantity = getItemQuantity(item.id);
                 return (
-                  <View style={styles.productCard}>
+                  <View style={[styles.productCard, { width: recommendedCardWidth }]}>
                     <TouchableOpacity onPress={() => handlePress(item)}>
                       <Image
                         source={{ uri: item.image }}
@@ -242,7 +239,7 @@ export default function Cart() {
                           </Text>
                         </TouchableOpacity>
                         <Text style={styles.counterValue}>{quantity}</Text>
-                        <TouchableOpacity onPress={() => handleIncrement(item.id)}>
+                        <TouchableOpacity onPress={() => incrementItem(item.id)}>
                           <Text style={styles.counterButton}>
                             <FontAwesome6
                               name="add"
@@ -276,7 +273,16 @@ export default function Cart() {
 
 
 
-      <View style={styles.bottomBar}>
+      <View
+        style={[
+          styles.bottomBar,
+          {
+            paddingHorizontal: screenPadding,
+            left: Math.max((width - contentWidth) / 2, 0),
+            right: Math.max((width - contentWidth) / 2, 0),
+          },
+        ]}
+      >
         <View>
           <Text style={styles.total}>₹{total.toFixed(0)}</Text>
           <Text style={styles.tax}>Inclusive of all taxes</Text>
@@ -291,11 +297,6 @@ export default function Cart() {
 }
 
 
-const cardWidth = (Dimensions.get("window").width - 70) / 2;
-
-
-
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -306,7 +307,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingTop: 40,
     paddingBottom: 16,
-    paddingHorizontal: 16,
     backgroundColor: 'white',
   },
   backBtn: {
@@ -317,11 +317,12 @@ const styles = StyleSheet.create({
     fontWeight: 600,
   },
   listContainer: {
-    padding: 16,
+    paddingVertical: 16,
     paddingBottom: 10,
   },
   card: {
     flexDirection: "row",
+    flexWrap: "wrap",
     marginBottom: 16,
     backgroundColor: "#f9f9f9",
     borderRadius: 10,
@@ -349,12 +350,11 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   counterContainer: {
-    position: "absolute",
-    right: 16,
-    bottom: 16,
+    marginLeft: "auto",
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "transparent",
+    alignSelf: "flex-end",
   },
 
 
@@ -372,17 +372,14 @@ const styles = StyleSheet.create({
   bottomBar: {
     position: "absolute",
     bottom: 20,
-    left: 0,
-    right: 0,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     backgroundColor: "#fff",
-    paddingRight: 16,
     paddingVertical: 10,
     borderColor: "#ccc",
     borderWidth: 1,
-    paddingLeft: 30,
+    gap: 12,
   },
   total: {
     fontSize: 20,
@@ -394,9 +391,11 @@ const styles = StyleSheet.create({
   },
   payButton: {
     backgroundColor: "#9D57FF",
-    paddingHorizontal: 35,
+    paddingHorizontal: 28,
     paddingVertical: 8,
     borderRadius: 4,
+    minWidth: 112,
+    alignItems: "center",
   },
   payText: {
     color: "#fff",
@@ -413,7 +412,6 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   productCard: {
-    width: cardWidth,
     marginBottom: 16,
     marginTop: 20,
     marginRight: 16,
@@ -428,7 +426,8 @@ const styles = StyleSheet.create({
   },
   productImage: {
     width: "100%",
-    height: 150,
+    aspectRatio: 1,
+    height: undefined,
     borderRadius: 8,
     marginBottom: 8,
   },
@@ -464,4 +463,3 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
 });
-

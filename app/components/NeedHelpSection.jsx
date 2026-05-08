@@ -95,7 +95,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "#E4D0FF",
     borderRadius: 10,
-    paddingVertical: 10,
     paddingVertical:Platform.OS=="ios"?10:6,
     paddingHorizontal: 4,
     marginRight: 12,
@@ -122,6 +121,5 @@ const styles = StyleSheet.create({
     size:Platform.OS==="ios"?24:20,
   },
 });
-
 
 

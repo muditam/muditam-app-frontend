@@ -3,11 +3,11 @@ import {
   View,
   Text,
   FlatList,
-  Dimensions,
   StyleSheet,
   TouchableOpacity,
   ImageBackground,
   Pressable,
+  useWindowDimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -15,7 +15,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Feather } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 
-const { width } = Dimensions.get('window');
 const ITEM_WIDTH = 18; // Wider, so "10", "11", "12" fit on one line
 
 const generateHba1cRange = () => {
@@ -36,6 +35,7 @@ const getColorForValue = (value) => {
 export default function HbA1cScreen() {
   const router = useRouter();
   const flatListRef = useRef();
+  const { width } = useWindowDimensions();
   const hba1cRange = generateHba1cRange();
   const [selected, setSelected] = useState(8.0);
   const lastIndexRef = useRef(null);
@@ -69,8 +69,8 @@ export default function HbA1cScreen() {
         ? progress.answers.length
         : 0;
 
-      // NOTE: You must define `questions` array somewhere globally for this to work
-      if (typeof questions !== "undefined" && resumeIndex >= questions.length) {
+      const questionsLength = globalThis.questions?.length;
+      if (typeof questionsLength === "number" && resumeIndex >= questionsLength) {
         router.replace('/home');  
       } else {
         router.replace(`/quiz/${resumeIndex || 0}`);

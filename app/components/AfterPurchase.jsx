@@ -17,7 +17,7 @@ import { StatusBar } from 'expo-status-bar'; // <-- Import StatusBar
 import SupportCard from '../components/SupportCard';
 import NeedHelpSection from '../components/NeedHelpSection';
 import KitProgressSection from '../components/KitProgressSection';
-import { fetchKitProgress } from '../utils/fetchKitProgress';
+import { fetchKitProgress } from '../../utils/fetchKitProgress';
 
 export default function AfterPurchase() {
   const router = useRouter();

@@ -10,11 +10,12 @@ import {
   Platform,
   ActivityIndicator,
   SafeAreaView,
+  Alert,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { FontAwesome, Feather, Ionicons } from "@expo/vector-icons";
 import { Animated } from "react-native";
-import { useCart } from "./contexts/CartContext";
+import { useCart } from "../contexts/CartContext";
 import { useSafeAreaInsets } from "react-native-safe-area-context"; 
 
 
@@ -704,7 +705,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "#9D57FF",
-    backgroundColor: "#9D57FF",
     paddingVertical: 6,
     paddingHorizontal: 40,
     borderRadius: 4,
@@ -879,12 +879,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#000",
   },
-  viewCartBtn: {
-    color: "#543287",
-    fontWeight: "bold",
-  },
-
-
   priceContainer: {
     position: "absolute",
     bottom: "0%",

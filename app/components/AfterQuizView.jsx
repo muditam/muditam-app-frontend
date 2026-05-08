@@ -6,9 +6,7 @@ import {
     ScrollView,
     Image,
     TouchableOpacity,
-    Dimensions,
     Pressable,
-    ActivityIndicator,
     Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -27,6 +25,7 @@ import StepsSection from '../components/StepsSection';
 import ExpertsPanelCard from '../components/ExpertsPanelCard';
 import RealJourneysSlider from '../components/RealJourneysSlider';
 import NeedHelpSection from '../components/NeedHelpSection';
+import FooterImageSection from '../components/FooterImageSection';
 
 const ROOT_CAUSES_CONFIG = [ 
     {
@@ -336,43 +335,7 @@ export default function AfterQuizView() {
                 <ReviewsRatings />
                 <ReviewsSection />
 
-                {(() => {
-                    const [imageHeight, setImageHeight] = useState(0);
-                    const imageUrl = 'https://cdn.shopify.com/s/files/1/0734/7155/7942/files/footer.png?v=1750146666';
-                    const sideMargin = 20; // 20px left + right
-
-                    useEffect(() => {
-                        Image.getSize(
-                            imageUrl,
-                            (width, height) => {
-                                const calculatedWidth = Dimensions.get('window').width - sideMargin * 2;
-                                const calculatedHeight = (height / width) * calculatedWidth;
-                                setImageHeight(calculatedHeight);
-                            },
-                            (error) => {
-                                console.error('Failed to get image size:', error);
-                            }
-                        );
-                    }, []);
-
-                    if (!imageHeight) {
-                        return (
-                            <View style={{ height: 200, alignItems: 'center', justifyContent: 'center', marginTop: 10, marginBottom: 40, marginHorizontal: sideMargin }}>
-                                <ActivityIndicator size="large" color="#543287" />
-                            </View>
-                        );
-                    }
-
-                    return (
-                        <View style={{ marginTop: -50, marginBottom: 80, marginHorizontal: sideMargin }}>
-                            <Image
-                                source={{ uri: imageUrl }}
-                                style={{ width: Dimensions.get('window').width - sideMargin * 2, height: imageHeight }}
-                                resizeMode="contain"
-                            />
-                        </View>
-                    );
-                })()}
+                <FooterImageSection />
             </ScrollView>
 
 
@@ -623,12 +586,6 @@ const styles = StyleSheet.create({
     },
     causeBoxActive: {
         backgroundColor: '#EBDBFF',
-    },
-    causeLabel: {
-        fontSize: 12,
-        color: '#333',
-        textAlign: 'center',
-        fontFamily: 'Poppins',
     },
     circleBoxWrapper: {
         alignItems: 'center',

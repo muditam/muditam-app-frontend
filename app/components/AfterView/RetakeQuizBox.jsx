@@ -113,9 +113,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     right: Platform.OS === "ios" ? 16 : 12,
     paddingTop: 16,
-    bottom: Platform.OS === "ios" ? 0 : -14,
   },
 });
-
 
 

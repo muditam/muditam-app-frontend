@@ -16,6 +16,7 @@ import {
 import { useRouter, useLocalSearchParams } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { registerPushNotifications } from "../utils/registerPushNotifications";
 
 export default function UserProfileForm() {
   const router = useRouter();
@@ -74,11 +75,14 @@ export default function UserProfileForm() {
       if (res.ok) {
         const userData = await res.json();
         await AsyncStorage.setItem("userDetails", JSON.stringify(userData));
+        registerPushNotifications(userData?._id).catch((error) => {
+          console.warn("Push registration failed:", error.message);
+        });
         router.replace("/home");
       } else {
         Alert.alert("Error", "Could not save your details.");
       }
-    } catch (err) {
+    } catch (_err) {
       Alert.alert("Network Error", "Please try again later.");
     } finally {
       setLoadingSubmit(false);

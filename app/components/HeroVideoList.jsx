@@ -5,9 +5,7 @@ import {
   FlatList,
   TouchableOpacity,
   Image,
-  Dimensions,
   Platform,
-  StyleSheet,
 } from "react-native";
 import { useRouter } from "expo-router";
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
@@ -71,7 +69,6 @@ export default function HeroVideoList() {
         height: CARD_HEIGHT,
         marginRight: SPACING,
         borderRadius: 12,
-        overflow: 'hidden',
         backgroundColor: '#000',
         marginBottom: 16,
         shadowColor: '#000',
@@ -129,24 +126,3 @@ export default function HeroVideoList() {
     </View>
   );
 }
-
-
-const styles = StyleSheet.create({
-  iconContainer: {
-    position: "absolute",
-    right: 16,
-    bottom: Platform.OS === 'android' ? 150 : 98,
-    alignItems: "center",
-  },
-  iconButton: {
-    alignItems: "center",
-    marginBottom: 24,
-  },
-  iconLabel: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: 500,
-    marginTop: 2,
-  },
-})
-

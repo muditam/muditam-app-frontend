@@ -46,7 +46,7 @@ export default function MyProfile() {
     setQuizLoading(true);
     try {
       // Replace with your API base URL
-      const res = await fetch(`http://192.168.1.61:3001/api/quiz/${phone}`);
+      const res = await fetch(`http://192.168.1.48:3001/api/quiz/${phone}`);
       if (res.ok) {
         const data = await res.json();
         setQuiz(data);
@@ -73,7 +73,7 @@ export default function MyProfile() {
           style: "destructive",
           onPress: async () => {
             try {
-              const res = await fetch(`http://192.168.1.61:3001/api/user/delete`, {
+              const res = await fetch(`http://192.168.1.48:3001/api/user/delete`, {
                 method: "POST",
                 headers: {
                   "Content-Type": "application/json"
@@ -297,7 +297,6 @@ const styles = StyleSheet.create({
     marginTop: 16,
   },
   headerTitle: {
-    fontSize: 24,
     fontSize: Platform.OS === "ios" ? 22 : 20,
     fontWeight: "600",
     marginLeft: 8,
@@ -365,26 +364,22 @@ const styles = StyleSheet.create({
   activeTab: {
     flex: 1,
     backgroundColor: "#252525",
-    paddingVertical: 11,
     paddingVertical: Platform.OS === "ios" ? 11 : 8,
     borderRadius: 50,
   },
   activeTabText: {
     textAlign: "center",
     color: "white",
-    fontSize: 16,
     fontSize: Platform.OS === "ios" ? 16 : 15,
   },
   inactiveTab: {
     flex: 1,
-    paddingVertical: 11,
     paddingVertical: Platform.OS === "ios" ? 11 : 8,
     borderRadius: 50,
     marginRight: 8,
   },
   inactiveTabText: {
     textAlign: "center",
-    fontSize: 16,
     fontSize: Platform.OS === "ios" ? 16 : 15,
     fontWeight: "500",
   },
@@ -450,6 +445,5 @@ const styles = StyleSheet.create({
     textDecorationLine: "underline",
   },
 });
-
 
 

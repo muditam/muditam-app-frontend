@@ -111,7 +111,7 @@ export default function ExpertList() {
               <Feather name="arrow-left" size={26} color="black" />
             </TouchableOpacity>
             <Text style={styles.headerText}>
-              "Every Body is Unique, So Is Our Care"
+              Every Body is Unique, So Is Our Care
             </Text>
             <Text style={styles.subHeaderText}>
               Every member of our team is handpicked for their clinical expertise and proven results in managing Diabetes and related conditions. 

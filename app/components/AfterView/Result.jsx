@@ -1,9 +1,6 @@
 import React from "react";
-import { View, Text, StyleSheet, ScrollView, Dimensions } from "react-native";
+import { View, Text, StyleSheet, ScrollView } from "react-native";
 import { FontAwesome5 } from "@expo/vector-icons";
-
-
-const { width } = Dimensions.get("window");
 
 
 const icons = [
@@ -175,6 +172,5 @@ const styles = StyleSheet.create({
     marginTop: -35,
   },
 });
-
 
 

@@ -4,12 +4,10 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  Dimensions,
   TouchableOpacity,
+  useWindowDimensions,
 } from "react-native";
-
-const { width } = Dimensions.get("window");
-const STEP_WIDTH = 379 + 16;
+import { getContentWidth, getScreenPadding } from "../../utils/responsive";
 
 const stepData = [
   {
@@ -32,14 +30,19 @@ const stepData = [
 const Steps = () => {
   const scrollRef = useRef(null);
   const [activeIndex, setActiveIndex] = useState(0);
+  const { width } = useWindowDimensions();
+  const screenPadding = getScreenPadding(width);
+  const contentWidth = getContentWidth(width, 980);
+  const boxWidth = Math.min(contentWidth - screenPadding * 2, 420);
+  const itemSize = boxWidth + 16;
 
   const handleScroll = (e) => {
-    const index = Math.round(e.nativeEvent.contentOffset.x / STEP_WIDTH);
+    const index = Math.round(e.nativeEvent.contentOffset.x / itemSize);
     setActiveIndex(index);
   };
 
   const scrollToIndex = (index) => {
-    scrollRef.current?.scrollTo({ x: index * STEP_WIDTH, animated: true });
+    scrollRef.current?.scrollTo({ x: index * itemSize, animated: true });
   };
 
   return (
@@ -47,17 +50,17 @@ const Steps = () => {
       <Text style={styles.headerText}>
         What Happens After You Place An Order?
       </Text>
-      <View style={{ marginRight: 16 }}>
+      <View>
         <ScrollView
           ref={scrollRef}
           horizontal
           showsHorizontalScrollIndicator={false}
           onScroll={handleScroll}
           scrollEventThrottle={16}
-          contentContainerStyle={styles.scrollContainer}
+          contentContainerStyle={{ paddingHorizontal: screenPadding }}
         >
           {stepData.map((step, index) => (
-            <View key={index} style={styles.box}>
+            <View key={index} style={[styles.box, { width: boxWidth }]}>
               <View style={styles.rowOne}>
                 <Text style={styles.number}>{index + 1}</Text>
                 <Text style={styles.title}>{step.title}</Text>
@@ -99,12 +102,11 @@ const styles = StyleSheet.create({
     marginLeft: 16,
   },
   box: {
-    width: 375,
-    height: 165,
+    minHeight: 165,
     borderRadius: 8,
     borderWidth: 0.5,
     paddingHorizontal: 20,
-    marginLeft: 16,
+    marginRight: 16,
     backgroundColor: "#fff",
     marginBottom: 35,
     top: 30,
@@ -130,12 +132,13 @@ const styles = StyleSheet.create({
   zIndex: 10,
 },
   title: {
-    fontSize: 22,
+    fontSize: 20,
     marginTop: 50,
     fontWeight: "500",
     color: "#000000",
     marginLeft: 5,
     textAlign: "center",
+    flex: 1,
   },
   subtitle: {
     fontSize: 14,

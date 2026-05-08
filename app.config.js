@@ -7,9 +7,16 @@ export default {
         icon: "./assets/images/logo.png",
         scheme: "muditam",
         userInterfaceStyle: "automatic",
+        newArchEnabled: true,
         android: { 
             package: "com.madhurmuditam.muditam",
             "googleServicesFile": "./google-services.json",
+            permissions: [
+                "android.permission.RECORD_AUDIO",
+                "android.permission.MODIFY_AUDIO_SETTINGS",
+                "android.permission.INTERNET",
+                "android.permission.WAKE_LOCK"
+            ],
             adaptiveIcon: {
                 foregroundImage: "./assets/images/adaptive-icon.png", 
                 backgroundColor: "#ffffff"
@@ -23,8 +30,9 @@ export default {
             supportsTablet: true,
             buildNumber: "1.0.0",
             infoPlist: {
-        ITSAppUsesNonExemptEncryption: false
-      }
+                ITSAppUsesNonExemptEncryption: false,
+                NSMicrophoneUsageDescription: "Allow Muditam Ayurveda to use your microphone for internet calls."
+            }
         },
         extra: {
             eas: {
