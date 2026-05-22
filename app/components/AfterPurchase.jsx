@@ -1,12 +1,13 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
+  FlatList,
   Image,
   TouchableOpacity,
   ActivityIndicator,
+  Platform,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -26,6 +27,10 @@ export default function AfterPurchase() {
   const [loadingProgress, setLoadingProgress] = useState(true);
   const [gender, setGender] = useState('');
   const [avatar, setAvatar] = useState('');
+  const sections = useMemo(
+    () => ['tasks', 'support', 'diet', 'progress'],
+    []
+  );
 
   useEffect(() => {
     const loadName = async () => {
@@ -52,33 +57,30 @@ export default function AfterPurchase() {
     loadProgress();
   }, []);
 
-  return (
-    <SafeAreaView style={styles.safeArea}>
-      {/* Set the StatusBar to 'light' so icons are white (good for dark header) */}
-      <StatusBar style="light" backgroundColor="#9C4DF4" translucent={false} />
+  const renderHeader = useCallback(
+    () => (
+      <>
+        <LinearGradient
+          colors={['#9C4DF4', '#7C4DFF']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.greetingBox1}
+        >
+          <View style={styles.header}>
+            <Image
+              source={{
+                uri: 'https://cdn.shopify.com/s/files/1/0734/7155/7942/files/new_logo_orange_leaf_1_4e0e0f89-08a5-4264-9d2b-0cfe9535d553.png?v=1727508866',
+              }}
+              style={styles.logo}
+              resizeMode="contain"
+            />
+            <TouchableOpacity style={styles.profileIcon} onPress={() => router.push('/me')}>
+              <Ionicons name="person-outline" size={20} color="white" />
+              <Text style={styles.profileText}>You</Text>
+            </TouchableOpacity>
+          </View>
+        </LinearGradient>
 
-      <LinearGradient
-        colors={['#9C4DF4', '#7C4DFF']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.greetingBox1}
-      >
-        <View style={styles.header}>
-          <Image
-            source={{
-              uri: 'https://cdn.shopify.com/s/files/1/0734/7155/7942/files/new_logo_orange_leaf_1_4e0e0f89-08a5-4264-9d2b-0cfe9535d553.png?v=1727508866',
-            }}
-            style={styles.logo}
-            resizeMode="contain"
-          />
-          <TouchableOpacity style={styles.profileIcon} onPress={() => router.push('/me')}>
-            <Ionicons name="person-outline" size={20} color="white" />
-            <Text style={styles.profileText}>You</Text>
-          </TouchableOpacity>
-        </View>
-      </LinearGradient>
-
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
         <LinearGradient
           colors={['#9C4DF4', '#7C4DFF']}
           start={{ x: 0, y: 0 }}
@@ -109,89 +111,111 @@ export default function AfterPurchase() {
 
               <View>
                 <Text style={styles.userName}>Hi {name}</Text>
-                <Text style={styles.userSubtitle}>Every step you take today supports a{'\n'}healthier tomorrow.</Text> 
+                <Text style={styles.userSubtitle}>Every step you take today supports a{'\n'}healthier tomorrow.</Text>
               </View>
             </View>
           </View>
         </LinearGradient>
+      </>
+    ),
+    [avatar, gender, name, router]
+  );
 
-        <View style={styles.sectionBlock}>
-          <Text style={styles.sectionLabel}>My Tasks</Text>
-          <TouchableOpacity style={styles.taskCard}>
-             <Image
-    source={{
-      uri: 'https://cdn.shopify.com/s/files/1/0734/7155/7942/files/Buy_your_next_kit_1.png?v=1752652413',
-    }}
-    style={styles.taskHighlight}
-    resizeMode="cover"
-  />
-            <Text style={styles.taskText}>Buy your next kit</Text>
-            <Ionicons name="chevron-forward" size={20} color="black" />
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.reorderWrapper}>
-          <Text style={styles.reorderTitle}>Reorder Your Kit</Text>
-          <View style={styles.reorderCard}>
-            <Text style={styles.reorderHeading}>Want To See Results In{'\n'}Time?</Text>
-            <Text style={styles.reorderSubtext}>Gaps can delay results.{'\n'}Order your kit now.</Text>
-            <TouchableOpacity onPress={() => router.push('/products')} style={styles.orderBtn}>
-              <Text style={styles.orderBtnText}>Order Now</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        <View style={{ marginTop: 10 }}>
-          <SupportCard />
-          <NeedHelpSection />
-        </View>
-
-        <View style={styles.line3} />
-        <View style={{ marginHorizontal: 16 }}>
-          <Text style={styles.sectionTitle}>Diet Plan</Text>
-          <View style={styles.dietCard}>
-
-            <Image
-              source={{
-                uri: "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/Drinking_8_glasses.png?v=1752651128",
-              }}
-              style={{ backgroundColor: "#000", borderRadius: 8, height: 123, width: 120, marginRight: 10 }}
-              resizeMode="cover"
-            />
-            <View style={{ display: "flex", flexDirection: "column" }}>
-              <Text style={styles.dietText}>
-                Drinking 8 glasses of water{"\n"}daily will improve your{"\n"}skin
-                overnight
-              </Text>
-              <TouchableOpacity style={styles.planBtn} onPress={() => router.push('/my-plan')}>
-                <Text style={styles.planBtnText}>View My Plan</Text>
+  const renderSection = useCallback(({ item }) => {
+    switch (item) {
+      case 'tasks':
+        return (
+          <>
+            <View style={styles.sectionBlock}>
+              <Text style={styles.sectionLabel}>My Tasks</Text>
+              <TouchableOpacity style={styles.taskCard}>
+                <Image
+                  source={{
+                    uri: 'https://cdn.shopify.com/s/files/1/0734/7155/7942/files/Buy_your_next_kit_1.png?v=1752652413',
+                  }}
+                  style={styles.taskHighlight}
+                  resizeMode="cover"
+                />
+                <Text style={styles.taskText}>Buy your next kit</Text>
+                <Ionicons name="chevron-forward" size={20} color="black" />
               </TouchableOpacity>
             </View>
 
+            <View style={styles.reorderWrapper}>
+              <Text style={styles.reorderTitle}>Reorder Your Kit</Text>
+              <View style={styles.reorderCard}>
+                <Text style={styles.reorderHeading}>Want To See Results In{'\n'}Time?</Text>
+                <Text style={styles.reorderSubtext}>Gaps can delay results.{'\n'}Order your kit now.</Text>
+                <TouchableOpacity onPress={() => router.push('/products')} style={styles.orderBtn}>
+                  <Text style={styles.orderBtnText}>Order Now</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </>
+        );
+      case 'support':
+        return (
+          <View style={{ marginTop: 10 }}>
+            <SupportCard />
+            <NeedHelpSection />
           </View>
-        </View>
-        <View style={styles.line4} />
-
-        {/* <View style={{ paddingHorizontal: 16, marginTop: 10 }}>
-          <Text style={styles.sectionTitle}>Your Digital Prescription</Text>
-          <View style={styles.prescriptionBox}>
-            <Text style={styles.prescriptionText}>Your doctor recommended{'\n'}treatment plan</Text>
-            <TouchableOpacity>
-              <Text style={styles.prescriptionLink}>View Prescription</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-        <View style={styles.line4} /> */}
-
-        {loadingProgress ? (
-          <ActivityIndicator size="large" color="#9C4DF4" style={{ marginTop: 6 }} />
+        );
+      case 'diet':
+        return (
+          <>
+            <View style={styles.line3} />
+            <View style={{ marginHorizontal: 16 }}>
+              <Text style={styles.sectionTitle}>Diet Plan</Text>
+              <View style={styles.dietCard}>
+                <Image
+                  source={{
+                    uri: "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/Drinking_8_glasses.png?v=1752651128",
+                  }}
+                  style={{ backgroundColor: "#000", borderRadius: 8, height: 123, width: 120, marginRight: 10 }}
+                  resizeMode="cover"
+                />
+                <View style={{ display: "flex", flexDirection: "column" }}>
+                  <Text style={styles.dietText}>
+                    Drinking 8 glasses of water{"\n"}daily will improve your{"\n"}skin
+                    overnight
+                  </Text>
+                  <TouchableOpacity style={styles.planBtn} onPress={() => router.push('/my-plan')}>
+                    <Text style={styles.planBtnText}>View My Plan</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+            <View style={styles.line4} />
+          </>
+        );
+      case 'progress':
+        return loadingProgress ? (
+          <ActivityIndicator size="large" color="#9C4DF4" style={{ marginTop: 6, marginBottom: 24 }} />
         ) : (
           <KitProgressSection
             currentKit={kitProgress.currentKit}
             completedKits={kitProgress.completedKits}
           />
-        )}
-      </ScrollView>
+        );
+      default:
+        return null;
+    }
+  }, [kitProgress, loadingProgress, router]);
+
+  return (
+    <SafeAreaView style={styles.safeArea}>
+      <StatusBar style="light" backgroundColor="#9C4DF4" translucent={false} />
+      <FlatList
+        data={sections}
+        keyExtractor={(item) => item}
+        renderItem={renderSection}
+        ListHeaderComponent={renderHeader}
+        contentContainerStyle={[styles.scrollContainer, { paddingBottom: 24 }]}
+        removeClippedSubviews={Platform.OS === 'android'}
+        initialNumToRender={3}
+        maxToRenderPerBatch={3}
+        windowSize={5}
+      />
     </SafeAreaView>
   );
 }

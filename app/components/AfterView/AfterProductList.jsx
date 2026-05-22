@@ -7,8 +7,11 @@ import {
   TouchableOpacity,
   ActivityIndicator,
 } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import ProductModal from './ProductModal';
+import {
+  getKitProductTitlesForHbA1c,
+  resolveUserHbA1c,
+} from '../../../utils/kitRecommendations';
 
 
 export default function AfterProductList({ setTotalPrice, totalPrice, setSelectedProducts }) {
@@ -20,20 +23,12 @@ export default function AfterProductList({ setTotalPrice, totalPrice, setSelecte
   useEffect(() => {
     const loadData = async () => {
       try {
-        const stored = await AsyncStorage.getItem('hba1c');
-        const hba1c = stored ? JSON.parse(stored) : null;
+        const hba1c = await resolveUserHbA1c();
 
         const res = await fetch('https://muditam-app-backend-ca1c8b03db09.herokuapp.com/api/shopify/products');
         const data = await res.json();
 
-        let titlesToShow = [];
-        if (hba1c <= 6.0) {
-          titlesToShow = ['Karela Jamun Fizz'];
-        } else if (hba1c > 6.0 && hba1c <= 9.0) {
-          titlesToShow = ['Karela Jamun Fizz', 'Sugar Defend Pro'];
-        } else {
-          titlesToShow = ['Sugar Defend Pro', 'Vasant Kusmakar Ras'];
-        }
+        const titlesToShow = getKitProductTitlesForHbA1c(hba1c);
 
         const filtered = titlesToShow
           .map((title) => data.find((product) => product.title === title))
@@ -58,7 +53,7 @@ export default function AfterProductList({ setTotalPrice, totalPrice, setSelecte
       }
     };
     loadData();
-  }, []);
+  }, [setSelectedProducts, setTotalPrice]);
 
 
   const renderItem = ({ item }) => {

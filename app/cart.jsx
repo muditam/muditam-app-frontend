@@ -12,7 +12,7 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { FontAwesome6, Ionicons, MaterialIcons } from "@expo/vector-icons";
-import { useCart } from "../contexts/CartContext";
+import { MAX_CART_ITEM_QUANTITY, useCart } from "../contexts/CartContext";
 import { getContentWidth, getScreenPadding } from "../utils/responsive";
 
 
@@ -159,7 +159,10 @@ export default function Cart() {
             data={cartItems}
             keyExtractor={(item) => `cart-${item.id}`}
             contentContainerStyle={[styles.listContainer, { paddingHorizontal: screenPadding }]}
-            renderItem={({ item }) => (
+            scrollEnabled={false}
+            renderItem={({ item }) => {
+              const isMaxQuantityReached = item.quantity >= MAX_CART_ITEM_QUANTITY;
+              return (
               <View style={styles.card}>
                 <Image source={{ uri: item.image }} style={styles.image} />
                 <View style={styles.infoSection}>
@@ -179,7 +182,11 @@ export default function Cart() {
                     </Text>
                   </TouchableOpacity>
                   <Text style={styles.counterValue}>{item.quantity}</Text>
-                  <TouchableOpacity onPress={() => incrementItem(item.id)}>
+                  <TouchableOpacity
+                    onPress={() => incrementItem(item.id)}
+                    disabled={isMaxQuantityReached}
+                    style={isMaxQuantityReached ? { opacity: 0.4 } : null}
+                  >
                     <Text style={styles.counterButton}>
                       <FontAwesome6
                         name="add"
@@ -191,7 +198,8 @@ export default function Cart() {
                   </TouchableOpacity>
                 </View>
               </View>
-            )}
+              );
+            }}
           />
 
 
@@ -208,12 +216,14 @@ export default function Cart() {
               data={recommendedProducts}
               keyExtractor={(item) => `rec-${item.id}`}
               horizontal
+              nestedScrollEnabled
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={{ paddingHorizontal: screenPadding }}
 
 
               renderItem={({ item }) => {
                 const quantity = getItemQuantity(item.id);
+                const isMaxQuantityReached = quantity >= MAX_CART_ITEM_QUANTITY;
                 return (
                   <View style={[styles.productCard, { width: recommendedCardWidth }]}>
                     <TouchableOpacity onPress={() => handlePress(item)}>
@@ -239,7 +249,11 @@ export default function Cart() {
                           </Text>
                         </TouchableOpacity>
                         <Text style={styles.counterValue}>{quantity}</Text>
-                        <TouchableOpacity onPress={() => incrementItem(item.id)}>
+                        <TouchableOpacity
+                          onPress={() => incrementItem(item.id)}
+                          disabled={isMaxQuantityReached}
+                          style={isMaxQuantityReached ? { opacity: 0.4 } : null}
+                        >
                           <Text style={styles.counterButton}>
                             <FontAwesome6
                               name="add"

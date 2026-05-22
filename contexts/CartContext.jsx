@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const CartContext = createContext();
+export const MAX_CART_ITEM_QUANTITY = 8;
 
 export const CartProvider = ({ children }) => {
   const [cartItems, setCartItems] = useState([]);
@@ -93,7 +94,10 @@ export const CartProvider = ({ children }) => {
       setCartItems((prev) =>
         prev.map((item) =>
           String(item.id) === String(product.id)
-            ? { ...item, quantity: item.quantity + 1 }
+            ? {
+                ...item,
+                quantity: Math.min(MAX_CART_ITEM_QUANTITY, item.quantity + 1),
+              }
             : item
         )
       );
@@ -107,7 +111,10 @@ export const CartProvider = ({ children }) => {
     setCartItems((prev) =>
       prev.map((item) =>
         String(item.id) === String(productId)
-          ? { ...item, quantity: item.quantity + 1 }
+          ? {
+              ...item,
+              quantity: Math.min(MAX_CART_ITEM_QUANTITY, item.quantity + 1),
+            }
           : item
       )
     );
@@ -134,6 +141,7 @@ export const CartProvider = ({ children }) => {
         incrementItem,
         decrementItem,
         setCartItems,
+        maxCartItemQuantity: MAX_CART_ITEM_QUANTITY,
       }}
     >
       {children}

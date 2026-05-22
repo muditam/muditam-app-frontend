@@ -1,13 +1,14 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
     View,
     Text,
     StyleSheet,
-    ScrollView,
+    FlatList,
     Image,
     TouchableOpacity,
     Pressable,
     Alert,
+    Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -143,13 +144,34 @@ export default function AfterQuizView() {
     const [quizCauses, setQuizCauses] = useState([]);
     const [sliderIndex, setSliderIndex] = useState(0);
     const [customerCount, setCustomerCount] = useState('23,235');
+    const sections = useMemo(
+        () => [
+            'impact',
+            'progress',
+            'products',
+            'result',
+            'chat',
+            'plans',
+            'steps',
+            'retake',
+            'hero',
+            'journeys',
+            'features',
+            'experts',
+            'help',
+            'ratings',
+            'reviews',
+            'footer',
+        ],
+        []
+    );
 
-    const causeDescriptions = {
+    const causeDescriptions = useMemo(() => ({
         Heart: 'If you’ve left something or want to update a response on the diabetes test, simply re-take it.',
         Kidney: 'Kidney issues are common with high sugar. You can re-take the test to update your inputs.',
         Nerve: 'Nerve damage due to sugar is serious. Re-take the quiz to adjust your answers anytime.',
         Foot: 'Foot complications may arise from diabetes. Update your test if something was missed.',
-    };
+    }), []);
 
     
     useEffect(() => {
@@ -196,10 +218,9 @@ export default function AfterQuizView() {
         }
     }
 
-    return (
-        <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
-            <ScrollView contentContainerStyle={styles.container}>
-                {/* Report Card */}
+    const renderHeader = useCallback(
+        () => (
+            <>
                 <View style={styles.reportCard}>
                     <View style={styles.profileRow}>
                         <Image
@@ -217,17 +238,16 @@ export default function AfterQuizView() {
                         </View>
                     </View>
 
-                    {/* Root Cause Card */}
                     <View style={styles.rootCard}>
                         <Text style={styles.reportHeading}>Your Diabetes Root Causes</Text>
                         <View style={[styles.rootCauses, showSlider && { justifyContent: 'flex-start' }]}>
-                            {displayedCauses.map((key, index) => {
+                            {displayedCauses.map((key) => {
                                 const cause = getCauseData(key);
-                                return ( 
+                                return (
                                     <View key={key} style={styles.causeItem}>
                                         <Image source={{ uri: cause.image }} style={styles.causeIcon} />
                                         <Text style={styles.causeLabel}>{cause.label}</Text>
-                                    </View> 
+                                    </View>
                                 );
                             })}
                         </View>
@@ -250,93 +270,126 @@ export default function AfterQuizView() {
                     </View>
                 </View>
 
- 
                 <View style={styles.hba1cContainer}>
                     <Text style={styles.hba1cText}>93% Noticed Progress</Text>
 
                     <View style={styles.hba1cBarBg}>
-                        <View style={styles.hba1cBarFill}>
-
-                        </View>
+                        <View style={styles.hba1cBarFill} />
                     </View>
                 </View>
 
-                {/* Note */}
                 <Text style={styles.noteText}>
                     *Based on {customerCount} customers of Muditam Ayurveda that match this profile.
                 </Text>
+            </>
+        ),
+        [customerCount, displayedCauses, gender, name, quizCauses.length, showSlider]
+    );
 
-                <View style={styles.impactSection}>
-                    <Text style={styles.impactTitle}>Impact of High Sugar</Text>
-                    <View style={styles.impactIcons}>
-                        {[
-                            {
-                                label: 'Heart',
-                                icon: 'https://cdn.shopify.com/s/files/1/0734/7155/7942/files/Heart_411a6ee7-8dc7-47a7-b1f3-f7d12f5ca883.png?v=1747394357',
-                            },
-                            {
-                                label: 'Kidney',
-                                icon: 'https://cdn.shopify.com/s/files/1/0734/7155/7942/files/Kidneys_cbeb8c7a-6d2c-46db-bb0c-2f6a8ad9d419.png?v=1747394357',
-                            },
-                            {
-                                label: 'Nerve',
-                                icon: 'https://cdn.shopify.com/s/files/1/0734/7155/7942/files/Nerve_d10bc9ad-9857-4fea-b984-8192738ce6fc.png?v=1747394357',
-                            },
-                            {
-                                label: 'Foot',
-                                icon: 'https://cdn.shopify.com/s/files/1/0734/7155/7942/files/Foot_41be811d-646b-4908-a3e5-8a756ef8d134.png?v=1747394357',
-                            },
-                        ].map((item, index) => {
-                            const isSelected = selectedCause === item.label; 
+    const renderSection = useCallback(({ item }) => {
+        switch (item) {
+            case 'impact':
+                return (
+                    <View style={styles.impactSection}>
+                        <Text style={styles.impactTitle}>Impact of High Sugar</Text>
+                        <View style={styles.impactIcons}>
+                            {[
+                                {
+                                    label: 'Heart',
+                                    icon: 'https://cdn.shopify.com/s/files/1/0734/7155/7942/files/Heart_411a6ee7-8dc7-47a7-b1f3-f7d12f5ca883.png?v=1747394357',
+                                },
+                                {
+                                    label: 'Kidney',
+                                    icon: 'https://cdn.shopify.com/s/files/1/0734/7155/7942/files/Kidneys_cbeb8c7a-6d2c-46db-bb0c-2f6a8ad9d419.png?v=1747394357',
+                                },
+                                {
+                                    label: 'Nerve',
+                                    icon: 'https://cdn.shopify.com/s/files/1/0734/7155/7942/files/Nerve_d10bc9ad-9857-4fea-b984-8192738ce6fc.png?v=1747394357',
+                                },
+                                {
+                                    label: 'Foot',
+                                    icon: 'https://cdn.shopify.com/s/files/1/0734/7155/7942/files/Foot_41be811d-646b-4908-a3e5-8a756ef8d134.png?v=1747394357',
+                                },
+                            ].map((impactItem, index) => {
+                                const isSelected = selectedCause === impactItem.label;
 
-                            return (
-                                <Pressable
-                                    key={index}
-                                    style={styles.circleBoxWrapper}
-                                    onPress={() => setSelectedCause(item.label)}
-                                >
-                                    <View style={[styles.circle, isSelected && styles.circleActive]}>
-                                        <Image source={{ uri: item.icon }} style={styles.iconInsideCircle} />
-                                    </View>
-                                    <Text
-                                        style={[
-                                            styles.causeLabel,
-                                            isSelected && styles.causeLabelActive,
-                                        ]}
+                                return (
+                                    <Pressable
+                                        key={index}
+                                        style={styles.circleBoxWrapper}
+                                        onPress={() => setSelectedCause(impactItem.label)}
                                     >
-                                        {item.label}
-                                    </Text>
-                                </Pressable>
-                            );
-                        })}
+                                        <View style={[styles.circle, isSelected && styles.circleActive]}>
+                                            <Image source={{ uri: impactItem.icon }} style={styles.iconInsideCircle} />
+                                        </View>
+                                        <Text
+                                            style={[
+                                                styles.causeLabel,
+                                                isSelected && styles.causeLabelActive,
+                                            ]}
+                                        >
+                                            {impactItem.label}
+                                        </Text>
+                                    </Pressable>
+                                );
+                            })}
+                        </View>
+
+                        <View style={styles.dynamicBox}>
+                            <Text style={styles.dynamicText}>
+                                {causeDescriptions[selectedCause]}
+                            </Text>
+                        </View>
                     </View>
+                );
+            case 'progress':
+                return <HbA1cProgressView />;
+            case 'products':
+                return <AfterProductList setTotalPrice={setTotalPrice} totalPrice={totalPrice} setSelectedProducts={setSelectedProducts} />;
+            case 'result':
+                return <Result />;
+            case 'chat':
+                return <ChatWithUsSection />;
+            case 'plans':
+                return <PlansInclude />;
+            case 'steps':
+                return <StepsSection />;
+            case 'retake':
+                return <RetakeQuizBox />;
+            case 'hero':
+                return <HeroVideoList />;
+            case 'journeys':
+                return <RealJourneysSlider />;
+            case 'features':
+                return <FeaturesComparison />;
+            case 'experts':
+                return <ExpertsPanelCard />;
+            case 'help':
+                return <NeedHelpSection />;
+            case 'ratings':
+                return <ReviewsRatings />;
+            case 'reviews':
+                return <ReviewsSection />;
+            case 'footer':
+                return <FooterImageSection />;
+            default:
+                return null;
+        }
+    }, [causeDescriptions, selectedCause, totalPrice]);
 
-
-
-                    <View style={styles.dynamicBox}>
-                        <Text style={styles.dynamicText}>
-                            {causeDescriptions[selectedCause]}
-                        </Text>
-                    </View>
-                </View>
-
-                <HbA1cProgressView />
-                <AfterProductList setTotalPrice={setTotalPrice} totalPrice={totalPrice} setSelectedProducts={setSelectedProducts} />
-                <Result />
-                <ChatWithUsSection />
-                <PlansInclude />
-                <StepsSection />
-                <RetakeQuizBox />
-                <HeroVideoList />
-                <RealJourneysSlider />
-                <FeaturesComparison />
-                <ExpertsPanelCard />
-                <NeedHelpSection />
-                <ReviewsRatings />
-                <ReviewsSection />
-
-                <FooterImageSection />
-            </ScrollView>
+    return (
+        <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
+            <FlatList
+                data={sections}
+                keyExtractor={(item) => item}
+                renderItem={renderSection}
+                ListHeaderComponent={renderHeader}
+                contentContainerStyle={styles.container}
+                removeClippedSubviews={Platform.OS === 'android'}
+                initialNumToRender={4}
+                maxToRenderPerBatch={4}
+                windowSize={6}
+            />
 
 
             {/* Price & CTA floating at bottom */}

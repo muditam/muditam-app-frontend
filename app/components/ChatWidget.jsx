@@ -23,7 +23,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-const API_BASE = process.env.EXPO_PUBLIC_API_BASE_URL || 'http://192.168.1.48:3001';
+const API_BASE =
+  process.env.EXPO_PUBLIC_API_BASE_URL || 'https://muditam-app-backend-ca1c8b03db09.herokuapp.com';
 const WS_BASE = (process.env.EXPO_PUBLIC_WS_BASE_URL || API_BASE.replace(/^http/, 'ws')).replace(/\/$/, '');
 const HUMAN_CALL_REQUEST_URL = `${API_BASE}/api/voice/request-human-call`;
 const MAX_ATTACHMENT_BYTES = 1.5 * 1024 * 1024;

@@ -4,14 +4,15 @@ export const checkPurchaseStatus = async () => {
   try {
     const userData = await AsyncStorage.getItem('userDetails');
     const phone = JSON.parse(userData || '{}')?.phone;
+    const cachedPurchased = await AsyncStorage.getItem('hasPurchased');
 
-    if (!phone) return false;
+    if (!phone) return cachedPurchased === 'true';
 
     const response = await fetch(`https://muditam-app-backend-ca1c8b03db09.herokuapp.com/api/user/purchase-status/${phone}`);
 
     if (!response.ok) {
       console.warn(`Server responded with status: ${response.status}`);
-      return false;
+      return cachedPurchased === 'true';
     }
 
     const data = await response.json();
@@ -24,6 +25,7 @@ export const checkPurchaseStatus = async () => {
     return hasPurchased;
   } catch (err) {
     console.error('Error checking purchase status:', err);
-    return false;
+    const cachedPurchased = await AsyncStorage.getItem('hasPurchased');
+    return cachedPurchased === 'true';
   }
 };

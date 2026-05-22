@@ -14,6 +14,14 @@ import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Ionicons, Feather } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  API_BASE,
+  fetchHealthProfile,
+  fetchPlansByLead,
+  formatGoalLabel,
+  getDietIdentity,
+  getLatestActivePlan,
+} from "../utils/diet";
 
 export default function MyProfile() {
   const router = useRouter();
@@ -21,6 +29,9 @@ export default function MyProfile() {
   const [selectedTab, setSelectedTab] = useState("diabetes");
   const [quiz, setQuiz] = useState(null); 
   const [quizLoading, setQuizLoading] = useState(false);
+  const [dietProfile, setDietProfile] = useState(null);
+  const [dietLoading, setDietLoading] = useState(false);
+  const [dietButtonLoading, setDietButtonLoading] = useState(false);
 
 
   useEffect(() => {
@@ -34,6 +45,7 @@ export default function MyProfile() {
           if (userObj?.phone) {
             fetchQuiz(userObj.phone);
           }
+          fetchDietProfile();
         }
       } catch (e) {
         console.error("Failed to load user details", e);
@@ -45,18 +57,63 @@ export default function MyProfile() {
   const fetchQuiz = async (phone) => {
     setQuizLoading(true);
     try {
-      // Replace with your API base URL
-      const res = await fetch(`http://192.168.1.48:3001/api/quiz/${phone}`);
+      const res = await fetch(`${API_BASE}/api/quiz/${phone}`);
       if (res.ok) {
         const data = await res.json();
         setQuiz(data);
       } else {
         setQuiz(null); // quiz not found
       }
-    } catch (e) {
+    } catch (_e) {
       setQuiz(null);
     }
     setQuizLoading(false);
+  };
+
+  const fetchDietProfile = async () => {
+    setDietLoading(true);
+    try {
+      const identity = await getDietIdentity();
+      const profile = await fetchHealthProfile(identity.leadId);
+      setDietProfile(profile);
+    } catch (error) {
+      console.error("Failed to load diet profile", error);
+      setDietProfile(null);
+    } finally {
+      setDietLoading(false);
+    }
+  };
+
+  const handleOpenDietPlanner = async () => {
+    if (dietButtonLoading) return;
+
+    try {
+      setDietButtonLoading(true);
+
+      if (!dietProfile) {
+        router.push("/diet/onboarding");
+        return;
+      }
+
+      const identity = await getDietIdentity();
+      const plans = await fetchPlansByLead(identity.leadId);
+      const activePlan = getLatestActivePlan(plans);
+
+      if (activePlan?._id) {
+        router.push({
+          pathname: "/diet/plan",
+          params: { planId: activePlan._id },
+        });
+        return;
+      }
+
+      router.push("/diet/pending");
+    } catch (error) {
+      console.error("Failed to open diet planner", error);
+      Alert.alert("Error", "Unable to open your diet plan right now.");
+    } finally {
+      setDietButtonLoading(false);
+    }
   };
 
   const handleDeleteAccount = () => {
@@ -71,9 +128,9 @@ export default function MyProfile() {
         {
           text: "Delete",
           style: "destructive",
-          onPress: async () => {
+            onPress: async () => {
             try {
-              const res = await fetch(`http://192.168.1.48:3001/api/user/delete`, {
+              const res = await fetch(`${API_BASE}/api/user/delete`, {
                 method: "POST",
                 headers: {
                   "Content-Type": "application/json"
@@ -87,7 +144,7 @@ export default function MyProfile() {
               } else {
                 alert("Failed to delete account");
               }
-            } catch (error) {
+            } catch (_error) {
               alert("An error occurred while deleting the account");
             }
           }
@@ -231,6 +288,12 @@ export default function MyProfile() {
                         ? `Diabetes Duration: ${quiz.answers[2]} years`
                         : "Diabetes Duration: Not Available"}
                     </Text>
+                    <Text style={styles.diagnosisText}>
+                      {quiz.height ? `Height: ${quiz.height} cm` : "Height: Not Available"}
+                    </Text>
+                    <Text style={styles.diagnosisText}>
+                      {quiz.weight ? `Weight: ${quiz.weight} kg` : "Weight: Not Available"}
+                    </Text>
                   </View>
                 </View>
               ) : (
@@ -261,14 +324,43 @@ export default function MyProfile() {
               </View>
             </View>
             <View style={styles.diagnosisCard}>
-              <Text style={styles.diagnosisText}>
-                Connect with your Health Expert
-              </Text>
+              {dietLoading ? (
+                <ActivityIndicator style={{ marginVertical: 20 }} />
+              ) : dietProfile ? (
+                <>
+                  <Text style={styles.diagnosisText}>
+                    {dietProfile.goal
+                      ? `Goal: ${formatGoalLabel(dietProfile.goal)}`
+                      : "Goal: Not Available"}
+                  </Text>
+                  <Text style={styles.diagnosisText}>
+                    {dietProfile.dietType
+                      ? `Diet Type: ${dietProfile.dietType}`
+                      : "Diet Type: Not Available"}
+                  </Text>
+                  <Text style={styles.diagnosisText}>
+                    {dietProfile.mealsPerDay
+                      ? `Meals Per Day: ${dietProfile.mealsPerDay}`
+                      : "Meals Per Day: Not Available"}
+                  </Text>
+                </>
+              ) : (
+                <Text style={styles.diagnosisText}>
+                  Complete your diet onboarding to unlock your smart diet planner.
+                </Text>
+              )}
               <TouchableOpacity
                 style={styles.dietProfileButton}
-                onPress={() => router.push("/connect-expert")}
+                onPress={handleOpenDietPlanner}
+                disabled={dietButtonLoading}
               >
-                <Text style={styles.dietProfileButtonText}>Connect Now</Text>
+                <Text style={styles.dietProfileButtonText}>
+                  {dietButtonLoading
+                    ? "Loading..."
+                    : dietProfile
+                      ? "See Diet Plan"
+                      : "Start Diet Onboarding"}
+                </Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -445,5 +537,3 @@ const styles = StyleSheet.create({
     textDecorationLine: "underline",
   },
 });
-
-

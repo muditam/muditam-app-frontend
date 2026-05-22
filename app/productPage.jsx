@@ -15,7 +15,7 @@ import {
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { FontAwesome, Feather, Ionicons } from "@expo/vector-icons";
 import { Animated } from "react-native";
-import { useCart } from "../contexts/CartContext";
+import { MAX_CART_ITEM_QUANTITY, useCart } from "../contexts/CartContext";
 import { useSafeAreaInsets } from "react-native-safe-area-context"; 
 
 
@@ -240,6 +240,7 @@ export default function ProductPage() {
 
   const quantity =
     cartItems.find((item) => item.id === selectedVariantId)?.quantity || 0;
+  const isMaxQuantityReached = quantity >= MAX_CART_ITEM_QUANTITY;
 
 
   const { title, description, images, variants } = productData;
@@ -613,8 +614,17 @@ export default function ProductPage() {
                       price: parseFloat(selectedVariant.price),
                     })
                   }
+                  disabled={isMaxQuantityReached}
                 >
-                  <Text style={{ fontSize: 18, color: "white" }}>+</Text>
+                  <Text
+                    style={{
+                      fontSize: 18,
+                      color: "white",
+                      opacity: isMaxQuantityReached ? 0.4 : 1,
+                    }}
+                  >
+                    +
+                  </Text>
                 </TouchableOpacity>
               </View>
             ) : (

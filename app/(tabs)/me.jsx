@@ -11,11 +11,22 @@ import {
   Linking,
   Platform,
   useColorScheme,
+  Alert,
 } from "react-native";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Ionicons, FontAwesome5, Entypo } from "@expo/vector-icons";
 import DateTimePicker from "@react-native-community/datetimepicker";
+import {
+  fetchHealthProfile,
+  fetchPlansByLead,
+  getDietIdentity,
+  getLatestActivePlan,
+} from "../../utils/diet";
+import {
+  getKitProductTitlesForHbA1c,
+  resolveUserHbA1c,
+} from "../../utils/kitRecommendations";
 
 export default function MeScreen() {
   const theme = useColorScheme();
@@ -26,12 +37,14 @@ export default function MeScreen() {
   const [showReminderSheet, setShowReminderSheet] = useState(false);
   const [reminderAllEnabled, setReminderAllEnabled] = useState(true);
   const [showConfirmOffModal, setShowConfirmOffModal] = useState(false);
+  const [isLaunchingCheckout, setIsLaunchingCheckout] = useState(false);
 
   const [reminderType, setReminderType] = useState("water");
   const [reminders, setReminders] = useState([]); // [{id, type, time, enabled}]
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [newTime, setNewTime] = useState("08:00");
   const [editingReminderId, setEditingReminderId] = useState(null);
+  const [isOpeningDiet, setIsOpeningDiet] = useState(false);
 
   const getStorageKey = (userId) => `reminders_${userId}`;
 
@@ -135,6 +148,123 @@ export default function MeScreen() {
     router.push("/book-test");
   };
 
+  const handleOpenDiet = async () => {
+    if (isOpeningDiet) return;
+
+    try {
+      setIsOpeningDiet(true);
+
+      const identity = await getDietIdentity();
+      const profile = await fetchHealthProfile(identity.leadId);
+
+      if (!profile) {
+        router.push("/diet/onboarding");
+        return;
+      }
+
+      const plans = await fetchPlansByLead(identity.leadId);
+      const activePlan = getLatestActivePlan(plans);
+
+      if (activePlan?._id) {
+        router.push({
+          pathname: "/diet/plan",
+          params: { planId: activePlan._id },
+        });
+        return;
+      }
+
+      router.push("/diet/pending");
+    } catch (error) {
+      console.error("Failed to open diet from Me page:", error);
+      Alert.alert("Error", "Unable to open your diet plan right now.");
+    } finally {
+      setIsOpeningDiet(false);
+    }
+  };
+
+  const handleBuyNow = async () => {
+    if (isLaunchingCheckout) return;
+
+    try {
+      setIsLaunchingCheckout(true);
+
+      const hba1c = await resolveUserHbA1c();
+
+      const response = await fetch(
+        "https://muditam-app-backend-ca1c8b03db09.herokuapp.com/api/shopify/products"
+      );
+      const allProducts = await response.json();
+
+      const titlesToShow = getKitProductTitlesForHbA1c(hba1c);
+
+      const selectedProducts = titlesToShow
+        .map((title) => allProducts.find((product) => product.title === title))
+        .filter(Boolean)
+        .map((product) => ({
+          ...product,
+          quantity: 1,
+          first_variant_id:
+            product.first_variant_id || product.variants?.[0]?.id,
+        }));
+
+      const validItems = selectedProducts.filter(
+        (item) => item.first_variant_id && item.quantity > 0
+      );
+
+      if (validItems.length === 0) {
+        Alert.alert(
+          "No products available",
+          "Unable to load your 1st Month Kit right now. Please try again."
+        );
+        return;
+      }
+
+      const cartResponse = await fetch(
+        "https://muditam-app-backend-ca1c8b03db09.herokuapp.com/api/shopify/create-cart",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ items: validItems }),
+        }
+      );
+
+      const cartData = await cartResponse.json();
+
+      if (!cartResponse.ok || !cartData.cartId) {
+        Alert.alert("Checkout Failed", "Unable to create cart. Try again.");
+        return;
+      }
+
+      const cartToken = cartData.cartId.split("/").pop();
+      const totalPrice = validItems.reduce(
+        (sum, item) => sum + parseFloat(item.price || 0) * (item.quantity || 1),
+        0
+      );
+      const productsString = JSON.stringify(
+        validItems.map((item) => ({
+          id: item.id,
+          title: item.title,
+          image: item.image?.uri || item.image,
+          description: item.description,
+        }))
+      );
+
+      router.push({
+        pathname: "/GoKwikCheckout",
+        params: {
+          cartId: cartToken,
+          total: totalPrice,
+          products: productsString,
+        },
+      });
+    } catch (error) {
+      console.error("Error launching Me page checkout:", error);
+      Alert.alert("Error", "Something went wrong. Please try again.");
+    } finally {
+      setIsLaunchingCheckout(false);
+    }
+  };
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView style={styles.container}>
@@ -157,14 +287,16 @@ export default function MeScreen() {
             <Text style={styles.buyKitHeaderText}>Once you buy your kit</Text>
           </View>
           <Text style={styles.buyKitDescription}>
-            Muditam Exerts will approve your plan and build a detailed
+            Muditam Experts will approve your plan and build a detailed
             prescription.
           </Text>
           <TouchableOpacity
             style={styles.buyNowButton}
-            onPress={() => console.log("Buy Now clicked")}
+            onPress={handleBuyNow}
           >
-            <Text style={styles.buyNowText}>Buy Now</Text>
+            <Text style={styles.buyNowText}>
+              {isLaunchingCheckout ? "Loading..." : "Buy Now"}
+            </Text>
           </TouchableOpacity>
         </View>
 
@@ -220,6 +352,24 @@ export default function MeScreen() {
             <Text style={styles.buttonText}>Book Test</Text>
           </TouchableOpacity>
         </View>
+
+        <TouchableOpacity style={styles.dietCard} onPress={handleOpenDiet}>
+          <View style={styles.dietCardAccent} />
+          <View style={styles.dietCardTextWrap}>
+            <Text style={styles.dietCardEyebrow}>Wellness</Text>
+            <Text style={styles.dietCardTitle}>Diet</Text>
+            <Text style={styles.dietCardSubtitle}>
+              Complete your profile, review your weekly meals, and track your smart plan.
+            </Text>
+          </View>
+          <View style={styles.dietChevronWrap}>
+            {isOpeningDiet ? (
+              <Text style={styles.dietChevronLoading}>...</Text>
+            ) : (
+              <Entypo name="chevron-right" size={20} color="#153c31" />
+            )}
+          </View>
+        </TouchableOpacity>
 
         {[
           { title: "All Products", route: "/products" },
@@ -837,7 +987,7 @@ const styles = StyleSheet.create({
   buttonsRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 24,
+    marginBottom: 22,
     marginTop: -8,
   },
   buttonItem: {
@@ -863,6 +1013,69 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: "#222",
     textAlign: "center",
+  },
+  dietCard: {
+    marginBottom: 16,
+    marginTop: -2,
+    backgroundColor: "#EAF5F1",
+    borderWidth: 1,
+    borderColor: "#CFE6DE",
+    borderRadius: 22,
+    paddingHorizontal: 18,
+    paddingVertical: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12,
+    overflow: "hidden",
+  },
+  dietCardAccent: {
+    position: "absolute",
+    right: -28,
+    top: -18,
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    backgroundColor: "rgba(151, 196, 182, 0.22)",
+  },
+  dietCardTextWrap: {
+    flex: 1,
+  },
+  dietCardEyebrow: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: "#5F8076",
+    letterSpacing: 0.4,
+    textTransform: "uppercase",
+    marginBottom: 4,
+  },
+  dietCardTitle: {
+    fontSize: 17,
+    fontWeight: "700",
+    color: "#153c31",
+  },
+  dietCardSubtitle: {
+    marginTop: 4,
+    color: "#536A63",
+    lineHeight: 21,
+    fontSize: 14,
+  },
+  dietChevronWrap: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: "rgba(255,255,255,0.72)",
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: "#D7EAE3",
+  },
+  dietChevronLoading: {
+    color: "#153c31",
+    fontSize: 18,
+    fontWeight: "700",
+    lineHeight: 18,
+    marginTop: -6,
   },
   linkRow: {
     flexDirection: "row",

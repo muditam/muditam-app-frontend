@@ -148,9 +148,7 @@ export default function Layout() {
       >
         <Tabs.Screen
           name="home"
-          options={{
-            redirect: () => (hasPurchased ? '/AfterPurchase' : undefined),
-          }}
+          options={{}}
         />
         <Tabs.Screen
           name="buykit"

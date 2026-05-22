@@ -13,7 +13,7 @@ import {
   Platform,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { useCart } from "../../contexts/CartContext";
+import { MAX_CART_ITEM_QUANTITY, useCart } from "../../contexts/CartContext";
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { Ionicons } from "@expo/vector-icons";
@@ -253,6 +253,7 @@ export default function Products() {
       >
         {filteredProducts.map((item) => {
           const quantity = getItemQuantity(item.id);
+          const isMaxQuantityReached = quantity >= MAX_CART_ITEM_QUANTITY;
           return (
             <View
               key={item.id}
@@ -285,7 +286,11 @@ export default function Products() {
                     </Text>
                   </TouchableOpacity>
                   <Text style={styles.counterValue}>{quantity}</Text>
-                  <TouchableOpacity onPress={() => handleIncrement(item)}>
+                  <TouchableOpacity
+                    onPress={() => handleIncrement(item)}
+                    disabled={isMaxQuantityReached}
+                    style={isMaxQuantityReached ? { opacity: 0.4 } : null}
+                  >
                     <Text style={styles.counterButton}>
                       <FontAwesome6
                         name="add"

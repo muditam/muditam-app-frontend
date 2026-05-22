@@ -13,15 +13,27 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { WebView } from 'react-native-webview';
 import { encode as b64Encode } from 'base-64';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { checkPurchaseStatus } from '../utils/checkPurchaseStatus';
 
 export default function GoKwikCheckout() {
-  const { cartId, total, products: productsString } = useLocalSearchParams();
+  const { cartId, products: productsString } = useLocalSearchParams();
   const router = useRouter();
   const webViewRef = useRef();
+  const purchaseCompletionRef = useRef(false);
+  const purchaseSyncRef = useRef(false);
   const [isCartValid, setIsCartValid] = useState(true);
   const [webViewUrl, setWebViewUrl] = useState(null);
 
-  const products = productsString ? JSON.parse(productsString) : [];
+  const products = useRef([]);
+
+  useEffect(() => {
+    try {
+      products.current = productsString ? JSON.parse(productsString) : [];
+    } catch (error) {
+      console.error('Failed to parse checkout products:', error);
+      products.current = [];
+    }
+  }, [productsString]);
 
   useEffect(() => {
     if (!cartId || cartId === 'undefined') {
@@ -61,10 +73,10 @@ export default function GoKwikCheckout() {
           window.ReactNativeWebView.postMessage(JSON.stringify({ event: 'orderSuccess', data }));
         });
         gokwikSdk.on('modal_closed', function(data) {
-          console.log('Modal closed', data);
+          window.ReactNativeWebView.postMessage(JSON.stringify({ event: 'modal_closed', data }));
         });
         gokwikSdk.on('openInBrowserTab', function(data) {
-          console.log('Open in browser tab', data);
+          window.ReactNativeWebView.postMessage(JSON.stringify({ event: 'openInBrowserTab', data }));
         });
       }
     })();
@@ -72,12 +84,74 @@ export default function GoKwikCheckout() {
   `;
 
   const handleBackPress = useCallback(() => {
+    if (purchaseCompletionRef.current) {
+      router.replace('/home');
+      return true;
+    }
+
     Alert.alert('Exit Checkout?', 'Are you sure you want to leave the payment screen?', [
       { text: 'Cancel', style: 'cancel' },
       { text: 'Exit', style: 'destructive', onPress: () => router.back() },
     ]);
     return true;
   }, [router]);
+
+  const syncPurchaseState = useCallback(async () => {
+    if (purchaseSyncRef.current) return true;
+
+    purchaseSyncRef.current = true;
+    try {
+      const userDetails = await AsyncStorage.getItem('userDetails');
+      const phone = JSON.parse(userDetails || '{}')?.phone;
+      const purchasedProductIds = (products.current || [])
+        .map((item) => item?.id)
+        .filter(Boolean);
+
+      await AsyncStorage.setItem('hasPurchased', 'true');
+      purchaseCompletionRef.current = true;
+
+      if (phone) {
+        await fetch('https://muditam-app-backend-ca1c8b03db09.herokuapp.com/api/user/mark-purchased', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            phone,
+            purchasedProductIds,
+          }),
+        });
+
+        const progressRes = await fetch(`https://muditam-app-backend-ca1c8b03db09.herokuapp.com/api/user/kit-progress/${phone}`);
+        const progressData = await progressRes.json();
+        const currentKit = progressData?.currentKit || 1;
+        const nextKit = currentKit + 1;
+        const newKitNumber = nextKit > 5 ? 5 : nextKit;
+
+        await fetch('https://muditam-app-backend-ca1c8b03db09.herokuapp.com/api/user/kit-progress/update', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phone, newKitNumber }),
+        });
+      } else {
+        console.warn('Phone number not found, purchase synced locally only.');
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Error syncing purchase state:', error);
+      return false;
+    } finally {
+      purchaseSyncRef.current = false;
+    }
+  }, []);
+
+  const completePurchaseFlow = useCallback(async () => {
+    const synced = await syncPurchaseState();
+    if (!synced) {
+      Alert.alert('Purchase Recorded', 'Your order was placed, but app sync is still catching up. Please reopen Home.');
+    }
+
+    router.replace('/home');
+  }, [router, syncPurchaseState]);
 
   useEffect(() => {
     const backHandlerListener = BackHandler.addEventListener('hardwareBackPress', handleBackPress);
@@ -96,45 +170,20 @@ export default function GoKwikCheckout() {
       const { event: evt, data } = JSON.parse(event.nativeEvent.data);
       if (evt === 'orderSuccess') {
         console.log('✅ Order success detected:', data);
+        await completePurchaseFlow();
+      }
 
-        const userDetails = await AsyncStorage.getItem('userDetails');
-        const phone = JSON.parse(userDetails || '{}')?.phone;
-        const purchasedProductIds = products.map((item) => item.id);
-
-
-        if (phone && purchasedProductIds.length > 0) {
-          await AsyncStorage.setItem('hasPurchased', 'true');
-
-          // ✅ 1. Mark as purchased
-          await fetch('https://muditam-app-backend-ca1c8b03db09.herokuapp.com/api/user/mark-purchased', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' }, 
-            body: JSON.stringify({
-              phone,
-              purchasedProductIds,
-            }),
-          });
-
-          // ✅ 2. Get current kit progress
-          const progressRes = await fetch(`https://muditam-app-backend-ca1c8b03db09.herokuapp.com/api/user/kit-progress/${phone}`);
-          const progressData = await progressRes.json();
-          const currentKit = progressData?.currentKit || 1;
-          const nextKit = currentKit + 1;
-          const newKitNumber = nextKit > 5 ? 5 : nextKit; // cap at 5
-
-          // ✅ 3. Update to new kit number
-          await fetch('https://muditam-app-backend-ca1c8b03db09.herokuapp.com/api/user/kit-progress/update', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ phone, newKitNumber }),
-          });
-
-          Alert.alert('Purchase Successful', 'Thank you for your order!');
+      if (evt === 'modal_closed') {
+        const purchased = purchaseCompletionRef.current || (await checkPurchaseStatus());
+        if (purchased) {
+          router.replace('/home');
         } else {
-          console.warn('Phone number not found, not syncing purchase to backend.');
+          router.back();
         }
+      }
 
-        router.replace('/home');
+      if (evt === 'openInBrowserTab') {
+        console.log('GoKwik requested browser tab open:', data);
       }
     } catch (error) {
       console.error('Error handling message from WebView:', error);
@@ -187,6 +236,11 @@ export default function GoKwikCheckout() {
             <ActivityIndicator size="large" color="#9D57FF" />
           </View>
         )}
+        onNavigationStateChange={(navState) => {
+          if (purchaseCompletionRef.current && navState?.url === 'about:blank') {
+            router.replace('/home');
+          }
+        }}
         onLoadStart={() => console.log('🌐 WebView loading started')}
         onLoadEnd={() => console.log('✅ WebView loaded')}
         onError={(e) => console.error('❌ WebView error:', e.nativeEvent)}

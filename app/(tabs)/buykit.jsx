@@ -17,6 +17,10 @@ import { Feather } from "@expo/vector-icons";
 import FAQ from "../components/FAQ";
 import RealJourneysSlider from "../components/RealJourneysSlider";
 import { getContentWidth, getScreenPadding } from "../../utils/responsive";
+import {
+  getKitProductTitlesForHbA1c,
+  resolveUserHbA1c,
+} from "../../utils/kitRecommendations";
 
 
 
@@ -122,8 +126,7 @@ export default function BuyKit() {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const stored = await AsyncStorage.getItem("hba1c");
-        const hba1c = stored ? JSON.parse(stored) : null;
+        const hba1c = await resolveUserHbA1c();
 
 
         const res = await fetch(
@@ -132,14 +135,7 @@ export default function BuyKit() {
         const data = await res.json();
 
 
-        let titlesToShow = [];
-        if (hba1c !== null && hba1c <= 6.0) {
-          titlesToShow = ["Karela Jamun Fizz"];
-        } else if (hba1c > 6.0 && hba1c <= 9.0) {
-          titlesToShow = ["Karela Jamun Fizz", "Sugar Defend Pro"];
-        } else {
-          titlesToShow = ["Sugar Defend Pro", "Vasant Kusmakar Ras"];
-        }
+        const titlesToShow = getKitProductTitlesForHbA1c(hba1c);
 
 
         const filtered = data.filter((p) => titlesToShow.includes(p.title));

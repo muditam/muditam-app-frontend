@@ -18,7 +18,8 @@ import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { io } from "socket.io-client";
 
-const API_BASE = process.env.EXPO_PUBLIC_API_BASE_URL || "http://192.168.1.48:3001";
+const API_BASE =
+  process.env.EXPO_PUBLIC_API_BASE_URL || "https://muditam-app-backend-ca1c8b03db09.herokuapp.com";
 const SOCKET_BASE = (process.env.EXPO_PUBLIC_SOCKET_BASE_URL || API_BASE).replace(/\/$/, "");
 const END_HUMAN_CALL_URL = `${API_BASE}/api/voice/human-calls`;
 const EXPERT_IMAGE_URL = "https://cdn.shopify.com/s/files/1/0734/7155/7942/files/image_26_1.png?v=1777293009";
