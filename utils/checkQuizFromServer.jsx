@@ -1,9 +1,10 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { parseJsonSafely } from './safeJson';
 
 export const checkQuizStatus = async () => {
   try {
     const storedUser = await AsyncStorage.getItem('userDetails');
-    const phone = JSON.parse(storedUser || '{}')?.phone;
+    const phone = parseJsonSafely(storedUser, {})?.phone;
 
     if (!phone) return false;
 

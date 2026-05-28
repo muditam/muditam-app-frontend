@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { parseJsonSafely } from '../../utils/safeJson';
 
 export default function History() {
   const [purchaseHistory, setPurchaseHistory] = useState([]);
@@ -11,7 +12,8 @@ export default function History() {
       try {
         const userDetails = await AsyncStorage.getItem('userDetails');
         if (userDetails) {
-          const { phone } = JSON.parse(userDetails);
+          const { phone } = parseJsonSafely(userDetails, {});
+          if (!phone) return;
           const response = await fetch(`https://muditam-app-backend-ca1c8b03db09.herokuapp.com/api/shopify/customer-history/${phone}`);
 
           if (response.ok) {

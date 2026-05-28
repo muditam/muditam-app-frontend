@@ -95,4 +95,7 @@ export const bookingApi = {
       }),
     });
   },
+  async getBookings({ phone }) {
+    return requestJson(`/api/redcliffe/bookings?phone=${encodeURIComponent(String(phone || '').trim())}`);
+  },
 };

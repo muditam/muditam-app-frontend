@@ -22,6 +22,7 @@ import {
   getDietIdentity,
   getLatestActivePlan,
 } from "../utils/diet";
+import { parseJsonSafely } from "../utils/safeJson";
 
 export default function MyProfile() {
   const router = useRouter();
@@ -39,7 +40,8 @@ export default function MyProfile() {
       try {
         const stored = await AsyncStorage.getItem("userDetails");
         if (stored) {
-          const userObj = JSON.parse(stored);
+          const userObj = parseJsonSafely(stored, null);
+          if (!userObj) return;
           setUser(userObj);
           // Fetch quiz data
           if (userObj?.phone) {

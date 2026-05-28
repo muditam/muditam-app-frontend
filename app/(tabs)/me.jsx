@@ -27,6 +27,7 @@ import {
   getKitProductTitlesForHbA1c,
   resolveUserHbA1c,
 } from "../../utils/kitRecommendations";
+import { parseJsonSafely } from "../../utils/safeJson";
 
 export default function MeScreen() {
   const theme = useColorScheme();
@@ -81,7 +82,7 @@ export default function MeScreen() {
   const getRemindersFromStorage = useCallback(async (userId) => {
     try {
       const stored = await AsyncStorage.getItem(getStorageKey(userId));
-      return stored ? JSON.parse(stored) : [];
+      return parseJsonSafely(stored, []);
     } catch (e) {
       console.error("Failed to load reminders:", e);
       return [];
@@ -118,7 +119,8 @@ export default function MeScreen() {
         const stored = await AsyncStorage.getItem("userDetails");
         if (!stored) return;
 
-        const parsedUser = JSON.parse(stored);
+        const parsedUser = parseJsonSafely(stored, null);
+        if (!parsedUser) return;
         setUser(parsedUser);
 
         const localReminders = await getRemindersFromStorage(parsedUser._id);

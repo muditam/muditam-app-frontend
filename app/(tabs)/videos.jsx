@@ -11,12 +11,12 @@ import {
   useWindowDimensions,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { Video } from "expo-av";
 import Modal from "react-native-modal";
 import {
   useSafeAreaInsets,
   SafeAreaView,
 } from "react-native-safe-area-context";
+import { useVideoPlayer, VideoView } from "expo-video";
 
 
 // --- categorizedVideos data unchanged (paste yours here) ---
@@ -376,8 +376,17 @@ export default function Videos() {
   const ReelVideo = React.memo(({ video, isActive }) => {
     const [isPaused, setIsPaused] = useState(false);
     const [showControls, setShowControls] = useState(false);
-    const videoRef = useRef(null);
     const insets = useSafeAreaInsets();
+    const player = useVideoPlayer(
+      {
+        uri: video.url,
+        useCaching: true,
+      },
+      (videoPlayer) => {
+        videoPlayer.loop = true;
+        videoPlayer.pause();
+      }
+    );
 
 
     const togglePlayPause = () => {
@@ -388,12 +397,26 @@ export default function Videos() {
 
 
     useEffect(() => {
-      if (!isActive) {
-        setIsPaused(true);
-      } else {
-        setIsPaused(false);
-      }
-    }, [isActive]);
+      const nextPaused = !isActive;
+      setIsPaused(nextPaused);
+      try {
+        if (nextPaused) {
+          player.pause();
+        } else {
+          player.play();
+        }
+      } catch (_error) {}
+    }, [isActive, player]);
+
+    useEffect(() => {
+      try {
+        if (isPaused) {
+          player.pause();
+        } else if (isActive) {
+          player.play();
+        }
+      } catch (_error) {}
+    }, [isActive, isPaused, player]);
 
 
     return (
@@ -403,14 +426,13 @@ export default function Videos() {
           activeOpacity={1}
           onPress={togglePlayPause}
         >
-          <Video
-            ref={videoRef}
-            source={{ uri: video.url }}
-            resizeMode="contain"
+          <VideoView
+            player={player}
             style={styles.videoPlayer}
-            shouldPlay={isActive && !isPaused}
-            isLooping
-            paused={isPaused}
+            contentFit="contain"
+            nativeControls={false}
+            allowsFullscreen={false}
+            allowsPictureInPicture={false}
           />
         </TouchableOpacity>
 

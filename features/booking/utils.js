@@ -6,6 +6,16 @@ export function cleanMessage(error, fallback) {
   return error?.message || fallback;
 }
 
+export function normalizePhoneValue(value = '') {
+  const digits = String(value || '').replace(/\D/g, '');
+  if (digits.length <= 10) return digits;
+  return digits.slice(-10);
+}
+
+export function isValidPhoneValue(value = '') {
+  return /^\d{10}$/.test(normalizePhoneValue(value));
+}
+
 export function normalizeAddressValue(value = '') {
   return String(value || '')
     .split(',')
@@ -42,11 +52,11 @@ export function getPackageEffectivePrice(item) {
   return offerPrice || price || 0;
 }
 
-export function buildPricingSummary(selectedPackages, selectedLab, patientCount = 1) {
+export function buildPricingSummary(selectedPackages, patientCount = 1) {
   const multiplier = Math.max(1, Number(patientCount) || 1);
   const packageSubtotal = selectedPackages.reduce((sum, item) => sum + getPackageEffectivePrice(item), 0);
   const subtotal = packageSubtotal * multiplier;
-  const discount = selectedLab?.id === 'redcliffe' ? Math.round(subtotal * 0.06) : Math.round(subtotal * 0.03);
+  const discount = 0;
   const payable = Math.max(0, subtotal - discount);
   return {
     patientCount: multiplier,
@@ -94,6 +104,7 @@ export function createEmptyDraft() {
     },
     contactInfo: {
       phone: '',
+      altPhone: '',
       whatsappPhone: '',
       email: '',
       paymentMode: 'credit',
@@ -119,10 +130,10 @@ export function createBookingPayload({
       customerName: primaryPatient.name.trim(),
       customerAge: Number(primaryPatient.age),
       customerGender: primaryPatient.gender,
-      paymentMode: draft.contactInfo.paymentMode,
-      phone: draft.contactInfo.phone.trim(),
-      altPhone: draft.contactInfo.phone.trim(),
-      whatsappPhone: (draft.contactInfo.whatsappPhone || draft.contactInfo.phone).trim(),
+      paymentMode: 'credit',
+      phone: normalizePhoneValue(draft.contactInfo.phone),
+      altPhone: normalizePhoneValue(draft.contactInfo.altPhone || draft.contactInfo.phone),
+      whatsappPhone: normalizePhoneValue(draft.contactInfo.whatsappPhone || draft.contactInfo.phone),
       email: draft.contactInfo.email.trim(),
       packageCodes: draft.selectedPackages.map((item) => item.code),
       address: buildAddressLabel(selectedAddress),

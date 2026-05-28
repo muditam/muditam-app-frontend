@@ -38,3 +38,6 @@ yarn-error.*
 
 app-example
 
+fcm-service-account.json
+
+AuthKey_623ALXN3YG.p8 

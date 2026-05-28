@@ -10,6 +10,7 @@ import {
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { LinearGradient } from "expo-linear-gradient";
+import { parseJsonSafely } from "../../../utils/safeJson";
 
 
 export default function RetakeQuizBox() {
@@ -19,7 +20,7 @@ export default function RetakeQuizBox() {
   const handleRetakeQuiz = async () => {
     try {
       const userDetails = await AsyncStorage.getItem("userDetails");
-      const phone = JSON.parse(userDetails || "{}")?.phone;
+      const phone = parseJsonSafely(userDetails, {})?.phone;
 
 
       if (!phone) {
@@ -115,5 +116,4 @@ const styles = StyleSheet.create({
     paddingTop: 16,
   },
 });
-
 

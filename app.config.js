@@ -6,15 +6,19 @@ export default {
   expo: {
     name: 'Muditam Ayurveda',
     slug: 'muditam',
-    version: '1.0.0',
+    version: '1.0.3',
     orientation: 'portrait',
     icon: './assets/images/logo.png',
     scheme: 'muditam',
-    userInterfaceStyle: 'automatic',
+    userInterfaceStyle: 'light',
     newArchEnabled: true,
     android: {
       package: 'com.madhurmuditam.muditam',
       googleServicesFile: './google-services.json',
+      blockedPermissions: [
+        'android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK',
+        'android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION',
+      ],
       permissions: [
         'android.permission.RECORD_AUDIO',
         'android.permission.MODIFY_AUDIO_SETTINGS',
@@ -27,21 +31,18 @@ export default {
         foregroundImage: './assets/images/adaptive-icon.png',
         backgroundColor: '#ffffff',
       },
-      config: {
-        usesCleartextTraffic: true,
-        ...(androidGoogleMapsApiKey
-          ? {
-              googleMaps: {
-                apiKey: androidGoogleMapsApiKey,
-              },
-            }
-          : {}),
-      },
+      config: androidGoogleMapsApiKey
+        ? {
+            googleMaps: {
+              apiKey: androidGoogleMapsApiKey,
+            },
+          }
+        : undefined,
     },
     ios: {
       bundleIdentifier: 'com.madhurmuditam.muditam',
       supportsTablet: true,
-      buildNumber: '1.0.0',
+      buildNumber: '1.0.42',
       config: iosGoogleMapsApiKey
         ? {
             googleMapsApiKey: iosGoogleMapsApiKey,
@@ -72,7 +73,13 @@ export default {
       ],
       'expo-router',
       'expo-font',
-      'expo-notifications',
+      [
+        'expo-notifications',
+        {
+          defaultChannel: 'default',
+          color: '#543287',
+        },
+      ],
       'expo-video',
       [
         'expo-location',

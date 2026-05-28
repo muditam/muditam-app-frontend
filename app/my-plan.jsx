@@ -12,6 +12,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { parseJsonSafely } from '../utils/safeJson';
 
 export default function MyPlanScreen() {
   const router = useRouter();
@@ -22,7 +23,7 @@ export default function MyPlanScreen() {
     const fetchPurchasedProducts = async () => {
       try {
         const userData = await AsyncStorage.getItem('userDetails');
-        const phone = JSON.parse(userData || '{}')?.phone;
+        const phone = parseJsonSafely(userData, {})?.phone;
 
         if (!phone) {
           console.warn('No phone found in storage');

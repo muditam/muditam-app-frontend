@@ -22,6 +22,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { parseJsonSafely } from '../../utils/safeJson';
 
 const API_BASE =
   process.env.EXPO_PUBLIC_API_BASE_URL || 'https://muditam-app-backend-ca1c8b03db09.herokuapp.com';
@@ -243,7 +244,8 @@ export default function ChatWidget({ bottomOffset = 78 }) {
     const loadUser = async () => {
       const stored = await AsyncStorage.getItem('userDetails');
       if (!stored) return;
-      setUser(JSON.parse(stored));
+      const parsedUser = parseJsonSafely(stored, null);
+      if (parsedUser) setUser(parsedUser);
     };
 
     loadUser();
@@ -312,7 +314,8 @@ export default function ChatWidget({ bottomOffset = 78 }) {
       };
       ws.onmessage = (event) => {
         try {
-          const payload = JSON.parse(event.data);
+          const payload = parseJsonSafely(event.data, null);
+          if (!payload) throw new Error('Invalid websocket payload');
           if (payload.type === 'conversation:update') {
             setConversation(payload.conversation);
           }
@@ -360,7 +363,7 @@ export default function ChatWidget({ bottomOffset = 78 }) {
     previousMessageCountRef.current = nextMessageCount;
     if (becameOpen || nextMessageCount <= 1) setThreadReady(false);
     scrollThreadToBottom(shouldAnimate);
-  }, [conversation?.messages?.length, open]);
+  }, [conversation?.messages?.length, open, scrollThreadToBottom]);
 
   useEffect(() => {
     if (!open || !user?.phone) return;

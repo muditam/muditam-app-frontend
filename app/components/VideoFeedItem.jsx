@@ -9,20 +9,29 @@ import {
   Share,
   Alert,
 } from "react-native";
-import { Video } from "expo-av";
 import { Ionicons } from "@expo/vector-icons";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
+import { useVideoPlayer, VideoView } from "expo-video";
 
 const { height, width } = Dimensions.get("window");
 
 export default function VideoFeedItem({ video, isActive }) {
-  const videoRef = useRef(null);
   const [userPhone, setUserPhone] = useState(null);
   const [likedStatus, setLikedStatus] = useState(null);
   const router = useRouter();
   const [backingOut, setBackingOut] = useState(false); // Prevent double back
+  const player = useVideoPlayer(
+    {
+      uri: video,
+      useCaching: true,
+    },
+    (videoPlayer) => {
+      videoPlayer.loop = true;
+      videoPlayer.pause();
+    }
+  );
 
   // Unmount-safe flag
   const isMounted = useRef(true);
@@ -33,16 +42,19 @@ export default function VideoFeedItem({ video, isActive }) {
   }, []);
 
   useEffect(() => {
-    // Guard all video API calls with try/catch and isMounted
-    if (isActive && videoRef.current) {
-      videoRef.current.playAsync?.().catch(() => { });
-    } else if (videoRef.current) {
-      videoRef.current.pauseAsync?.().catch(() => { });
-    }
+    try {
+      if (isActive) {
+        player.play();
+      } else {
+        player.pause();
+      }
+    } catch (_error) {}
     return () => {
-      videoRef.current?.stopAsync?.().catch(() => { });
+      try {
+        player.pause();
+      } catch (_error) {}
     };
-  }, [isActive]);
+  }, [isActive, player]);
 
   useEffect(() => {
     let canceled = false;
@@ -79,7 +91,7 @@ export default function VideoFeedItem({ video, isActive }) {
         }
       );
       if (isMounted.current) setLikedStatus(action);
-    } catch (err) {
+    } catch (_err) {
       Alert.alert("Error", "Failed to update feedback");
     }
   };
@@ -97,14 +109,13 @@ export default function VideoFeedItem({ video, isActive }) {
     setBackingOut(true);
 
     try {
-      await videoRef.current?.pauseAsync?.();
-      await videoRef.current?.stopAsync?.();
-    } catch (e) { }
+      player.pause();
+    } catch (_error) { }
 
     setTimeout(() => {
       try {
         router.back();
-      } catch (err) { 
+      } catch (_err) { 
         router.replace("/");
       }
       setBackingOut(false);
@@ -113,15 +124,13 @@ export default function VideoFeedItem({ video, isActive }) {
 
   return (
     <View style={styles.container}>
-      <Video
-        ref={videoRef}
-        source={{ uri: video }}
+      <VideoView
+        player={player}
         style={styles.video}
-        resizeMode="cover"
-        isLooping
-        removeClippedSubviews
-        useNativeControls={false}
-        shouldPlay={false}
+        contentFit="cover"
+        nativeControls={false}
+        allowsFullscreen={false}
+        allowsPictureInPicture={false}
       />
 
       <TouchableOpacity style={styles.backButton} onPress={handleBack}>

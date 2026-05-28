@@ -1,9 +1,10 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { parseJsonSafely } from './safeJson';
 
 export const fetchKitProgress = async () => {
   try {
     const userData = await AsyncStorage.getItem('userDetails');
-    const phone = JSON.parse(userData || '{}')?.phone;
+    const phone = parseJsonSafely(userData, {})?.phone;
     if (!phone) return { currentKit: 1, completedKits: [] };
 
     const res = await fetch(`https://muditam-app-backend-ca1c8b03db09.herokuapp.com/api/user/kit-progress/${phone}`);

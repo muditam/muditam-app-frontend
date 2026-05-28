@@ -15,12 +15,16 @@ import { encode as b64Encode } from 'base-64';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { checkPurchaseStatus } from '../utils/checkPurchaseStatus';
 
+const API_BASE =
+  process.env.EXPO_PUBLIC_API_BASE_URL || 'https://muditam-app-backend-ca1c8b03db09.herokuapp.com';
+
 export default function GoKwikCheckout() {
-  const { cartId, products: productsString } = useLocalSearchParams();
+  const { cartId, bookingId, products: productsString } = useLocalSearchParams();
   const router = useRouter();
   const webViewRef = useRef();
   const purchaseCompletionRef = useRef(false);
   const purchaseSyncRef = useRef(false);
+  const bookingConfirmRef = useRef(false);
   const [isCartValid, setIsCartValid] = useState(true);
   const [webViewUrl, setWebViewUrl] = useState(null);
 
@@ -153,6 +157,35 @@ export default function GoKwikCheckout() {
     router.replace('/home');
   }, [router, syncPurchaseState]);
 
+  const confirmPendingBooking = useCallback(async () => {
+    if (!bookingId || bookingConfirmRef.current) return true;
+
+    bookingConfirmRef.current = true;
+    try {
+      const response = await fetch(`${API_BASE}/api/redcliffe/bookings/confirm`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          bookingId,
+          isConfirmed: true,
+        }),
+      });
+
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(data.message || data.error || 'Could not confirm the lab booking.');
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Error confirming lab booking after payment:', error);
+      Alert.alert('Payment successful', error.message || 'Lab booking confirmation is still pending. Please contact support.');
+      return false;
+    } finally {
+      bookingConfirmRef.current = false;
+    }
+  }, [bookingId]);
+
   useEffect(() => {
     const backHandlerListener = BackHandler.addEventListener('hardwareBackPress', handleBackPress);
     const appStateListener = AppState.addEventListener('change', (nextAppState) => {
@@ -170,6 +203,8 @@ export default function GoKwikCheckout() {
       const { event: evt, data } = JSON.parse(event.nativeEvent.data);
       if (evt === 'orderSuccess') {
         console.log('✅ Order success detected:', data);
+        const confirmed = await confirmPendingBooking();
+        if (!confirmed) return;
         await completePurchaseFlow();
       }
 

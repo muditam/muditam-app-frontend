@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, useMemo } from 'react';
 import {
   View,
   Text,
@@ -14,6 +14,7 @@ import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Feather } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
+import { parseJsonSafely } from '../../utils/safeJson';
 
 const ITEM_WIDTH = 18; // Wider, so "10", "11", "12" fit on one line
 
@@ -36,7 +37,7 @@ export default function HbA1cScreen() {
   const router = useRouter();
   const flatListRef = useRef();
   const { width } = useWindowDimensions();
-  const hba1cRange = generateHba1cRange();
+  const hba1cRange = useMemo(() => generateHba1cRange(), []);
   const [selected, setSelected] = useState(8.0);
   const lastIndexRef = useRef(null);
 
@@ -46,7 +47,7 @@ export default function HbA1cScreen() {
       flatListRef.current?.scrollToIndex({ index, animated: false });
       lastIndexRef.current = index;
     }
-  }, []);
+  }, [hba1cRange, selected]);
 
   const handleScroll = (event) => {
     const x = event.nativeEvent.contentOffset.x;
@@ -64,7 +65,7 @@ export default function HbA1cScreen() {
       await AsyncStorage.setItem('hba1c', JSON.stringify(selected));
 
       const progressStr = await AsyncStorage.getItem('quizProgress');
-      const progress = progressStr ? JSON.parse(progressStr) : null;
+      const progress = parseJsonSafely(progressStr, null);
       const resumeIndex = Array.isArray(progress?.answers)
         ? progress.answers.length
         : 0;

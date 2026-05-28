@@ -1,5 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { API_BASE } from "./diet";
+import { parseJsonSafely } from "./safeJson";
 
 export function parseHbA1cValue(rawValue) {
   if (rawValue == null) return null;
@@ -39,12 +40,12 @@ export function getKitProductTitlesForHbA1c(rawHbA1c) {
 export async function resolveUserHbA1c() {
   const storedHbA1c = await AsyncStorage.getItem("hba1c");
   const parsedStoredHbA1c = parseHbA1cValue(
-    storedHbA1c ? JSON.parse(storedHbA1c) : null
+    parseJsonSafely(storedHbA1c, null)
   );
 
   try {
     const storedUser = await AsyncStorage.getItem("userDetails");
-    const phone = storedUser ? JSON.parse(storedUser)?.phone : null;
+    const phone = parseJsonSafely(storedUser, null)?.phone;
 
     if (!phone) {
       return parsedStoredHbA1c;

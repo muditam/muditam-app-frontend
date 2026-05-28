@@ -21,6 +21,7 @@ import {
   getKitProductTitlesForHbA1c,
   resolveUserHbA1c,
 } from "../../utils/kitRecommendations";
+import { parseJsonSafely } from "../../utils/safeJson";
 
 
 
@@ -111,7 +112,8 @@ export default function BuyKit() {
         if (!stored) return;
 
 
-        const parsedUser = JSON.parse(stored);
+        const parsedUser = parseJsonSafely(stored, null);
+        if (!parsedUser) return;
         setUser(parsedUser);
       } catch (err) {
         console.warn("Failed to load username", err);

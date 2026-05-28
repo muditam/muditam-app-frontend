@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { parseJsonSafely } from '../utils/safeJson';
 
 const CartContext = createContext();
 export const MAX_CART_ITEM_QUANTITY = 8;
@@ -28,12 +29,12 @@ export const CartProvider = ({ children }) => {
           AsyncStorage.getItem('cartItems'),
         ]);
 
-        const phone = JSON.parse(storedUser || '{}')?.phone;
+        const phone = parseJsonSafely(storedUser, {})?.phone;
         if (phone) setUserPhone(phone);
 
         let parsedCart = [];
         if (storedCart) {
-          parsedCart = JSON.parse(storedCart).filter(isValidProduct);
+          parsedCart = parseJsonSafely(storedCart, []).filter(isValidProduct);
         }
 
         if (!phone) {

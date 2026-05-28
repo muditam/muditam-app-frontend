@@ -3,8 +3,6 @@ import { useState, useEffect } from "react";
 import {
   View,
   Text,
-  TextInput,
-  Button,
   TouchableOpacity,
   StyleSheet,
   Pressable,
@@ -13,10 +11,10 @@ import {
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { Picker } from "@react-native-picker/picker";
-import { RadioButton } from "react-native-paper";
 import { Feather } from "@expo/vector-icons"; 
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { SafeAreaView } from "react-native-safe-area-context"; 
+import { parseJsonSafely } from "../../utils/safeJson";
 
 const questions = [ 
   {
@@ -210,7 +208,7 @@ export default function QuestionScreen() {
 
   const [answers, setAnswers] = useState([]);
   const [selectedOption, setSelectedOption] = useState([]); 
-  const [inputValue, setInputValue] = useState("");
+  const [inputValue] = useState("");
 
   const currentQuestion = questions[index];
 
@@ -219,7 +217,7 @@ export default function QuestionScreen() {
       try {
         const stored = await AsyncStorage.getItem("quizProgress");
         if (stored) {
-          const parsed = JSON.parse(stored);
+          const parsed = parseJsonSafely(stored, {});
           setAnswers(parsed.answers || []);
           const prevAnswer = parsed.answers?.[index];
           if (Array.isArray(prevAnswer)) {
@@ -248,13 +246,13 @@ export default function QuestionScreen() {
   const submitAnswers = async (finalAnswers) => {
     try {
       const userData = await AsyncStorage.getItem("userVitals");
-      const { height, weight } = JSON.parse(userData || "{}");
+      const { height, weight } = parseJsonSafely(userData, {});
 
       const userDetails = await AsyncStorage.getItem("userDetails");
-      const phone = JSON.parse(userDetails || "{}")?.phone;
+      const phone = parseJsonSafely(userDetails, {})?.phone;
 
       const hba1cValue = await AsyncStorage.getItem("hba1c");
-      const hba1c = hba1cValue ? JSON.parse(hba1cValue) : null;
+      const hba1c = parseJsonSafely(hba1cValue, null);
 
       const response = await fetch("https://muditam-app-backend-ca1c8b03db09.herokuapp.com/api/quiz/submit", {
         method: "POST",
@@ -613,4 +611,3 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
 });
-

@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  Animated,
   Image,
   KeyboardAvoidingView,
   Modal,
@@ -23,7 +24,6 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { WebView } from 'react-native-webview';
 import { bookingApi } from './api';
 import { LEAFLET_CSS, LEAFLET_JS } from './leafletAssets';
-import { ADDRESS_TAGS, buildLabOptions, GENDERS, PAYMENT_MODES } from './mockData';
 import { bookingStorage } from './storage';
 import {
   buildAddressLabel,
@@ -35,15 +35,40 @@ import {
   formatDateInput,
   formatDateLabel,
   getPackageEffectivePrice,
+  isValidPhoneValue,
+  normalizePhoneValue,
 } from './utils';
 import { getContentWidth, getFluidValue, getScreenPadding } from '../../utils/responsive';
 
 const FLOW_INDEX = ['home', 'packages', 'addresses', 'location', 'saveAddress', 'patients', 'labs', 'slots', 'review'];
+const ADDRESS_TAGS = ['Home', 'Work', 'Other'];
+const GENDERS = [
+  { value: 'male', label: 'Male' },
+  { value: 'female', label: 'Female' },
+  { value: 'other', label: 'Other' },
+];
 const SLOT_PERIODS = [
   { key: 'Morning', start: 0, end: 12 },
   { key: 'Afternoon', start: 12, end: 17 },
   { key: 'Evening', start: 17, end: 24 },
 ];
+const REAL_BOOKING_PROVIDER = {
+  id: 'redcliffe',
+  name: 'Redcliffe Labs',
+};
+const BOOKING_TEST_VARIANT_ID_MAP = {
+  'urine routine & microscopic examination test': '54021343707446',
+  'testosterone total test': '54021343674678',
+  'prolactin test (prl)': '54021343641910',
+  'muditam full body with vitamin d and b12': '54021343609142',
+  'muditam ayurveda hba1c': '54021343576374',
+  'muditam ayurveda full body check-up': '54021343543606',
+  'muditam ayurveda advance body check-up': '54021343510838',
+  'muditam - fever package': '54021343478070',
+  'iron studies test': '54021343445302',
+  'high-sensitivity c-reactive protein (hscrp ) test': '54021343412534',
+  'ferritin test': '54021343379766',
+};
 const DEFAULT_MAP_CENTER = {
   latitude: 28.5245,
   longitude: 77.1855,
@@ -90,6 +115,13 @@ function buildStreetTiles({ latitude, longitude, width: mapWidth, height: mapHei
   }
 
   return tiles;
+}
+
+function normalizePackageNameKey(value = '') {
+  return String(value || '')
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, ' ');
 }
 
 function hasNativeLocationModule() {
@@ -234,13 +266,13 @@ function buildLocationMapHtml({ latitude, longitude }) {
 function SearchField({ value, onChangeText, placeholder, onFocus }) {
   return (
     <View style={styles.searchWrap}>
-      <Ionicons name="search-outline" size={18} color="#8D8AA6" />
+      <Ionicons name="search-outline" size={18} color="#C084FC" />
       <TextInput
         value={value}
         onChangeText={onChangeText}
         onFocus={onFocus}
         placeholder={placeholder}
-        placeholderTextColor="#8D8AA6"
+        placeholderTextColor="#8B8B95"
         style={styles.searchInput}
       />
     </View>
@@ -295,7 +327,7 @@ function StatusBanner({ message }) {
   );
 }
 
-function BottomBar({ children, bottomInset, maxWidth, screenPadding }) {
+function BottomBar({ children, bottomInset, maxWidth, screenPadding, onHeightChange }) {
   return (
     <View
       style={[
@@ -306,7 +338,12 @@ function BottomBar({ children, bottomInset, maxWidth, screenPadding }) {
         },
       ]}
     >
-      <View style={[styles.bottomBarInner, { maxWidth }]}>
+      <View
+        style={[styles.bottomBarInner, { maxWidth }]}
+        onLayout={(event) => {
+          onHeightChange?.(event.nativeEvent.layout.height + bottomInset + 12);
+        }}
+      >
         {children}
       </View>
     </View>
@@ -326,16 +363,22 @@ function EmptyState({ title, subtitle }) {
   );
 }
 
-function PatientModal({ visible, onClose, onSave, initialValue }) {
-  const [form, setForm] = useState(initialValue || { id: '', name: '', age: '', gender: 'male' });
+function PatientModal({ visible, onClose, onSave, initialValue, mode = 'basic', defaultEmail = '' }) {
+  const [form, setForm] = useState(
+    initialValue || { id: '', name: '', age: '', gender: 'male', email: defaultEmail, useSameEmailForOthers: true }
+  );
+  const showEmailFields = mode === 'primary-email';
 
   useEffect(() => {
-    setForm(initialValue || { id: '', name: '', age: '', gender: 'male' });
-  }, [initialValue, visible]);
+    setForm(
+      initialValue || { id: '', name: '', age: '', gender: 'male', email: defaultEmail, useSameEmailForOthers: true }
+    );
+  }, [defaultEmail, initialValue, visible]);
 
   const handleSave = () => {
+    if (showEmailFields && !String(form.email || '').trim()) return;
     if (!form.name.trim() || !form.age || !form.gender) return;
-    onSave({ ...form, age: String(form.age) });
+    onSave({ ...form, age: String(form.age), email: String(form.email || '').trim() });
   };
 
   return (
@@ -367,10 +410,154 @@ function PatientModal({ visible, onClose, onSave, initialValue }) {
           />
           <SectionLabel>Gender</SectionLabel>
           <ChoicePills options={GENDERS} value={form.gender} onChange={(value) => setForm((current) => ({ ...current, gender: value }))} compact />
+          {showEmailFields ? (
+            <>
+              <SectionLabel>Email</SectionLabel>
+              <TextInput
+                value={form.email}
+                onChangeText={(value) => setForm((current) => ({ ...current, email: value }))}
+                style={styles.textField}
+                autoCapitalize="none"
+                keyboardType="email-address"
+                placeholder="you@example.com"
+                placeholderTextColor="#A09BB7"
+              />
+              <TouchableOpacity
+                style={styles.checkboxRow}
+                onPress={() =>
+                  setForm((current) => ({
+                    ...current,
+                    useSameEmailForOthers: !current.useSameEmailForOthers,
+                  }))
+                }
+              >
+                <Ionicons
+                  name={form.useSameEmailForOthers ? 'checkbox' : 'square-outline'}
+                  size={20}
+                  color="#7E22CE"
+                />
+                <Text style={styles.checkboxLabel}>Use same email for others</Text>
+              </TouchableOpacity>
+            </>
+          ) : null}
           <TouchableOpacity style={styles.primaryButton} onPress={handleSave}>
             <Text style={styles.primaryButtonText}>Save Patient</Text>
           </TouchableOpacity>
         </View>
+      </View>
+    </Modal>
+  );
+}
+
+function ContactInfoModal({ visible, onClose, onSave, initialValue }) {
+  const [form, setForm] = useState(initialValue || { phone: '', altPhone: '', whatsappPhone: '', email: '' });
+  const [errorText, setErrorText] = useState('');
+
+  useEffect(() => {
+    setForm(initialValue || { phone: '', altPhone: '', whatsappPhone: '', email: '' });
+    setErrorText('');
+  }, [initialValue, visible]);
+
+  const handleSave = () => {
+    const phone = normalizePhoneValue(form.phone);
+    const altPhone = normalizePhoneValue(form.altPhone || phone);
+    const whatsappPhone = normalizePhoneValue(form.whatsappPhone || phone);
+    const email = String(form.email || '').trim();
+
+    if (!isValidPhoneValue(phone)) {
+      setErrorText('Please enter a valid phone number');
+      return;
+    }
+    if (!email) {
+      setErrorText('Please enter an email address');
+      return;
+    }
+
+    onSave({
+      phone,
+      altPhone,
+      whatsappPhone,
+      email,
+    });
+  };
+
+  return (
+    <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
+      <View style={styles.modalBackdrop}>
+        <View style={styles.modalSheet}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>Add Contact Details</Text>
+            <TouchableOpacity onPress={onClose} style={styles.modalCloseButton}>
+              <Ionicons name="close" size={20} color="#666666" />
+            </TouchableOpacity>
+          </View>
+          <SectionLabel>Phone</SectionLabel>
+          <TextInput
+            value={form.phone}
+            onChangeText={(value) => setForm((current) => ({ ...current, phone: normalizePhoneValue(value) }))}
+            style={styles.textField}
+            keyboardType="phone-pad"
+            placeholder="9876543210"
+            placeholderTextColor="#A09BB7"
+          />
+          <SectionLabel>Alternate Phone</SectionLabel>
+          <TextInput
+            value={form.altPhone}
+            onChangeText={(value) => setForm((current) => ({ ...current, altPhone: normalizePhoneValue(value) }))}
+            style={styles.textField}
+            keyboardType="phone-pad"
+            placeholder="9876543210"
+            placeholderTextColor="#A09BB7"
+          />
+          <SectionLabel>WhatsApp Phone</SectionLabel>
+          <TextInput
+            value={form.whatsappPhone}
+            onChangeText={(value) => setForm((current) => ({ ...current, whatsappPhone: normalizePhoneValue(value) }))}
+            style={styles.textField}
+            keyboardType="phone-pad"
+            placeholder="9876543210"
+            placeholderTextColor="#A09BB7"
+          />
+          <SectionLabel>Email</SectionLabel>
+          <TextInput
+            value={form.email}
+            onChangeText={(value) => setForm((current) => ({ ...current, email: value }))}
+            style={styles.textField}
+            autoCapitalize="none"
+            keyboardType="email-address"
+            placeholder="you@example.com"
+            placeholderTextColor="#A09BB7"
+          />
+          {errorText ? <Text style={styles.contactModalErrorText}>{errorText}</Text> : null}
+          <TouchableOpacity style={styles.primaryButton} onPress={handleSave}>
+            <Text style={styles.primaryButtonText}>Save Details</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </Modal>
+  );
+}
+
+function BookingSuccessOverlay({ visible, animationValue }) {
+  const scale = animationValue.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0.88, 1],
+  });
+
+  const opacity = animationValue.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, 1],
+  });
+
+  return (
+    <Modal visible={visible} animationType="fade" transparent>
+      <View style={styles.successOverlayBackdrop}>
+        <Animated.View style={[styles.successOverlayCard, { opacity, transform: [{ scale }] }]}>
+          <View style={styles.successOverlayIcon}>
+            <Ionicons name="checkmark" size={32} color="#FFFFFF" />
+          </View>
+          <Text style={styles.successOverlayTitle}>Booking confirmed</Text>
+        </Animated.View>
       </View>
     </Modal>
   );
@@ -393,15 +580,21 @@ export default function BookingFlow() {
   const [savedAddresses, setSavedAddresses] = useState([]);
   const [savedPatients, setSavedPatients] = useState([]);
   const [packageResults, setPackageResults] = useState([]);
+  const [likedPackageCodes, setLikedPackageCodes] = useState([]);
   const [packagesLoading, setPackagesLoading] = useState(false);
   const [locationQuery, setLocationQuery] = useState('');
   const [locationResults, setLocationResults] = useState([]);
   const [locationLoading, setLocationLoading] = useState(false);
   const [slots, setSlots] = useState([]);
   const [slotsLoading, setSlotsLoading] = useState(false);
+  const [customerBookings, setCustomerBookings] = useState([]);
+  const [customerBookingsLoading, setCustomerBookingsLoading] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [stickyFooterHeight, setStickyFooterHeight] = useState(0);
+  const [bookingSuccessVisible, setBookingSuccessVisible] = useState(false);
   const [statusMessage, setStatusMessage] = useState(null);
-  const [patientModalState, setPatientModalState] = useState({ visible: false, patient: null });
+  const [contactModalVisible, setContactModalVisible] = useState(false);
+  const [patientModalState, setPatientModalState] = useState({ visible: false, patient: null, mode: 'basic' });
   const [patientDrawerVisible, setPatientDrawerVisible] = useState(false);
   const [slotDrawerVisible, setSlotDrawerVisible] = useState(false);
   const [selectedSlotPeriod, setSelectedSlotPeriod] = useState('Morning');
@@ -410,9 +603,11 @@ export default function BookingFlow() {
   const mapWebViewRef = useRef(null);
   const mapSyncTimeoutRef = useRef(null);
   const ignoreNextMapMoveRef = useRef(false);
+  const resumeBookingAfterContactRef = useRef(false);
+  const bookingSuccessAnimation = useRef(new Animated.Value(0)).current;
   const locationModuleReady = useMemo(() => hasNativeLocationModule(), []);
   const hasStickyBar = ['packages', 'addresses', 'patients', 'labs', 'slots', 'review'].includes(draft.step);
-  const scrollBottomPadding = (hasStickyBar ? 108 : 20) + bottomInset;
+  const scrollBottomPadding = hasStickyBar ? Math.max(stickyFooterHeight, 104) + 20 : 20 + bottomInset;
   const safeAreaBackground = draft.step === 'home' ? '#8C33F4' : '#FFFFFF';
 
   const selectedAddress = useMemo(
@@ -435,21 +630,11 @@ export default function BookingFlow() {
     [draft.selectedSlotId, slots]
   );
 
-  const labOptions = useMemo(
-    () =>
-      buildLabOptions({
-        selectedPackages: draft.selectedPackages,
-        selectedAddress,
-        selectedSlot,
-      }),
-    [draft.selectedPackages, selectedAddress, selectedSlot]
-  );
-
-  const selectedLab = useMemo(() => labOptions.find((item) => item.id === 'redcliffe') || labOptions[0] || null, [labOptions]);
+  const selectedLab = REAL_BOOKING_PROVIDER;
 
   const pricingSummary = useMemo(
-    () => buildPricingSummary(draft.selectedPackages, selectedLab, selectedPatients.length || 1),
-    [draft.selectedPackages, selectedLab, selectedPatients.length]
+    () => buildPricingSummary(draft.selectedPackages, selectedPatients.length || 1),
+    [draft.selectedPackages, selectedPatients.length]
   );
 
   const slotDateOptions = useMemo(
@@ -523,12 +708,21 @@ export default function BookingFlow() {
         const nextDraft = {
           ...createEmptyDraft(),
           ...(storedDraft || {}),
-          contactInfo: {
-            ...createEmptyDraft().contactInfo,
-            phone: storedDraft?.contactInfo?.phone || storedUser?.phone || '',
-            whatsappPhone: storedDraft?.contactInfo?.whatsappPhone || storedUser?.phone || '',
+          step: 'home',
+          searchQuery: '',
+          selectedPackages: [],
+          selectedLabId: '',
+          selectedSlotId: '',
+          selectedDate: '',
+          createdBooking: null,
+          confirmation: null,
+            contactInfo: {
+              ...createEmptyDraft().contactInfo,
+            phone: normalizePhoneValue(storedDraft?.contactInfo?.phone || storedUser?.phone || ''),
+            altPhone: normalizePhoneValue(storedDraft?.contactInfo?.altPhone || ''),
+            whatsappPhone: normalizePhoneValue(storedDraft?.contactInfo?.whatsappPhone || storedUser?.phone || ''),
             email: storedDraft?.contactInfo?.email || storedUser?.email || '',
-            paymentMode: storedDraft?.contactInfo?.paymentMode || 'credit',
+            paymentMode: 'credit',
           },
         };
 
@@ -576,6 +770,20 @@ export default function BookingFlow() {
     if (!hydrated) return;
     bookingStorage.savePatients(savedPatients);
   }, [hydrated, savedPatients]);
+
+  useEffect(() => {
+    if (!bookingSuccessVisible) {
+      bookingSuccessAnimation.setValue(0);
+      return;
+    }
+
+    Animated.spring(bookingSuccessAnimation, {
+      toValue: 1,
+      useNativeDriver: true,
+      friction: 7,
+      tension: 90,
+    }).start();
+  }, [bookingSuccessAnimation, bookingSuccessVisible]);
 
   useEffect(() => {
     return () => {
@@ -861,10 +1069,35 @@ export default function BookingFlow() {
       router.back();
       return;
     }
+    if (draft.step === 'orders') {
+      updateDraft({ step: 'home' });
+      setStatusMessage(null);
+      return;
+    }
     const currentIndex = FLOW_INDEX.indexOf(draft.step);
     const previousStep = FLOW_INDEX[Math.max(0, currentIndex - 1)];
     updateDraft({ step: previousStep });
     setStatusMessage(null);
+  };
+
+  const loadCustomerBookings = async () => {
+    const phone = String(draft.contactInfo.phone || '').trim();
+    if (!phone) {
+      setStatusMessage({ type: 'error', text: 'Add your phone number to view booked orders.' });
+      return;
+    }
+
+    try {
+      setCustomerBookingsLoading(true);
+      setStatusMessage(null);
+      const response = await bookingApi.getBookings({ phone });
+      setCustomerBookings(Array.isArray(response.bookings) ? response.bookings : []);
+      updateDraft({ step: 'orders' });
+    } catch (error) {
+      setStatusMessage({ type: 'error', text: cleanMessage(error, 'Could not load your bookings.') });
+    } finally {
+      setCustomerBookingsLoading(false);
+    }
   };
 
   const handlePackageToggle = (pkg) => {
@@ -1036,12 +1269,30 @@ export default function BookingFlow() {
       name: patient.name.trim(),
       age: String(patient.age || ''),
       gender: patient.gender,
+      email: String(patient.email || '').trim(),
     };
 
     setSavedPatients((current) => {
-      const exists = current.some((item) => item.id === nextPatient.id);
-      return exists ? current.map((item) => (item.id === nextPatient.id ? nextPatient : item)) : [nextPatient, ...current];
+      const nextList = current.some((item) => item.id === nextPatient.id)
+        ? current.map((item) => (item.id === nextPatient.id ? nextPatient : item))
+        : [nextPatient, ...current];
+
+      if (patient.useSameEmailForOthers && nextPatient.email) {
+        return nextList.map((item) => ({ ...item, email: nextPatient.email }));
+      }
+
+      return nextList;
     });
+
+    if (nextPatient.email) {
+      updateDraft((current) => ({
+        ...current,
+        contactInfo: {
+          ...current.contactInfo,
+          email: nextPatient.email,
+        },
+      }));
+    }
 
     updateDraft((current) => ({
       ...current,
@@ -1050,7 +1301,9 @@ export default function BookingFlow() {
         : [nextPatient.id, ...current.selectedPatientIds].slice(0, 5),
       slotGender: current.slotGender || nextPatient.gender,
     }));
-    setPatientModalState({ visible: false, patient: null });
+    setPatientModalState({ visible: false, patient: null, mode: 'basic' });
+    setStatusMessage(null);
+
   };
 
   const togglePatientSelection = (patientId) => {
@@ -1068,6 +1321,13 @@ export default function BookingFlow() {
           : [...current.selectedPatientIds, patientId].slice(0, 5),
       };
     });
+  };
+
+  const toggleLikedPackage = (packageCode) => {
+    if (!packageCode) return;
+    setLikedPackageCodes((current) =>
+      current.includes(packageCode) ? current.filter((code) => code !== packageCode) : [...current, packageCode]
+    );
   };
 
   const handlePatientDelete = (patientId) => {
@@ -1124,6 +1384,57 @@ export default function BookingFlow() {
     updateDraft({ step: 'review' });
   };
 
+  const openContactModal = ({ resumeBooking = false } = {}) => {
+    resumeBookingAfterContactRef.current = resumeBooking;
+    setContactModalVisible(true);
+  };
+
+  const handleContactSave = (contactInfo) => {
+    updateDraft((current) => ({
+      ...current,
+      contactInfo: {
+        ...current.contactInfo,
+        ...contactInfo,
+      },
+    }));
+    setContactModalVisible(false);
+    setStatusMessage(null);
+
+    if (resumeBookingAfterContactRef.current) {
+      resumeBookingAfterContactRef.current = false;
+      setTimeout(() => {
+        handleBookNow();
+      }, 50);
+    }
+  };
+
+  const buildCheckoutItems = () => {
+    const patientCount = Math.max(1, selectedPatients.length || 1);
+    const checkoutItemsByVariant = draft.selectedPackages.reduce((accumulator, item) => {
+      const variantId = BOOKING_TEST_VARIANT_ID_MAP[normalizePackageNameKey(item.name)];
+      if (!variantId) {
+        throw new Error(`No checkout product mapped for "${item.name}".`);
+      }
+
+      const existing = accumulator.get(variantId);
+      if (existing) {
+        existing.quantity += patientCount;
+        return accumulator;
+      }
+
+      accumulator.set(variantId, {
+        id: variantId,
+        title: item.name,
+        description: item.description || '',
+        first_variant_id: variantId,
+        quantity: patientCount,
+      });
+      return accumulator;
+    }, new Map());
+
+    return Array.from(checkoutItemsByVariant.values());
+  };
+
   const handleBookNow = async () => {
     if (!selectedAddress) {
       setStatusMessage({ type: 'error', text: 'Choose an address first.' });
@@ -1145,14 +1456,15 @@ export default function BookingFlow() {
       setSlotDrawerVisible(true);
       return;
     }
-    if (!draft.contactInfo.phone.trim() || !draft.contactInfo.email.trim()) {
-      setStatusMessage({ type: 'error', text: 'Add phone and email before continuing.' });
-      setPatientDrawerVisible(true);
+    if (!isValidPhoneValue(draft.contactInfo.phone) || !draft.contactInfo.email.trim()) {
+      setStatusMessage({ type: 'error', text: 'Add a valid phone number and email before continuing.' });
+      openContactModal({ resumeBooking: true });
       return;
     }
 
     try {
       setActionLoading('booking');
+      const checkoutItems = buildCheckoutItems();
       const payload = createBookingPayload({
         draft,
         selectedAddress,
@@ -1160,18 +1472,37 @@ export default function BookingFlow() {
         selectedSlot,
       });
       const created = await bookingApi.createBooking(payload);
-      const confirmation = await bookingApi.confirmBooking({
-        bookingId: created.booking?.bookingId || created.bookingId,
-        isConfirmed: true,
+      const bookingId = created.booking?.bookingId || created.bookingId;
+      const cartResponse = await bookingApi.requestJson('/api/shopify/create-cart', {
+        method: 'POST',
+        body: JSON.stringify({ items: checkoutItems }),
       });
 
       updateDraft((current) => ({
         ...current,
         createdBooking: created,
-        confirmation,
+        confirmation: null,
       }));
-      setStatusMessage({ type: 'success', text: confirmation.message || 'Booking confirmed successfully.' });
-      await bookingStorage.clearDraft();
+      setStatusMessage(null);
+      const cartToken = String(cartResponse.cartId || '').split('/').pop();
+      const productsString = JSON.stringify(
+        checkoutItems.map((item) => ({
+          id: item.id,
+          title: item.title,
+          image: '',
+          description: item.description,
+        }))
+      );
+
+      router.push({
+        pathname: '/GoKwikCheckout',
+        params: {
+          cartId: cartToken,
+          bookingId: String(bookingId || ''),
+          total: String(pricingSummary.payable),
+          products: productsString,
+        },
+      });
     } catch (error) {
       setStatusMessage({ type: 'error', text: cleanMessage(error, 'Could not complete the booking.') });
     } finally {
@@ -1207,7 +1538,7 @@ export default function BookingFlow() {
             </TouchableOpacity>
             <Text style={[styles.heroTitle, styles.heroTitleInline, { fontSize: heroTitleSize }]}>Lab Tests</Text>
           </View>
-          <TouchableOpacity style={styles.heroOrdersButton}>
+          <TouchableOpacity style={styles.heroOrdersButton} onPress={loadCustomerBookings}>
             <Ionicons name="cart-outline" size={14} color="#FFFFFF" />
             <Text style={styles.heroOrdersText}>My Orders</Text>
           </TouchableOpacity>
@@ -1250,31 +1581,13 @@ export default function BookingFlow() {
             />
           </View>
         </LinearGradient>
-        <View style={styles.promoFooter}>
+      <View style={styles.promoFooter}>
           <Ionicons name="location" size={22} color="#7E22CE" />
           <Text style={styles.promoFooterText}>
-            <Text style={styles.promoFooterHighlight}>178</Text> Pathology & <Text style={styles.promoFooterHighlight}>345</Text>{' '}
-            Radiology labs nearby
+            NABL certified diagnostics with home sample collection
           </Text>
         </View>
       </View>
-
-      <TouchableOpacity style={styles.prescriptionCard} onPress={() => updateDraft({ step: 'packages' })}>
-        <View style={styles.prescriptionIconWrap}>
-          <Ionicons name="document-text" size={26} color="#7E22CE" />
-        </View>
-        <View style={styles.prescriptionTextWrap}>
-          <Text style={styles.prescriptionTitle} numberOfLines={1}>
-            Order via Prescription
-          </Text>
-          <Text style={styles.prescriptionSubtitle} numberOfLines={1}>
-            {"Upload and we'll handle the rest"}
-          </Text>
-        </View>
-        <View style={styles.uploadChip}>
-          <Text style={styles.uploadChipText}>Upload</Text>
-        </View>
-      </TouchableOpacity>
 
       <View style={styles.iconFeatureRow}>
         {[
@@ -1314,6 +1627,7 @@ export default function BookingFlow() {
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.popularScroller}>
         {packageResults.slice(0, 6).map((item, index) => {
           const isSelected = draft.selectedPackages.some((pkg) => pkg.code === item.code);
+          const isLiked = likedPackageCodes.includes(item.code);
           const actualPrice = Number(item?.price || 0);
           const effectivePrice = getPackageEffectivePrice(item) || 0;
           const showStrikePrice = actualPrice > effectivePrice;
@@ -1334,7 +1648,15 @@ export default function BookingFlow() {
                 <View style={badgeStyle}>
                   <Text style={badgeTextStyle}>{badgeLabel}</Text>
                 </View>
-                <Ionicons name="heart" size={28} color="#4B4B63" />
+                <Pressable
+                  hitSlop={8}
+                  onPress={(event) => {
+                    event?.stopPropagation?.();
+                    toggleLikedPackage(item.code);
+                  }}
+                >
+                  <Ionicons name="heart" size={28} color={isLiked ? '#DC2626' : '#4B4B63'} />
+                </Pressable>
               </View>
               <Text style={styles.packagePreviewName} numberOfLines={2}>
                 {item.name}
@@ -1362,19 +1684,8 @@ export default function BookingFlow() {
         onChangeText={(value) => updateDraft({ searchQuery: value })}
         placeholder="Search & Book 'Lipid Profile'"
       />
-      <TouchableOpacity style={styles.prescriptionCard}>
-        <View style={styles.prescriptionIconWrap}>
-          <Ionicons name="document-text-outline" size={18} color="#7E22CE" />
-        </View>
-        <View style={styles.prescriptionTextWrap}>
-          <Text style={styles.prescriptionTitle}>Got a prescription?</Text>
-          <Text style={styles.prescriptionSubtitle}>Upload & book your test instantly</Text>
-        </View>
-        <Ionicons name="chevron-forward" size={18} color="#7E22CE" />
-      </TouchableOpacity>
       <View style={styles.sectionHeaderRow}>
         <Text style={styles.sectionTitle}>Popular Tests</Text>
-        <Text style={styles.sectionAction}>View All</Text>
       </View>
       {packagesLoading ? (
         <View style={styles.loaderArea}>
@@ -1404,19 +1715,6 @@ export default function BookingFlow() {
           </View>
         );
       })}
-      <BottomBar bottomInset={bottomInset} maxWidth={shellWidth} screenPadding={screenPadding}>
-        <View style={styles.bottomBarSummary}>
-          <Text style={styles.bottomBarLabel}>Test/Packages added</Text>
-          <Text style={styles.bottomBarValue}>{draft.selectedPackages.length}</Text>
-        </View>
-        <TouchableOpacity
-          style={[styles.bottomBarButton, !draft.selectedPackages.length && styles.bottomBarButtonDisabled]}
-          disabled={!draft.selectedPackages.length}
-          onPress={openSlotDrawerFromPackages}
-        >
-          <Text style={styles.bottomBarButtonText}>Continue</Text>
-        </TouchableOpacity>
-      </BottomBar>
     </>
   );
 
@@ -1468,18 +1766,6 @@ export default function BookingFlow() {
         );
       })}
 
-      <BottomBar bottomInset={bottomInset} maxWidth={shellWidth} screenPadding={screenPadding}>
-        <TouchableOpacity style={styles.bottomBarButtonOutline} onPress={openAddressFlow}>
-          <Text style={styles.bottomBarButtonOutlineText}>Add Address</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.bottomBarButton, !draft.selectedAddressId && styles.bottomBarButtonDisabled]}
-          disabled={!draft.selectedAddressId}
-          onPress={() => updateDraft({ step: 'patients' })}
-        >
-          <Text style={styles.bottomBarButtonText}>Continue</Text>
-        </TouchableOpacity>
-      </BottomBar>
     </>
   );
 
@@ -1735,7 +2021,13 @@ export default function BookingFlow() {
                       {patient.gender}, {patient.age || '--'} yrs
                     </Text>
                   </View>
-                  <TouchableOpacity onPress={() => setPatientModalState({ visible: true, patient })} style={styles.patientDrawerIconButton}>
+                  <TouchableOpacity
+                    onPress={() => {
+                      resumeBookingAfterContactRef.current = false;
+                      setPatientModalState({ visible: true, patient, mode: 'basic' });
+                    }}
+                    style={styles.patientDrawerIconButton}
+                  >
                     <Ionicons name="pencil-outline" size={15} color="#4B5563" />
                   </TouchableOpacity>
                   <TouchableOpacity style={[styles.patientDrawerIconButton, styles.patientDrawerDeleteButton]} onPress={() => handlePatientDelete(patient.id)}>
@@ -1752,7 +2044,10 @@ export default function BookingFlow() {
             <TouchableOpacity
               style={[styles.addPatientLink, savedPatients.length >= 5 && styles.addPatientLinkDisabled]}
               disabled={savedPatients.length >= 5}
-              onPress={() => setPatientModalState({ visible: true, patient: null })}
+              onPress={() => {
+                resumeBookingAfterContactRef.current = false;
+                setPatientModalState({ visible: true, patient: null, mode: 'basic' });
+              }}
             >
               <Text style={styles.addPatientLinkText}>+ Add New Patient</Text>
             </TouchableOpacity>
@@ -1840,8 +2135,7 @@ export default function BookingFlow() {
             {!slotsLoading && !slots.length ? <EmptyState title="No slots available" subtitle="Try another date or change the selected address." /> : null}
           </ScrollView>
           <TouchableOpacity
-            style={[styles.slotDrawerContinueButton, !draft.selectedSlotId && styles.bottomBarButtonDisabled]}
-            disabled={!draft.selectedSlotId}
+            style={styles.slotDrawerContinueButton}
             onPress={continueFromSlotDrawer}
           >
             <Text style={styles.primaryButtonText}>Continue</Text>
@@ -1870,7 +2164,13 @@ export default function BookingFlow() {
                 <Text style={styles.patientSelectedLabel}>{selectedIndex === 0 ? 'Primary patient' : `Additional member ${selectedIndex}`}</Text>
               ) : null}
             </View>
-            <TouchableOpacity onPress={() => setPatientModalState({ visible: true, patient })} style={styles.miniIconButton}>
+            <TouchableOpacity
+              onPress={() => {
+                resumeBookingAfterContactRef.current = false;
+                setPatientModalState({ visible: true, patient, mode: 'basic' });
+              }}
+              style={styles.miniIconButton}
+            >
               <Ionicons name="pencil-outline" size={16} color="#B05CFF" />
             </TouchableOpacity>
             <View style={[styles.selectionRing, selected && styles.selectionRingActive]}>
@@ -1880,7 +2180,13 @@ export default function BookingFlow() {
         );
       })}
 
-      <TouchableOpacity style={styles.addPatientLink} onPress={() => setPatientModalState({ visible: true, patient: null })}>
+      <TouchableOpacity
+        style={styles.addPatientLink}
+        onPress={() => {
+          resumeBookingAfterContactRef.current = false;
+          setPatientModalState({ visible: true, patient: null, mode: 'basic' });
+        }}
+      >
         <Text style={styles.addPatientLinkText}>+ Add New Patient</Text>
       </TouchableOpacity>
 
@@ -1892,10 +2198,21 @@ export default function BookingFlow() {
             ...current,
             contactInfo: {
               ...current.contactInfo,
-              phone: value,
-              whatsappPhone: current.contactInfo.whatsappPhone || value,
+              phone: normalizePhoneValue(value),
+              whatsappPhone: current.contactInfo.whatsappPhone || normalizePhoneValue(value),
             },
           }))
+        }
+        style={styles.textField}
+        keyboardType="phone-pad"
+        placeholder="9876543210"
+        placeholderTextColor="#A09BB7"
+      />
+      <SectionLabel>Alternate Phone</SectionLabel>
+      <TextInput
+        value={draft.contactInfo.altPhone}
+        onChangeText={(value) =>
+          updateDraft((current) => ({ ...current, contactInfo: { ...current.contactInfo, altPhone: normalizePhoneValue(value) } }))
         }
         style={styles.textField}
         keyboardType="phone-pad"
@@ -1905,7 +2222,9 @@ export default function BookingFlow() {
       <SectionLabel>WhatsApp Phone</SectionLabel>
       <TextInput
         value={draft.contactInfo.whatsappPhone}
-        onChangeText={(value) => updateDraft((current) => ({ ...current, contactInfo: { ...current.contactInfo, whatsappPhone: value } }))}
+        onChangeText={(value) =>
+          updateDraft((current) => ({ ...current, contactInfo: { ...current.contactInfo, whatsappPhone: normalizePhoneValue(value) } }))
+        }
         style={styles.textField}
         keyboardType="phone-pad"
         placeholder="9876543210"
@@ -1920,33 +2239,6 @@ export default function BookingFlow() {
         placeholder="you@example.com"
         placeholderTextColor="#A09BB7"
       />
-      <SectionLabel>Payment</SectionLabel>
-      <ChoicePills
-        options={PAYMENT_MODES}
-        value={draft.contactInfo.paymentMode}
-        onChange={(value) => updateDraft((current) => ({ ...current, contactInfo: { ...current.contactInfo, paymentMode: value } }))}
-        compact
-      />
-
-      <BottomBar bottomInset={bottomInset} maxWidth={shellWidth} screenPadding={screenPadding}>
-        <View style={styles.bottomBarSummary}>
-          <Text style={styles.bottomBarLabel}>Patients selected</Text>
-          <Text style={styles.bottomBarValue}>{draft.selectedPatientIds.length}</Text>
-        </View>
-        <TouchableOpacity
-          style={[styles.bottomBarButton, !draft.selectedPatientIds.length && styles.bottomBarButtonDisabled]}
-          disabled={!draft.selectedPatientIds.length}
-          onPress={() =>
-            updateDraft((current) => ({
-              ...current,
-              slotGender: selectedPatient?.gender || current.slotGender,
-              step: 'labs',
-            }))
-          }
-        >
-          <Text style={styles.bottomBarButtonText}>Continue</Text>
-        </TouchableOpacity>
-      </BottomBar>
     </>
   );
 
@@ -1956,14 +2248,36 @@ export default function BookingFlow() {
       <Text style={styles.reviewSectionTitle}>Patient Name</Text>
       {selectedPatients.map((patient, index) => (
         <View key={patient.id} style={styles.reviewPatientCard}>
-          <View style={styles.patientAvatarSmall} />
           <View style={styles.reviewTextWrap}>
             <Text style={styles.reviewCardLabel}>{index === 0 ? 'Patient Details' : `Member ${index}`}</Text>
             <Text style={styles.reviewCardValue}>{patient.name}</Text>
+            {index === 0 ? (
+              <>
+                <Text style={styles.reviewCardSubValue}>
+                  {isValidPhoneValue(draft.contactInfo.phone) ? draft.contactInfo.phone : 'Valid phone required before booking'}
+                </Text>
+                <Text style={styles.reviewCardSubValue}>{draft.contactInfo.email || 'Email required before booking'}</Text>
+              </>
+            ) : null}
           </View>
-          <TouchableOpacity style={styles.reviewEditButton} onPress={() => setPatientDrawerVisible(true)}>
-            <Ionicons name="pencil" size={15} color="#4F46E5" />
-          </TouchableOpacity>
+          {index === 0 && (!draft.contactInfo.email || !isValidPhoneValue(draft.contactInfo.phone)) ? (
+            <TouchableOpacity
+              style={styles.reviewAddButton}
+              onPress={() => openContactModal()}
+            >
+              <Text style={styles.reviewAddButtonText}>+ Add</Text>
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity
+              style={styles.reviewEditButton}
+              onPress={() => {
+                resumeBookingAfterContactRef.current = false;
+                return index === 0 ? openContactModal() : setPatientDrawerVisible(true);
+              }}
+            >
+              <Ionicons name="pencil" size={15} color="#4F46E5" />
+            </TouchableOpacity>
+          )}
         </View>
       ))}
 
@@ -2010,10 +2324,6 @@ export default function BookingFlow() {
           <Text style={styles.billLabel}>Total Cost</Text>
           <Text style={styles.billValue}>₹{pricingSummary.subtotal}</Text>
         </View>
-        <View style={styles.billRow}>
-          <Text style={styles.billDiscountLabel}>Discount</Text>
-          <Text style={styles.billDiscountValue}>-₹{pricingSummary.discount}</Text>
-        </View>
         <View style={styles.billDivider} />
         <View style={styles.billRow}>
           <Text style={styles.billPayLabel}>You Pay</Text>
@@ -2021,24 +2331,144 @@ export default function BookingFlow() {
         </View>
       </View>
 
-      {draft.confirmation?.bookingStatus ? (
-        <View style={styles.confirmedCard}>
-          <Text style={styles.confirmedCardTitle}>Booking Status</Text>
-          <Text style={styles.confirmedCardText}>{draft.confirmation.bookingStatus}</Text>
-        </View>
-      ) : null}
-
-      <BottomBar bottomInset={bottomInset} maxWidth={shellWidth} screenPadding={screenPadding}>
-        <View style={styles.bottomBarSummary}>
-          <Text style={styles.bottomBarLabel}>Total Amount</Text>
-          <Text style={styles.bottomBarValue}>₹{pricingSummary.payable}</Text>
-        </View>
-        <TouchableOpacity style={styles.bottomBarButton} onPress={handleBookNow} disabled={actionLoading === 'booking'}>
-          <Text style={styles.bottomBarButtonText}>{actionLoading === 'booking' ? 'Booking...' : 'Pay Now'}</Text>
-        </TouchableOpacity>
-      </BottomBar>
     </>
   );
+
+  const renderOrders = () => (
+    <>
+      <ScreenHeader title="My Orders" onBack={goBack} />
+      {customerBookingsLoading ? (
+        <View style={styles.ordersLoadingState}>
+          <ActivityIndicator color="#7E22CE" size="large" />
+          <Text style={styles.ordersLoadingText}>Loading your bookings...</Text>
+        </View>
+      ) : customerBookings.length ? (
+        customerBookings.map((booking) => {
+          const primaryPatient = booking.patients?.[0];
+          const packageNames = (booking.packages || []).map((item) => item.name).filter(Boolean);
+          return (
+            <View key={String(booking.bookingId || `${booking.bookingDate}-${booking.phone}`)} style={styles.orderCard}>
+              <View style={styles.orderCardHeader}>
+                <View style={styles.orderHeaderTextWrap}>
+                  <Text style={styles.orderCardTitle}>Booking #{booking.bookingId || 'Pending'}</Text>
+                  <Text style={styles.orderCardMeta}>
+                    {formatDateLabel(booking.collectionDate || booking.bookingDate) || 'Date pending'}
+                    {booking.collectionTimeLabel ? `, ${booking.collectionTimeLabel}` : ''}
+                  </Text>
+                </View>
+                <View style={styles.orderStatusBadge}>
+                  <Text style={styles.orderStatusText}>{booking.status || 'Booked'}</Text>
+                </View>
+              </View>
+
+              <View style={styles.orderInfoBlock}>
+                <Text style={styles.orderInfoLabel}>Patient</Text>
+                <Text style={styles.orderInfoValue}>{primaryPatient?.name || 'Customer'}</Text>
+                {booking.patients?.length > 1 ? (
+                  <Text style={styles.orderInfoSubvalue}>+{booking.patients.length - 1} more member(s)</Text>
+                ) : null}
+              </View>
+
+              <View style={styles.orderInfoBlock}>
+                <Text style={styles.orderInfoLabel}>Tests / Packages</Text>
+                <Text style={styles.orderInfoValue}>{packageNames.join(', ') || 'Package details unavailable'}</Text>
+              </View>
+
+              <View style={styles.orderSplitRow}>
+                <View style={styles.orderSplitItem}>
+                  <Text style={styles.orderInfoLabel}>Payment</Text>
+                  <Text style={styles.orderInfoValue}>{booking.paymentMode || 'Unknown'}</Text>
+                </View>
+                <View style={styles.orderSplitItem}>
+                  <Text style={styles.orderInfoLabel}>Amount</Text>
+                  <Text style={styles.orderInfoValue}>
+                    {booking.payableAmount ? `₹${booking.payableAmount}` : 'Pending'}
+                  </Text>
+                </View>
+              </View>
+
+              <View style={styles.orderInfoBlock}>
+                <Text style={styles.orderInfoLabel}>Collection Address</Text>
+                <Text style={styles.orderInfoValue}>{booking.address || booking.locationLabel || 'Address not available'}</Text>
+              </View>
+            </View>
+          );
+        })
+      ) : (
+        <EmptyState title="No booked orders yet" subtitle="Your confirmed customer bookings will appear here." />
+      )}
+    </>
+  );
+
+  const renderStickyFooter = () => {
+    switch (draft.step) {
+      case 'packages':
+      case 'labs':
+      case 'slots':
+        return (
+          <BottomBar bottomInset={bottomInset} maxWidth={shellWidth} screenPadding={screenPadding} onHeightChange={setStickyFooterHeight}>
+            <View style={styles.bottomBarSummary}>
+              <Text style={styles.bottomBarLabel}>Test/Packages added</Text>
+              <Text style={styles.bottomBarValue}>{draft.selectedPackages.length}</Text>
+            </View>
+            <TouchableOpacity style={styles.bottomBarButton} onPress={openSlotDrawerFromPackages}>
+              <Text style={styles.bottomBarButtonText}>Continue</Text>
+            </TouchableOpacity>
+          </BottomBar>
+        );
+      case 'addresses':
+        return (
+          <BottomBar bottomInset={bottomInset} maxWidth={shellWidth} screenPadding={screenPadding} onHeightChange={setStickyFooterHeight}>
+            <TouchableOpacity style={styles.bottomBarButtonOutline} onPress={openAddressFlow}>
+              <Text style={styles.bottomBarButtonOutlineText}>Add Address</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.bottomBarButton, !draft.selectedAddressId && styles.bottomBarButtonDisabled]}
+              disabled={!draft.selectedAddressId}
+              onPress={() => updateDraft({ step: 'patients' })}
+            >
+              <Text style={styles.bottomBarButtonText}>Continue</Text>
+            </TouchableOpacity>
+          </BottomBar>
+        );
+      case 'patients':
+        return (
+          <BottomBar bottomInset={bottomInset} maxWidth={shellWidth} screenPadding={screenPadding} onHeightChange={setStickyFooterHeight}>
+            <View style={styles.bottomBarSummary}>
+              <Text style={styles.bottomBarLabel}>Patients selected</Text>
+              <Text style={styles.bottomBarValue}>{draft.selectedPatientIds.length}</Text>
+            </View>
+            <TouchableOpacity
+              style={[styles.bottomBarButton, !draft.selectedPatientIds.length && styles.bottomBarButtonDisabled]}
+              disabled={!draft.selectedPatientIds.length}
+              onPress={() =>
+                updateDraft((current) => ({
+                  ...current,
+                  slotGender: selectedPatient?.gender || current.slotGender,
+                  step: 'labs',
+                }))
+              }
+            >
+              <Text style={styles.bottomBarButtonText}>Continue</Text>
+            </TouchableOpacity>
+          </BottomBar>
+        );
+      case 'review':
+        return (
+          <BottomBar bottomInset={bottomInset} maxWidth={shellWidth} screenPadding={screenPadding} onHeightChange={setStickyFooterHeight}>
+            <View style={styles.bottomBarSummary}>
+              <Text style={styles.bottomBarLabel}>Total Amount</Text>
+              <Text style={styles.bottomBarValue}>₹{pricingSummary.payable}</Text>
+            </View>
+            <TouchableOpacity style={styles.bottomBarButton} onPress={handleBookNow} disabled={actionLoading === 'booking'}>
+              <Text style={styles.bottomBarButtonText}>{actionLoading === 'booking' ? 'Booking...' : 'Book Now'}</Text>
+            </TouchableOpacity>
+          </BottomBar>
+        );
+      default:
+        return null;
+    }
+  };
 
   const renderCurrentStep = () => {
     switch (draft.step) {
@@ -2060,6 +2490,8 @@ export default function BookingFlow() {
         return renderPackages();
       case 'review':
         return renderReview();
+      case 'orders':
+        return renderOrders();
       default:
         return renderHome();
     }
@@ -2094,14 +2526,27 @@ export default function BookingFlow() {
               <StatusBanner message={statusMessage} />
             </View>
           </ScrollView>
+          {renderStickyFooter()}
           {renderSlotDrawer()}
           {renderPatientDrawer()}
           <PatientModal
             visible={patientModalState.visible}
             initialValue={patientModalState.patient}
-            onClose={() => setPatientModalState({ visible: false, patient: null })}
+            mode={patientModalState.mode}
+            defaultEmail={draft.contactInfo.email}
+            onClose={() => setPatientModalState({ visible: false, patient: null, mode: 'basic' })}
             onSave={handlePatientSave}
           />
+          <ContactInfoModal
+            visible={contactModalVisible}
+            initialValue={draft.contactInfo}
+            onClose={() => {
+              resumeBookingAfterContactRef.current = false;
+              setContactModalVisible(false);
+            }}
+            onSave={handleContactSave}
+          />
+          <BookingSuccessOverlay visible={bookingSuccessVisible} animationValue={bookingSuccessAnimation} />
           {showDatePicker ? (
             <DateTimePicker
               value={draft.selectedDate ? new Date(draft.selectedDate) : new Date()}
@@ -2209,6 +2654,88 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginLeft: 6,
   },
+  ordersLoadingState: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 40,
+  },
+  ordersLoadingText: {
+    marginTop: 12,
+    color: '#6B7280',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  orderCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: '#EEE6FF',
+    padding: 16,
+    marginBottom: 14,
+  },
+  orderCardHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    marginBottom: 14,
+  },
+  orderHeaderTextWrap: {
+    flex: 1,
+    marginRight: 12,
+  },
+  orderCardTitle: {
+    color: '#111111',
+    fontSize: 15,
+    fontWeight: '800',
+  },
+  orderCardMeta: {
+    color: '#6B7280',
+    fontSize: 12,
+    fontWeight: '600',
+    marginTop: 4,
+  },
+  orderStatusBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 999,
+    backgroundColor: '#F3E8FF',
+  },
+  orderStatusText: {
+    color: '#7E22CE',
+    fontSize: 11,
+    fontWeight: '800',
+    textTransform: 'capitalize',
+  },
+  orderInfoBlock: {
+    marginBottom: 12,
+  },
+  orderInfoLabel: {
+    color: '#6B7280',
+    fontSize: 11,
+    fontWeight: '700',
+    marginBottom: 4,
+    textTransform: 'uppercase',
+  },
+  orderInfoValue: {
+    color: '#111111',
+    fontSize: 13,
+    fontWeight: '700',
+    lineHeight: 19,
+  },
+  orderInfoSubvalue: {
+    color: '#6B7280',
+    fontSize: 12,
+    fontWeight: '600',
+    marginTop: 3,
+  },
+  orderSplitRow: {
+    flexDirection: 'row',
+    marginBottom: 12,
+  },
+  orderSplitItem: {
+    flex: 1,
+    marginRight: 12,
+  },
   heroTitle: {
     color: '#FFFFFF',
     fontWeight: '700',
@@ -2232,31 +2759,32 @@ const styles = StyleSheet.create({
   },
   floatingSearchCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 22,
-    marginTop: -18,
-    padding: 8,
-    shadowColor: '#000000',
-    shadowOpacity: 0.08,
-    shadowRadius: 18,
-    shadowOffset: { width: 0, height: 10 },
-    elevation: 5,
+    borderRadius: 9999,
+    marginTop: -16,
+    marginBottom: 8,
+    marginHorizontal: 8,
+    paddingHorizontal: 18,
+    paddingVertical: 12,
+    borderWidth: 1,
+    borderColor: '#E9DDFB',
+    shadowOpacity: 0,
+    shadowRadius: 0,
+    shadowOffset: { width: 0, height: 0 },
+    elevation: 0,
   },
   searchWrap: {
-    minHeight: 44,
+    minHeight: 28,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#F0E8FF',
-    paddingHorizontal: 14,
-    borderRadius: 999,
+    backgroundColor: 'transparent',
+    borderRadius: 9999,
   },
   searchInput: {
     flex: 1,
-    color: '#111111',
+    color: '#4B5563',
     fontSize: 14,
-    paddingVertical: 10,
-    marginLeft: 10,
+    paddingVertical: 0,
+    marginLeft: 12,
   },
   offerStrip: {
     marginTop: 12,
@@ -2290,8 +2818,8 @@ const styles = StyleSheet.create({
   promoCard: {
     minHeight: 178,
     paddingLeft: 22,
-    paddingTop: 18,
-    paddingBottom: 18,
+    paddingTop: 22,
+    paddingBottom: 22,
     paddingRight: 146,
     justifyContent: 'center',
     overflow: 'hidden',
@@ -2305,9 +2833,9 @@ const styles = StyleSheet.create({
   },
   promoTitle: {
     color: '#FFFFFF',
-    fontSize: 26,
+    fontSize: 25,
     fontWeight: '800',
-    lineHeight: 31,
+    lineHeight: 27,
     letterSpacing: -0.4,
   },
   promoSubtitle: {
@@ -2336,7 +2864,7 @@ const styles = StyleSheet.create({
     top: 0,
     right: 0,
     bottom: 0,
-    width: 142,
+    width: 152,
     overflow: 'hidden',
     borderTopLeftRadius: 18,
     borderBottomLeftRadius: 18,
@@ -2366,54 +2894,10 @@ const styles = StyleSheet.create({
     color: '#7E22CE',
     fontWeight: '800',
   },
-  prescriptionCard: {
-    marginTop: 14,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 20,
-    paddingHorizontal: 15,
-    paddingVertical: 13,
-    borderWidth: 1,
-    borderColor: '#EADCFB',
-    borderStyle: 'dashed',
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  prescriptionIconWrap: {
-    height: 50,
-    width: 50,
-    borderRadius: 30,
-    backgroundColor: '#F3E8FF',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   prescriptionTextWrap: {
     flex: 1,
     marginLeft: 14,
     paddingRight: 8,
-  },
-  prescriptionTitle: {
-    color: '#111111',
-    fontSize: 16,
-    fontWeight: '800',
-  },
-  prescriptionSubtitle: {
-    color: '#6B7280',
-    fontSize: 12,
-    marginTop: 4,
-    lineHeight: 16,
-  },
-  uploadChip: {
-    backgroundColor: '#A855F7',
-    borderRadius: 999,
-    minWidth: 90,
-    alignItems: 'center',
-    paddingHorizontal: 15,
-    paddingVertical: 12,
-  },
-  uploadChipText: {
-    color: '#FFFFFF',
-    fontWeight: '700',
-    fontSize: 15,
   },
   iconFeatureRow: {
     marginTop: 26,
@@ -2446,7 +2930,7 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     backgroundColor: '#F7F5FF',
     paddingHorizontal: 18,
-    paddingVertical: 16,
+    paddingVertical: 13,
   },
   trustBannerText: {
     color: '#222222',
@@ -2629,8 +3113,15 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    paddingTop: 8,
-    backgroundColor: 'transparent',
+    paddingTop: 12,
+    backgroundColor: '#FFFFFF',
+    borderTopWidth: 1,
+    borderTopColor: '#F3ECFF',
+    shadowColor: '#1F1147',
+    shadowOpacity: 0.08,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: -6 },
+    elevation: 18,
   },
   bottomBarInner: {
     width: '100%',
@@ -2638,6 +3129,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-end',
     flexWrap: 'wrap',
+  },
+  reviewFooterPaymentWrap: {
+    width: '100%',
+    marginBottom: 12,
+  },
+  reviewFooterPaymentLabel: {
+    color: '#111111',
+    fontSize: 12,
+    fontWeight: '700',
+    marginBottom: 8,
   },
   bottomBarSummary: {
     flex: 1,
@@ -3116,6 +3617,13 @@ const styles = StyleSheet.create({
     color: '#111111',
     fontSize: 14,
   },
+  contactModalErrorText: {
+    color: '#C81E1E',
+    fontSize: 12,
+    fontWeight: '600',
+    marginTop: 4,
+    marginBottom: 10,
+  },
   tagRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -3409,6 +3917,17 @@ const styles = StyleSheet.create({
     color: '#7E22CE',
     fontWeight: '800',
     fontSize: 15,
+  },
+  checkboxRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 14,
+  },
+  checkboxLabel: {
+    marginLeft: 10,
+    color: '#374151',
+    fontSize: 13,
+    fontWeight: '600',
   },
   filterTabs: {
     flexDirection: 'row',
@@ -3711,6 +4230,21 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginLeft: 8,
   },
+  reviewAddButton: {
+    minWidth: 72,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: '#F3E8FF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 8,
+    paddingHorizontal: 12,
+  },
+  reviewAddButtonText: {
+    color: '#7E22CE',
+    fontSize: 13,
+    fontWeight: '800',
+  },
   reviewLabDivider: {
     height: 1,
     backgroundColor: '#F0DDC9',
@@ -3821,24 +4355,41 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: '800',
   },
-  confirmedCard: {
-    marginTop: 12,
-    borderRadius: 14,
-    backgroundColor: '#EBFFF3',
-    borderWidth: 1,
-    borderColor: '#BDE6CB',
-    padding: 14,
+  successOverlayBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(17,17,17,0.18)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 24,
   },
-  confirmedCardTitle: {
-    color: '#1F7A4E',
-    fontSize: 12,
-    fontWeight: '700',
+  successOverlayCard: {
+    width: '100%',
+    maxWidth: 280,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 24,
+    alignItems: 'center',
+    paddingHorizontal: 24,
+    paddingVertical: 28,
+    shadowColor: '#111111',
+    shadowOpacity: 0.14,
+    shadowRadius: 22,
+    shadowOffset: { width: 0, height: 10 },
+    elevation: 12,
   },
-  confirmedCardText: {
-    color: '#14532D',
+  successOverlayIcon: {
+    height: 64,
+    width: 64,
+    borderRadius: 32,
+    backgroundColor: '#7E22CE',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+  },
+  successOverlayTitle: {
+    color: '#111111',
+    fontSize: 20,
     fontWeight: '800',
-    fontSize: 14,
-    marginTop: 4,
+    textAlign: 'center',
   },
   statusBanner: {
     marginTop: 18,

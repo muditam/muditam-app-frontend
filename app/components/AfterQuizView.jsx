@@ -82,57 +82,148 @@ function calculateBMI(heightCm, weightKg) {
     return Number(weightKg) / (hM * hM);
 }
 
+function normalizeAnswerList(answer) {
+    if (Array.isArray(answer)) return answer.filter(Boolean);
+    return answer ? [answer] : [];
+}
+
+function incrementScore(scoreMap, key, amount) {
+    scoreMap[key] = (scoreMap[key] || 0) + amount;
+}
+
 function getRootCausesFromQuiz(answers, userVitals) {
-    const causes = [];
+    const scores = {};
+    const bmi = calculateBMI(userVitals?.height, userVitals?.weight);
+    const familyHistory = answers[0];
+    const diabetesStatus = answers[1];
+    const fastingSugar = answers[3];
+    const postMealSugar = answers[4];
+    const conditions = normalizeAnswerList(answers[5]);
+    const symptoms = normalizeAnswerList(answers[6]);
+    const sleepCycle = answers[8];
+    const hasStress = answers[9];
+    const sugarIntake = answers[10];
+    const activityLevel = answers[11];
+    const treatment = answers[12];
+    const weightChange = answers[13];
 
-    // 1. BMI
-    if (userVitals && userVitals.height && userVitals.weight) {
-        const bmi = calculateBMI(userVitals.height, userVitals.weight);
-        if (bmi > 23) causes.push('body_weight');
+    if (bmi >= 27) {
+        incrementScore(scores, 'body_weight', 4);
+        incrementScore(scores, 'insulin', 2);
+    } else if (bmi >= 23) {
+        incrementScore(scores, 'body_weight', 3);
+        incrementScore(scores, 'insulin', 1);
     }
 
-    // 2. Genetics: Q1 (index 0)
-    const q1 = answers[0];
-    if (q1 && Array.isArray(q1) ? q1.some(ans => ans !== 'None') : q1 !== 'None') {
-        causes.push('genetics');
+    if (weightChange === 'Recently Gained Weight') {
+        incrementScore(scores, 'body_weight', 2);
+        incrementScore(scores, 'insulin', 1);
+    } else if (weightChange === 'Recently Lost Weight') {
+        incrementScore(scores, 'insulin', 1);
     }
 
-    // 3. Comorbidities: Q6 (index 5)
-    const q6 = answers[5];
-    if (q6) {
-        if (Array.isArray(q6)) {
-            if (q6.includes('Thyroid')) causes.push('thyroid');
-            if (q6.includes('Fatty Liver')) causes.push('fatty_liver');
-            if (q6.includes('High Cholesterol')) causes.push('cholesterol');
-            if (q6.includes('Hypertension')) causes.push('hypertension');
-        }
+    if (familyHistory && familyHistory !== 'None') {
+        incrementScore(scores, 'genetics', familyHistory === 'Both' ? 4 : 3);
     }
 
-    // 4. Stress: Q10 (index 9)
-    const q10 = answers[9];
-    if (q10 && q10 === 'Yes') causes.push('stress');
-
-    // 5. Lifestyle: Q12 (index 11) - "How frequently do you engage in physical activity?"
-    const q12 = answers[11];
-    if (
-        q12 &&
-        q12 !== "I exercise or walk atleast 30 mins daily"
+    if (diabetesStatus === 'Yes, I am Type 2 Diabetic & also on Insulin') {
+        incrementScore(scores, 'insulin', 5);
+    } else if (
+        diabetesStatus === 'Yes, I am Type-2 Diabetic' ||
+        diabetesStatus === 'Yes, I am Pre-Diabetic'
     ) {
-        causes.push('lifestyle');
+        incrementScore(scores, 'insulin', 3);
     }
 
-    // 6. Lifestyle: Q11 (index 10) - "How often do you eat or drink sugary foods?"
-    const q11 = answers[10];
     if (
-        q11 &&
-        (q11 === "Regularly - I can't resist sweet desserts or snacks" ||
-            q11.startsWith("Frequently") ||
-            q11.startsWith("Rarely"))
+        fastingSugar === '201-300 mg/dL' ||
+        fastingSugar === '301-400 mg/dL' ||
+        fastingSugar === 'More than 400 mg/dL'
     ) {
-        if (!causes.includes('lifestyle')) causes.push('lifestyle');
+        incrementScore(scores, 'insulin', 3);
+    } else if (fastingSugar === '126- 200 mg/dL') {
+        incrementScore(scores, 'insulin', 2);
+    } else if (fastingSugar === '100-125 mg/dL') {
+        incrementScore(scores, 'insulin', 1);
     }
 
-    return causes;
+    if (
+        postMealSugar === '251-300 mg/dL' ||
+        postMealSugar === '301-400 mg/dL' ||
+        postMealSugar === 'More than 400 mg/dL'
+    ) {
+        incrementScore(scores, 'insulin', 3);
+    } else if (postMealSugar === '181-250 mg/dL') {
+        incrementScore(scores, 'insulin', 2);
+    } else if (postMealSugar === '141-180 mg/dL') {
+        incrementScore(scores, 'insulin', 1);
+    }
+
+    if (conditions.includes('Thyroid')) incrementScore(scores, 'thyroid', 4);
+    if (conditions.includes('Fatty Liver')) {
+        incrementScore(scores, 'fatty_liver', 4);
+        incrementScore(scores, 'insulin', 1);
+    }
+    if (conditions.includes('High Cholesterol')) incrementScore(scores, 'cholesterol', 4);
+    if (conditions.includes('Hypertension')) incrementScore(scores, 'hypertension', 4);
+
+    if (hasStress === 'Yes') incrementScore(scores, 'stress', 3);
+    if (
+        sleepCycle === 'Improper Sleep (Less than 6 hrs.)' ||
+        sleepCycle === 'Disturbed' ||
+        sleepCycle === 'Difficulty Falling Asleep' ||
+        sleepCycle === 'Have to Consume Sleeping Pills'
+    ) {
+        incrementScore(scores, 'stress', 2);
+    }
+
+    if (activityLevel === 'I exercise or walk for less than 30 mins daily') {
+        incrementScore(scores, 'lifestyle', 1);
+        incrementScore(scores, 'insulin', 1);
+    } else if (
+        activityLevel === 'I exercise or walk occasionally' ||
+        activityLevel === "I don't get time to exercise or walk"
+    ) {
+        incrementScore(scores, 'lifestyle', 3);
+        incrementScore(scores, 'insulin', 1);
+    }
+
+    if (sugarIntake === "Regularly - I can't resist sweet desserts or snacks") {
+        incrementScore(scores, 'lifestyle', 3);
+        incrementScore(scores, 'insulin', 1);
+    } else if (sugarIntake?.startsWith('Frequently')) {
+        incrementScore(scores, 'lifestyle', 2);
+    } else if (sugarIntake?.startsWith('Rarely')) {
+        incrementScore(scores, 'lifestyle', 1);
+    }
+
+    if (
+        symptoms.includes('Sugar Cravings') ||
+        symptoms.includes('Acidity') ||
+        symptoms.includes('Gas') ||
+        symptoms.includes('Constipation')
+    ) {
+        incrementScore(scores, 'lifestyle', 1);
+    }
+    if (symptoms.includes('Tiredness') || symptoms.includes('Frequent Urination')) {
+        incrementScore(scores, 'insulin', 1);
+    }
+
+    if (treatment === 'Insulin') {
+        incrementScore(scores, 'insulin', 3);
+    } else if (
+        treatment === 'Allopathic medicine(tablets)' ||
+        treatment === 'No, I am currently not taking any kind of Treatment'
+    ) {
+        incrementScore(scores, 'insulin', 1);
+    }
+
+    const rankedCauses = Object.entries(scores)
+        .filter(([, score]) => score > 0)
+        .sort((a, b) => b[1] - a[1])
+        .map(([key]) => key);
+
+    return rankedCauses.slice(0, 4);
 }
 
 export default function AfterQuizView() {
@@ -187,11 +278,13 @@ export default function AfterQuizView() {
             const quiz = quizRaw ? JSON.parse(quizRaw) : {};
             const quizAnswers = quiz.answers || [];
             let causes = getRootCausesFromQuiz(quizAnswers, userVitals);
-
-            // If less than 3, add lifestyle if not already
-            if (causes.length < 3 && !causes.includes('lifestyle')) causes.push('lifestyle');
-            // If less than 2, also add insulin resistance
-            if (causes.length < 2 && !causes.includes('insulin')) causes.push('insulin');
+            if (!causes.length) {
+                causes = ['insulin', 'lifestyle', 'stress'];
+            } else if (causes.length === 1 && !causes.includes('lifestyle')) {
+                causes = [...causes, 'lifestyle'];
+            } else if (causes.length === 2 && !causes.includes('stress')) {
+                causes = [...causes, 'stress'];
+            }
 
             setQuizCauses(causes);
 

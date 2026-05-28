@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import '../../global.css';
+import { parseJsonSafely } from '../../utils/safeJson';
 
 import { checkQuizStatus } from '../../utils/checkQuizFromServer';
 import { checkPurchaseStatus } from '../../utils/checkPurchaseStatus';
@@ -33,7 +34,7 @@ export default function Layout() {
         if (!userDetails) {
           router.replace('/login');
         } else {
-          const parsedUser = JSON.parse(userDetails);
+          const parsedUser = parseJsonSafely(userDetails, {});
           setUserReady(true);
           syncPushNotificationsIfPermitted(parsedUser?._id).catch((error) => {
             console.warn('Push sync failed:', error.message);

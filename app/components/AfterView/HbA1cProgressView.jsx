@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { RadioButton } from 'react-native-paper';
+import { parseJsonSafely } from '../../../utils/safeJson';
 
 const barImages = {
   supplements: 'https://cdn.shopify.com/s/files/1/0734/7155/7942/files/Group_917.webp?v=1745650473',
@@ -44,7 +45,7 @@ export default function HbA1cProgressView() {
   useEffect(() => {
     const loadAnswers = async () => {
       const data = await AsyncStorage.getItem('quizProgress');
-      const parsed = JSON.parse(data || '{}');
+      const parsed = parseJsonSafely(data, {});
       const q4 = parsed.answers?.[3]; // index 3 = question 4
       const match = /([0-9.]+)%/.exec(q4);
       if (match) setHba1cValue(parseFloat(match[1]));
@@ -56,7 +57,7 @@ export default function HbA1cProgressView() {
   const fetchUserHbA1c = async () => {
     try {
       const user = await AsyncStorage.getItem('userDetails');
-      const phone = JSON.parse(user || '{}')?.phone;
+      const phone = parseJsonSafely(user, {})?.phone;
       if (!phone) return;
 
       const response = await fetch(`https://muditam-app-backend-ca1c8b03db09.herokuapp.com/api/quiz/${phone}`);
@@ -205,5 +206,4 @@ const styles = StyleSheet.create({
 
   },
 });
-
 

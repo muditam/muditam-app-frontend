@@ -15,6 +15,7 @@ import { Picker } from "@react-native-picker/picker";
 import AsyncStorage from '@react-native-async-storage/async-storage'; 
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as ImagePicker from 'expo-image-picker';
+import { parseJsonSafely } from "../utils/safeJson";
 
 export default function EditProfileScreen() {
   const [preferredLanguage, setpreferredLanguage] = useState("English");
@@ -38,7 +39,8 @@ export default function EditProfileScreen() {
     const loadUser = async () => {
       const stored = await AsyncStorage.getItem('userDetails');
       if (stored) {
-        const userData = JSON.parse(stored);
+        const userData = parseJsonSafely(stored, null);
+        if (!userData) return;
         setUser(userData);
         setOriginalUser(userData); // snapshot for comparison
         setpreferredLanguage(userData.langpreferredLanguageuage || "English");
@@ -129,7 +131,7 @@ export default function EditProfileScreen() {
       } else {
         alert('Failed to update profile');
       }
-    } catch (error) {
+    } catch (_error) {
       alert('An error occurred while updating profile');
     }
   };
