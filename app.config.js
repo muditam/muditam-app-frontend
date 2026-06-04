@@ -50,7 +50,14 @@ export default {
         : undefined,
       infoPlist: {
         ITSAppUsesNonExemptEncryption: false,
-        NSMicrophoneUsageDescription: 'Allow Muditam Ayurveda to use your microphone for internet calls.',
+        NSCameraUsageDescription:
+          'Muditam Ayurveda uses the camera so you can take a profile photo and capture health-related images, such as glucose readings, to upload in the app.',
+        NSMicrophoneUsageDescription:
+          'Muditam Ayurveda uses the microphone so you can record voice notes in chat and speak during internet audio calls with your health expert.',
+        NSPhotoLibraryUsageDescription:
+          'Muditam Ayurveda accesses your photo library so you can choose a profile photo or attach existing health-related images and files in chat and care flows.',
+        NSPhotoLibraryAddUsageDescription:
+          'Muditam Ayurveda saves selected health-related images to your app flow only when you choose to upload or share them, such as a profile photo or glucose reading.',
         NSLocationWhenInUseUsageDescription: 'Allow Muditam Ayurveda to detect your location and show nearby sample collection areas.',
       },
     },

@@ -13,19 +13,19 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   activityOptions,
-  calculateBmi,
-  calculateMacroPreview,
+  calculateNutritionPreview,
   communityLabels,
   communityOptions,
   createInitialDietForm,
   dietTypeOptions,
   fetchHealthProfile,
-  fetchPlansByLead,
   generateDietPlan,
+  healthConditionOptions,
+  hasDuplicateCoreMealFoods,
+  hasInsufficientSuggestedCalories,
   getDietIdentity,
-  getLatestActivePlan,
-  goalOptions,
   saveHealthProfile,
+  allergyOptions,
 } from '../../utils/diet';
 
 const STEP_COUNT = 6;
@@ -38,26 +38,16 @@ const goalCards = [
 ];
 
 const healthConditionCards = [
-  'weightLoss',
-  'diabetes',
-  'pcos',
-  'cholesterol',
   'hypertension',
-  'muscleGain',
   'thyroid',
-  'ibs',
+  'inflammation',
+  'proteinDeficiency',
+  'vitaminB12Deficiency',
+  'pcos',
+  'diabetes',
+  'sleepDisorder',
+  'prediabetes',
   'anemia',
-  'heartDisease',
-];
-
-const allergyCards = [
-  { code: 'SF', label: 'Seafood' },
-  { code: 'ML', label: 'Dairy / Milk' },
-  { code: 'F', label: 'Fish' },
-  { code: 'E', label: 'Eggs' },
-  { code: 'N', label: 'Nuts' },
-  { code: 'G', label: 'Gluten' },
-  { code: 'SO', label: 'Soy' },
 ];
 
 function clampNumber(value, min, max) {
@@ -148,35 +138,27 @@ export default function DietOnboardingScreen() {
   }, []);
 
   const preview = useMemo(() => {
-    if (!form) return { bmi: 0, calorieTarget: 1200, macros: { carbs: 150, protein: 75, fat: 33 } };
-    const age = Number(form.age || 0);
-    const weightKg = Number(form.weightKg || 0);
+    if (!form) return { bmi: 0, calorieTarget: 1200, macros: { carbs: 170, protein: 56, fat: 33 } };
     const heightCm = Number(
       form.heightUnit === 'ft'
         ? feetInchesToCm(form.heightFeet, form.heightInches)
         : form.heightCm || 0
     );
-    const multiplier = { AC1: 1.2, AC2: 1.375, AC3: 1.55, AC4: 1.7 }[form.activityCode] || 1.375;
-    const baseBmr =
-      form.gender === 'male'
-        ? 10 * weightKg + 6.25 * heightCm - 5 * age + 5
-        : 10 * weightKg + 6.25 * heightCm - 5 * age - 161;
-    const tdee = baseBmr * multiplier;
-    let calorieTarget = tdee;
-    if (form.goal === 'weightLoss') calorieTarget = tdee - 500;
-    if (form.goal === 'fatShredding') calorieTarget = tdee - 650;
-    if (form.goal === 'muscleGain') calorieTarget = tdee + 250;
-    if (!['weightLoss', 'fatShredding', 'muscleGain', 'weightMaintenance'].includes(form.goal)) calorieTarget = tdee - 250;
-    calorieTarget = Math.max(1200, Math.round(calorieTarget));
-    return {
-      bmi: calculateBmi(heightCm, weightKg),
-      calorieTarget,
-      macros: calculateMacroPreview(calorieTarget),
-    };
+    return calculateNutritionPreview({
+      age: Number(form.age || 0),
+      weightKg: Number(form.weightKg || 0),
+      heightCm,
+      activityCode: form.activityCode,
+      gender: form.gender,
+      goal: form.goal,
+    });
   }, [form]);
 
   const currentGoalCard = goalCards.find((item) => item.key === form?.goal) || goalCards[0];
-  const visibleConditions = showMoreConditions ? goalOptions : healthConditionCards;
+  const visibleConditions = useMemo(() => {
+    if (showMoreConditions) return healthConditionOptions;
+    return healthConditionOptions.filter((item) => healthConditionCards.includes(item.value));
+  }, [showMoreConditions]);
   const isCompact = width < 380;
   const isTablet = width >= 768;
   const horizontalPadding = isCompact ? 12 : 16;
@@ -250,11 +232,20 @@ export default function DietOnboardingScreen() {
       setSaving(true);
       const payload = normalizeSubmitPayload(form, identity);
       await saveHealthProfile(payload);
-      const currentPlans = await fetchPlansByLead(identity.leadId);
-      const existingPlan = getLatestActivePlan(currentPlans);
-      const generatedPlan = existingPlan || (await generateDietPlan({ leadId: identity.leadId, generatedBy: 'app-user', createdBy: 'app-user' }));
-      const refreshedPlans = generatedPlan?._id ? [generatedPlan] : await fetchPlansByLead(identity.leadId);
-      const finalPlan = generatedPlan?._id ? generatedPlan : getLatestActivePlan(refreshedPlans);
+      const generatedPlan = await generateDietPlan({
+        leadId: identity.leadId,
+        generatedBy: 'app-user',
+        createdBy: 'app-user',
+        archivePrevious: true,
+      });
+      const finalPlan = hasDuplicateCoreMealFoods(generatedPlan) || hasInsufficientSuggestedCalories(generatedPlan)
+        ? await generateDietPlan({
+            leadId: identity.leadId,
+            generatedBy: 'app-user',
+            createdBy: 'app-user',
+            archivePrevious: true,
+          })
+        : generatedPlan;
 
       if (finalPlan?._id) {
         router.replace({ pathname: '/diet/plan', params: { planId: finalPlan._id } });
@@ -483,13 +474,13 @@ export default function DietOnboardingScreen() {
         </View>
         <View style={styles.checkGrid}>
           {visibleConditions.map((item) => {
-            const active = form.healthConditions.includes(item);
+            const active = form.healthConditions.includes(item.value);
             return (
-              <TouchableOpacity key={item} style={[styles.checkItem, { width: checkItemWidth }]} onPress={() => toggleListValue('healthConditions', item)}>
+              <TouchableOpacity key={item.value} style={[styles.checkItem, { width: checkItemWidth }]} onPress={() => toggleListValue('healthConditions', item.value)}>
                 <View style={[styles.checkbox, active && styles.checkboxActive]}>
                   {active ? <Text style={styles.checkboxTick}>✓</Text> : null}
                 </View>
-                <Text style={styles.checkText}>{item === 'pcos' ? 'Pcos' : item.replace(/([A-Z])/g, ' $1').replace(/^./, (letter) => letter.toUpperCase())}</Text>
+                <Text style={styles.checkText}>{item.label}</Text>
               </TouchableOpacity>
             );
           })}
@@ -507,7 +498,7 @@ export default function DietOnboardingScreen() {
           <Text style={styles.checkPanelEmoji}>🤧</Text>
         </View>
         <View style={styles.checkGrid}>
-          {allergyCards.map((item) => {
+          {allergyOptions.map((item) => {
             const active = form.allergies.includes(item.code);
             return (
               <TouchableOpacity key={item.code} style={[styles.checkItem, { width: checkItemWidth }]} onPress={() => toggleListValue('allergies', item.code)}>
@@ -555,7 +546,7 @@ export default function DietOnboardingScreen() {
             const active = form.activityCode === item.code;
             return (
               <TouchableOpacity key={item.code} style={[styles.activityCard, active && styles.activityCardActive]} onPress={() => setForm((current) => ({ ...current, activityCode: item.code }))}>
-                <Text style={styles.activityCode}>{item.code}</Text>
+                <Text style={styles.activityEmoji}>{item.emoji || '🏃'}</Text>
                 <Text style={styles.activityText}>{item.label}</Text>
               </TouchableOpacity>
             );
@@ -792,7 +783,7 @@ const styles = StyleSheet.create({
   activityList: { gap: 10 },
   activityCard: { borderRadius: 14, borderWidth: 1, borderColor: '#ece6e6', padding: 14, flexDirection: 'row', alignItems: 'center', gap: 12 },
   activityCardActive: { borderColor: '#f15b7b', backgroundColor: '#fff1f3' },
-  activityCode: { color: '#f15b7b', fontWeight: '900', width: 36 },
+  activityEmoji: { fontSize: 22, width: 32, textAlign: 'center' },
   activityText: { color: '#22252b', fontWeight: '700' },
   summaryIntro: { fontSize: 17, lineHeight: 30, color: '#30323a', marginTop: 8 },
   summaryCard: { marginTop: 14, backgroundColor: '#fff', borderRadius: 18, borderWidth: 1, borderColor: '#ece6e6', padding: 16, flexDirection: 'row', alignItems: 'flex-start', gap: 12 },

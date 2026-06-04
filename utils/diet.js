@@ -6,10 +6,10 @@ export const API_BASE =
   'https://muditam-app-backend-ca1c8b03db09.herokuapp.com';
 
 export const activityOptions = [
-  { code: 'AC1', label: 'Sedentary' },
-  { code: 'AC2', label: 'Lightly active' },
-  { code: 'AC3', label: 'Moderately active' },
-  { code: 'AC4', label: 'Very active' },
+  { code: 'AC1', label: 'Sedentary', emoji: '🪑' },
+  { code: 'AC2', label: 'Lightly active', emoji: '🚶' },
+  { code: 'AC3', label: 'Moderately active', emoji: '🏃' },
+  { code: 'AC4', label: 'Very active', emoji: '🏋️' },
 ];
 
 export const dietTypeOptions = [
@@ -44,14 +44,34 @@ export const goalOptions = [
   'hairHealth',
 ];
 
+export const healthConditionOptions = [
+  { value: 'hypertension', label: 'High blood pressure' },
+  { value: 'thyroid', label: 'Hypothyroidism' },
+  { value: 'inflammation', label: 'Inflammation' },
+  { value: 'proteinDeficiency', label: 'Protein Deficiency' },
+  { value: 'vitaminB12Deficiency', label: 'Vitamin B12 Deficiency' },
+  { value: 'pcos', label: 'PCOS' },
+  { value: 'diabetes', label: 'Diabetes' },
+  { value: 'sleepDisorder', label: 'Sleep disorder' },
+  { value: 'prediabetes', label: 'Prediabetes' },
+  { value: 'anemia', label: 'Anemia' },
+  { value: 'fattyLiver', label: 'Fatty Liver' },
+  { value: 'calciumDeficiency', label: 'Calcium Deficiency' },
+  { value: 'vitaminDDeficiency', label: 'Vitamin D Deficiency' },
+  { value: 'uricAcid', label: 'Uric Acid Problem' },
+  { value: 'cholesterol', label: 'High Cholestrol/ Heart' },
+  { value: 'ibs', label: 'Digestion / Acidity / Constipation' },
+  { value: 'ironDeficiency', label: 'Iron Deficiency' },
+];
+
 export const allergyOptions = [
-  { code: 'SF', label: 'Shellfish' },
-  { code: 'SO', label: 'Soy' },
-  { code: 'ML', label: 'Milk' },
-  { code: 'F', label: 'Fish' },
-  { code: 'E', label: 'Egg' },
-  { code: 'N', label: 'Nuts' },
-  { code: 'G', label: 'Gluten' },
+  { code: 'G', label: 'Gluten Allergy' },
+  { code: 'E', label: 'Eggs Allergy' },
+  { code: 'ML', label: 'Milk/Lactose Allergy' },
+  { code: 'SF', label: 'Sea Food Allergy' },
+  { code: 'N', label: 'Nut allergy' },
+  { code: 'F', label: 'Fish Allergy' },
+  { code: 'SO', label: 'Soya Allergy' },
 ];
 
 export const communityOptions = ['U', 'P', 'S', 'M', 'G', 'B', 'T', 'R', 'K', 'A', 'H', 'O', 'C'];
@@ -165,6 +185,39 @@ export async function generateDietPlan(payload) {
   });
 }
 
+export function hasDuplicateCoreMealFoods(plan) {
+  const firstDay = plan?.planDays?.[0];
+  if (!firstDay?.slots?.length) return false;
+
+  const coreSlots = [2, 4, 7]
+    .map((slotIndex) => firstDay.slots.find((slot) => slot.slotIndex === slotIndex && slot.isActive))
+    .filter(Boolean);
+
+  const seen = new Set();
+  for (const slot of coreSlots) {
+    for (const food of slot.foods || []) {
+      const key = `${food.source}::${food.foodId}`;
+      if (seen.has(key)) return true;
+      seen.add(key);
+    }
+  }
+
+  return false;
+}
+
+export function hasInsufficientSuggestedCalories(plan) {
+  const firstDay = plan?.planDays?.[0];
+  const target = Number(plan?.calorieTarget || 0);
+  if (!firstDay?.slots?.length || !target) return false;
+
+  const suggestedCalories = firstDay.slots.reduce((sum, slot) => {
+    if (!slot?.isActive) return sum;
+    return sum + Number(slot.totalCalories || 0);
+  }, 0);
+
+  return suggestedCalories > 0 && suggestedCalories < target * 0.75;
+}
+
 export async function fetchFoodDetail(foodId, source) {
   const query = new URLSearchParams({ foodId, source }).toString();
   return request(`/api/smart-diet-plan/food-detail?${query}`);
@@ -200,6 +253,13 @@ export async function toggleFoodLogged(planId, payload) {
   });
 }
 
+export async function updateFoodInPlan(planId, payload) {
+  return request(`/api/smart-diet-plan/${planId}/update-food`, {
+    method: 'PUT',
+    body: JSON.stringify(payload),
+  });
+}
+
 export async function swapFood(planId, payload) {
   return request(`/api/smart-diet-plan/${planId}/swap`, {
     method: 'PUT',
@@ -216,6 +276,13 @@ export function validateDietProfile(form) {
 }
 
 export function createInitialDietForm(identity, profile) {
+  const normalizedHealthConditions = (profile?.healthConditions || []).map((value) => {
+    if (value === 'heartDisease') return 'cholesterol';
+    if (value === 'liverDisease') return 'fattyLiver';
+    if (value === 'osteoporosis') return 'calciumDeficiency';
+    if (value === 'uricAcidProblem') return 'uricAcid';
+    return value;
+  });
   return {
     leadId: identity.leadId,
     clientName: profile?.clientName || identity.clientName,
@@ -230,7 +297,7 @@ export function createInitialDietForm(identity, profile) {
     goal: profile?.goal || 'weightLoss',
     dietType: profile?.dietType || 'V',
     communityCodes: profile?.communityCodes || [],
-    healthConditions: profile?.healthConditions || [],
+    healthConditions: normalizedHealthConditions,
     allergies: profile?.allergies || [],
     mealsPerDay: profile?.mealsPerDay ? String(profile.mealsPerDay) : '3',
   };
@@ -242,16 +309,32 @@ export function formatGoalLabel(value) {
     .replace(/^./, (letter) => letter.toUpperCase());
 }
 
+export function formatHealthConditionLabel(value) {
+  if (value === 'heartDisease') value = 'cholesterol';
+  if (value === 'liverDisease') value = 'fattyLiver';
+  if (value === 'osteoporosis') value = 'calciumDeficiency';
+  if (value === 'uricAcidProblem') value = 'uricAcid';
+  return healthConditionOptions.find((item) => item.value === value)?.label || formatGoalLabel(value);
+}
+
+export function formatAllergyLabel(value) {
+  return allergyOptions.find((item) => item.code === value)?.label || value || '-';
+}
+
 export function getDailyTotals(day) {
   return (day?.slots || []).reduce(
     (acc, slot) => {
       if (!slot.isActive) return acc;
-      acc.calories += Number(slot.totalCalories || 0);
-      acc.smartCalories += Number(slot.totalSmartCalories || 0);
-      acc.protein += Number(slot.totalProtein || 0);
-      acc.carbs += Number(slot.totalCarbs || 0);
-      acc.fat += Number(slot.totalFat || 0);
-      acc.fiber += Number(slot.totalFiber || 0);
+      for (const food of slot.foods || []) {
+        if (!food.isConsumed) continue;
+        const quantity = Number(food.quantity || 1);
+        acc.calories += Number(food.calories || 0) * quantity;
+        acc.smartCalories += Number(food.smartCalories || 0) * quantity;
+        acc.protein += Number(food.protein || 0) * quantity;
+        acc.carbs += Number(food.carbs || 0) * quantity;
+        acc.fat += Number(food.fat || 0) * quantity;
+        acc.fiber += Number(food.fiber || 0) * quantity;
+      }
       return acc;
     },
     { calories: 0, smartCalories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0 }
@@ -265,11 +348,59 @@ export function calculateBmi(heightCm, weightKg) {
   return weight / (heightMeters * heightMeters);
 }
 
-export function calculateMacroPreview(calorieTarget = 0) {
+function getMacroRatioProfile(goal = '') {
+  const normalizedGoal = String(goal || '').trim();
+  if (normalizedGoal === 'muscleGain') {
+    return { carbs: 0.5, protein: 0.23, fat: 0.27 };
+  }
+  if (normalizedGoal === 'weightMaintenance') {
+    return { carbs: 0.54, protein: 0.2, fat: 0.26 };
+  }
+  return { carbs: 0.565, protein: 0.185, fat: 0.25 };
+}
+
+export function calculateMacroPreview(calorieTarget = 0, goal = '') {
   const total = Number(calorieTarget || 0);
+  const ratios = getMacroRatioProfile(goal);
   return {
-    carbs: Math.round((total * 0.5) / 4),
-    protein: Math.round((total * 0.25) / 4),
-    fat: Math.round((total * 0.25) / 9),
+    carbs: Math.round((total * ratios.carbs) / 4),
+    protein: Math.round((total * ratios.protein) / 4),
+    fat: Math.round((total * ratios.fat) / 9),
+  };
+}
+
+export function calculateCalorieTargetPreview(profile = {}) {
+  const age = Number(profile.age || 0);
+  const weightKg = Number(profile.weightKg || 0);
+  const heightCm = Number(profile.heightCm || 0);
+  const multiplier =
+    {
+      AC1: 1.2,
+      AC2: 1.375,
+      AC3: 1.55,
+      AC4: 1.7,
+    }[profile.activityCode] || 1.375;
+
+  const baseBmr =
+    String(profile.gender || '').toLowerCase() === 'male'
+      ? 10 * weightKg + 6.25 * heightCm - 5 * age + 5
+      : 10 * weightKg + 6.25 * heightCm - 5 * age - 161;
+  const tdee = baseBmr * multiplier;
+
+  let calorieTarget = tdee;
+  if (profile.goal === 'weightLoss') calorieTarget = tdee - 500;
+  if (profile.goal === 'fatShredding') calorieTarget = tdee - 650;
+  if (profile.goal === 'muscleGain') calorieTarget = tdee + 250;
+  if (!['weightLoss', 'fatShredding', 'muscleGain', 'weightMaintenance'].includes(profile.goal)) calorieTarget = tdee - 250;
+
+  return Math.max(1200, Math.round(calorieTarget));
+}
+
+export function calculateNutritionPreview(profile = {}) {
+  const calorieTarget = calculateCalorieTargetPreview(profile);
+  return {
+    bmi: calculateBmi(profile.heightCm, profile.weightKg),
+    calorieTarget,
+    macros: calculateMacroPreview(calorieTarget, profile.goal),
   };
 }

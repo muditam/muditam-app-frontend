@@ -54,11 +54,13 @@
       <true/>
     </dict>
     <key>NSCameraUsageDescription</key>
-    <string>Allow $(PRODUCT_NAME) to access your camera</string>
+    <string>Muditam Ayurveda uses the camera so you can take a profile photo and capture health-related images, such as glucose readings, to upload in the app.</string>
     <key>NSMicrophoneUsageDescription</key>
-    <string>Allow $(PRODUCT_NAME) to access your microphone</string>
+    <string>Muditam Ayurveda uses the microphone so you can record voice notes in chat and speak during internet audio calls with your health expert.</string>
+    <key>NSPhotoLibraryAddUsageDescription</key>
+    <string>Muditam Ayurveda saves selected health-related images to your app flow only when you choose to upload or share them, such as a profile photo or glucose reading.</string>
     <key>NSPhotoLibraryUsageDescription</key>
-    <string>Allow $(PRODUCT_NAME) to access your photos</string>
+    <string>Muditam Ayurveda accesses your photo library so you can choose a profile photo or attach existing health-related images and files in chat and care flows.</string>
     <key>NSUserActivityTypes</key>
     <array>
       <string>$(PRODUCT_BUNDLE_IDENTIFIER).expo.index_route</string>

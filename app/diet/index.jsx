@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
-import { fetchHealthProfile, fetchPlansByLead, getDietIdentity, getLatestActivePlan } from '../../utils/diet';
+import { fetchHealthProfile, fetchPlansByLead, generateDietPlan, getDietIdentity, getLatestActivePlan, hasDuplicateCoreMealFoods, hasInsufficientSuggestedCalories } from '../../utils/diet';
 
 export default function DietEntryResolver() {
   const router = useRouter();
@@ -18,7 +18,15 @@ export default function DietEntryResolver() {
       }
 
       const plans = await fetchPlansByLead(identity.leadId);
-      const activePlan = getLatestActivePlan(plans);
+      let activePlan = getLatestActivePlan(plans);
+      if (activePlan && (hasDuplicateCoreMealFoods(activePlan) || hasInsufficientSuggestedCalories(activePlan))) {
+        activePlan = await generateDietPlan({
+          leadId: identity.leadId,
+          generatedBy: 'app-user',
+          createdBy: 'app-user',
+          archivePrevious: true,
+        });
+      }
       if (!activePlan) {
         router.replace('/diet/pending');
         return;

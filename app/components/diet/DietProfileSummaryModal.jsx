@@ -1,5 +1,6 @@
 import React from 'react';
 import { Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { formatAllergyLabel, formatHealthConditionLabel } from '../../../utils/diet';
 
 export default function DietProfileSummaryModal({ visible, profile, onClose, onEdit }) {
   if (!profile) return null;
@@ -32,8 +33,8 @@ export default function DietProfileSummaryModal({ visible, profile, onClose, onE
               </View>
             ))}
             {!!profile.communityCodes?.length && <Text style={styles.details}>Communities: {profile.communityCodes.join(', ')}</Text>}
-            {!!profile.healthConditions?.length && <Text style={styles.details}>Health conditions: {profile.healthConditions.join(', ')}</Text>}
-            {!!profile.allergies?.length && <Text style={styles.details}>Allergies: {profile.allergies.join(', ')}</Text>}
+            {!!profile.healthConditions?.length && <Text style={styles.details}>Health conditions: {profile.healthConditions.map(formatHealthConditionLabel).join(', ')}</Text>}
+            {!!profile.allergies?.length && <Text style={styles.details}>Allergies: {profile.allergies.map(formatAllergyLabel).join(', ')}</Text>}
           </ScrollView>
           <TouchableOpacity style={styles.button} onPress={onEdit}>
             <Text style={styles.buttonText}>Edit profile</Text>

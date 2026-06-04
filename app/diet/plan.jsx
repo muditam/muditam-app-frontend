@@ -16,17 +16,22 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import DietFoodDetailModal from '../components/diet/DietFoodDetailModal';
 import {
   addFoodToPlan,
+  calculateMacroPreview,
   fetchFoodDetail,
   fetchHealthProfile,
   fetchPlanById,
   fetchPlansByLead,
   fetchSwapOptions,
+  generateDietPlan,
   getDailyTotals,
   getDietIdentity,
   getLatestActivePlan,
+  hasDuplicateCoreMealFoods,
+  hasInsufficientSuggestedCalories,
   searchFoods,
   swapFood,
   toggleFoodLogged,
+  updateFoodInPlan,
 } from '../../utils/diet';
 
 function clamp(value, min, max) {
@@ -73,14 +78,57 @@ function getFoodImageUri(food) {
   return String(food?.imageUrl || food?.imageId || '').trim();
 }
 
+function getSlotAccent(slotIndex) {
+  const map = {
+    0: '#e5f6ec',
+    1: '#f8efe2',
+    2: '#f7eafb',
+    3: '#eef7fb',
+    4: '#e9f6f2',
+    5: '#f4eefc',
+    6: '#f7eafb',
+    7: '#eaf4fb',
+    8: '#e7f5ee',
+  };
+  return map[slotIndex] || '#eef4f8';
+}
+
+function getSlotStatus(slot) {
+  const foods = slot?.foods || [];
+  if (!foods.length) return 'Log Slot';
+  return foods.every((food) => food.isConsumed) ? 'Logged' : 'Log Slot';
+}
+
+function isCurrentPlanDay(dayIndex) {
+  return Number(dayIndex) === 0;
+}
+
+function getFoodQualityLabel(food) {
+  if (food.hasRecipe || Number(food.score || 0) >= 8) return 'Best Choice';
+  if (Number(food.score || 0) >= 5) return 'Average Choice';
+  return '';
+}
+
+function isNonVegetarianFood(food) {
+  return String(food?.foodType || '').trim().toUpperCase() === 'NV';
+}
+
+function getSuggestedDayCalories(day) {
+  return (day?.slots || []).reduce((sum, slot) => {
+    if (!slot?.isActive) return sum;
+    return sum + Number(slot.totalCalories || 0);
+  }, 0);
+}
+
 function getWeekMeta(planDays = []) {
   const baseDate = new Date();
   return planDays.map((day, index) => {
     const nextDate = new Date(baseDate);
     nextDate.setDate(baseDate.getDate() + index);
+    const weekdayLabel = nextDate.toLocaleDateString('en-US', { weekday: 'short' });
     return {
-      label: day.dayLabel.slice(0, 3),
-      date: nextDate.getDate(),
+      label: weekdayLabel,
+      date: index + 1,
     };
   });
 }
@@ -100,8 +148,9 @@ function FoodThumb({ food }) {
   return <Text style={styles.foodThumbFallback}>{getFoodGlyph(food)}</Text>;
 }
 
-function SummaryHero({ profile, plan, totals, targetMacros, compact, onBack }) {
-  const calorieProgress = clamp((totals.calories / Math.max(1, plan?.calorieTarget || 1)) * 100, 0, 100);
+function SummaryHero({ profile, dayTargetCalories, totals, targetMacros, compact, onBack }) {
+  const calorieProgress = clamp((totals.calories / Math.max(1, dayTargetCalories || 1)) * 100, 0, 100);
+  const hasConsumedFoods = totals.calories > 0;
   const macroRows = [
     { label: 'Carbs', current: totals.carbs, target: targetMacros.carbs },
     { label: 'Protein', current: totals.protein, target: targetMacros.protein },
@@ -122,7 +171,7 @@ function SummaryHero({ profile, plan, totals, targetMacros, compact, onBack }) {
           <Text style={styles.heroCopy}>Your daily nutrition snapshot.</Text>
         </View>
         <View style={styles.heroTargetPill}>
-          <Text style={styles.heroTargetPillText}>{Math.round(plan?.calorieTarget || 0)} kcal target</Text>
+          <Text style={styles.heroTargetPillText}>{Math.round(dayTargetCalories || 0)} kcal target</Text>
         </View>
       </View>
 
@@ -130,11 +179,13 @@ function SummaryHero({ profile, plan, totals, targetMacros, compact, onBack }) {
         <View style={styles.summaryRow}>
           <View>
             <Text style={styles.summaryLabel}>Consumed today</Text>
-            <Text style={styles.summaryValue}>{Math.round(totals.calories)} kcal</Text>
+            <Text style={styles.summaryValue}>{hasConsumedFoods ? `${Math.round(totals.calories)} kcal` : '--'}</Text>
           </View>
           <View style={{ alignItems: 'flex-end' }}>
             <Text style={styles.summaryLabel}>Remaining</Text>
-            <Text style={styles.summaryValueMuted}>{Math.max(0, Math.round((plan?.calorieTarget || 0) - totals.calories))} kcal</Text>
+            <Text style={styles.summaryValueMuted}>
+              {hasConsumedFoods ? `${Math.max(0, Math.round((dayTargetCalories || 0) - totals.calories))} kcal` : '--'}
+            </Text>
           </View>
         </View>
 
@@ -165,20 +216,19 @@ function SummaryHero({ profile, plan, totals, targetMacros, compact, onBack }) {
 
 function DayStrip({ weekMeta, selectedDayIndex, onSelect, compact }) {
   return (
-    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={[styles.dayStrip, compact && styles.dayStripCompact]}>
+    <View style={[styles.dayStrip, compact && styles.dayStripCompact]}>
       {weekMeta.map((day, index) => {
         const active = index === selectedDayIndex;
-        const isToday = index === 0;
         return (
           <TouchableOpacity key={`${day.label}-${day.date}`} style={[styles.dayPill, active && styles.dayPillActive]} onPress={() => onSelect(index)}>
-            <Text style={[styles.dayPillLabel, (active || isToday) && styles.dayPillLabelActive]}>{isToday ? 'Today' : day.label}</Text>
+            <Text style={[styles.dayPillLabel, active && styles.dayPillLabelActive]}>{day.label}</Text>
             <View style={[styles.dayPillCircle, active && styles.dayPillCircleActive]}>
               <Text style={[styles.dayPillDate, active && styles.dayPillDateActive]}>{day.date}</Text>
             </View>
           </TouchableOpacity>
         );
       })}
-    </ScrollView>
+    </View>
   );
 }
 
@@ -211,87 +261,124 @@ function SearchResultsPanel({ visible, loading, results, onAdd }) {
   );
 }
 
-function FoodCard({ food, slot, dayIndex, profileDietType, loggingKey, onToggleLogged, onOpenSwap, onOpenDetail, compact }) {
+function AlternativeCard({ food, onSelect }) {
+  return (
+    <TouchableOpacity style={styles.alternativeCard} onPress={() => onSelect(food)}>
+      <View style={styles.alternativeImageShell}>
+        <FoodThumb food={food} />
+      </View>
+      <View style={styles.alternativeBody}>
+        <Text numberOfLines={2} style={styles.alternativeName}>{food.name}</Text>
+        <Text style={styles.alternativeKcal}>{Math.round(food.calories || 0)} Kcal</Text>
+        <View style={styles.alternativeFooter}>
+          <View style={styles.alternativeKcalBarTrack}>
+            <View
+              style={[
+                styles.alternativeKcalBarFill,
+                { width: `${Math.min(100, Math.max(18, (Number(food.calories || 0) / 220) * 100))}%` },
+              ]}
+            />
+          </View>
+          <View style={styles.alternativeAddCircle}>
+            <Text style={styles.alternativeAddPlus}>+</Text>
+          </View>
+        </View>
+      </View>
+    </TouchableOpacity>
+  );
+}
+
+function FoodCard({ food, slot, dayIndex, profileDietType, loggingKey, onToggleLogged, onOpenSwap, onOpenDetail, compact, canLog }) {
   const actionKey = `${dayIndex}-${slot.slotIndex}-${food.source}-${food.foodId}`;
   const logging = loggingKey === actionKey;
+  const qualityLabel = getFoodQualityLabel(food);
+  const nonVeg = isNonVegetarianFood(food);
 
   return (
     <View style={[styles.foodCard, food.isConsumed && styles.foodCardLogged]}>
-      <View style={styles.foodThumbWrap}>
-        <View style={styles.foodThumbShell}>
-          <FoodThumb food={food} />
+      <View style={styles.foodCardTop}>
+        <View style={styles.foodThumbWrap}>
+          <View style={styles.foodThumbShell}>
+            <FoodThumb food={food} />
+          </View>
+          {qualityLabel ? (
+            <View style={styles.qualityBadge}>
+              <Text style={styles.qualityBadgeText}>{qualityLabel}</Text>
+            </View>
+          ) : null}
+        </View>
+
+        <View style={styles.foodBody}>
+          <View style={styles.foodInfoTopRow}>
+            <View style={[styles.foodVegMarker, nonVeg && styles.foodVegMarkerNonVeg]}>
+              <View style={[styles.foodVegMarkerDot, nonVeg && styles.foodVegMarkerDotNonVeg]} />
+            </View>
+            <Text style={styles.foodName}>{food.name}</Text>
+            <TouchableOpacity style={styles.foodArrowButton} onPress={() => onOpenDetail(food, slot, dayIndex, canLog)}>
+              <Text style={styles.foodArrowText}>›</Text>
+            </TouchableOpacity>
+          </View>
+          <Text style={styles.foodCopy}>
+            {food.portion || 1}
+            {food.portionUnit ? ` ${food.portionUnit}` : ''}
+            {' / '}
+            {Math.round(food.calories || 0)} Kcal, {Number(food.protein || 0).toFixed(2)} gms Protein
+          </Text>
         </View>
       </View>
 
-      <View style={styles.foodBody}>
-        <View style={[styles.foodTopMeta, compact && styles.foodTopMetaCompact]}>
-          <View style={styles.foodBadgeWrap}>
-            {food.score >= 70 || food.hasRecipe ? (
-              <View style={styles.recommendBadge}>
-                <Text style={styles.recommendBadgeText}>{food.hasRecipe ? 'Recipe' : 'Best choice'}</Text>
-              </View>
-            ) : null}
-          </View>
-          <View style={styles.dietPill}>
-            <Text style={styles.dietPillText}>{formatDietBadge(food.foodType, profileDietType)}</Text>
-          </View>
-        </View>
+      <View style={[styles.cardActions, compact && styles.cardActionsCompact]}>
+        <TouchableOpacity
+          style={[styles.primaryAction, food.isConsumed && styles.primaryActionLogged, (logging || !canLog) && styles.actionDisabled]}
+          disabled={logging || !canLog}
+          onPress={() => onToggleLogged(slot.slotIndex, food)}
+        >
+          <Text style={styles.primaryActionText}>
+            {logging ? 'Saving…' : !canLog ? 'Locked' : food.isConsumed ? 'Logged ✓' : 'Log +'}
+          </Text>
+        </TouchableOpacity>
 
-        <Text style={styles.foodName}>{food.name}</Text>
-        <Text style={styles.foodCopy}>{formatFoodSubtitle(food)}</Text>
-
-        <View style={[styles.cardActions, compact && styles.cardActionsCompact]}>
-          <TouchableOpacity
-            style={[styles.primaryAction, food.isConsumed && styles.primaryActionLogged, logging && styles.actionDisabled]}
-            disabled={logging}
-            onPress={() => onToggleLogged(slot.slotIndex, food)}
-          >
-            <Text style={styles.primaryActionText}>{logging ? 'Saving…' : food.isConsumed ? 'Logged' : 'Log +'}</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.secondaryAction} onPress={() => onOpenSwap(slot.slotIndex, food, dayIndex)}>
-            <Text style={styles.secondaryActionText}>Options ›</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.tertiaryAction} onPress={() => onOpenDetail(food)}>
-            <Text style={styles.tertiaryActionText}>›</Text>
-          </TouchableOpacity>
-        </View>
+        <TouchableOpacity style={styles.secondaryAction} onPress={() => onOpenSwap(slot.slotIndex, food, dayIndex)}>
+          <Text style={styles.secondaryActionText}>Options ›</Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
 }
 
-function MealSection({ slot, dayIndex, profileDietType, loggingKey, onToggleLogged, onOpenSwap, onOpenDetail, compact }) {
+function MealSection({ slot, dayIndex, profileDietType, loggingKey, onToggleLogged, onOpenSwap, onOpenDetail, compact, canLog }) {
+  const status = canLog ? getSlotStatus(slot) : 'Upcoming';
   return (
-    <View style={styles.mealSection}>
-      <View style={styles.mealRail} />
-      <View style={styles.mealHeader}>
-        <View>
-          <Text style={styles.mealTitle}>{slot.slotName}</Text>
-          <Text style={styles.mealTime}>{slot.mealTime}</Text>
-        </View>
-        <View style={{ alignItems: 'flex-end' }}>
-          <Text style={styles.mealCalories}>{Math.round(slot.totalCalories || 0)} kcal</Text>
-          <Text style={styles.mealSmart}>SC {Math.round(slot.totalSmartCalories || 0)}</Text>
+    <View style={styles.mealSectionShell}>
+      <View style={[styles.mealSectionHeader, { backgroundColor: getSlotAccent(slot.slotIndex) }]}>
+        <Text style={styles.mealSectionHeaderTitle}>{slot.slotName}</Text>
+        <View style={styles.mealStatusPill}>
+          <Text style={styles.mealStatusText}>{status}</Text>
         </View>
       </View>
 
-      <View style={styles.mealFoodStack}>
-        {slot.foods.map((food) => (
-          <FoodCard
-            key={`${food.source}-${food.foodId}`}
-            food={food}
-            slot={slot}
-            dayIndex={dayIndex}
-            profileDietType={profileDietType}
-            loggingKey={loggingKey}
-            onToggleLogged={onToggleLogged}
-            onOpenSwap={onOpenSwap}
-            onOpenDetail={onOpenDetail}
-            compact={compact}
-          />
+      <View style={styles.mealSectionBody}>
+        {(slot.foods || []).map((food, index) => (
+          <View key={`${food.source}-${food.foodId}`} style={[styles.mealFoodRowWrap, index > 0 && styles.mealFoodRowBorder]}>
+            <FoodCard
+              food={food}
+              slot={slot}
+              dayIndex={dayIndex}
+              profileDietType={profileDietType}
+              loggingKey={loggingKey}
+              onToggleLogged={onToggleLogged}
+              onOpenSwap={onOpenSwap}
+              onOpenDetail={onOpenDetail}
+              compact={compact}
+              canLog={canLog}
+            />
+          </View>
         ))}
+        {!slot.foods?.length ? (
+          <View style={styles.emptySlotState}>
+            <Text style={styles.emptyText}>No foods available for this slot yet.</Text>
+          </View>
+        ) : null}
       </View>
     </View>
   );
@@ -311,7 +398,9 @@ export default function SmartDietPlanView() {
   const [searchLoading, setSearchLoading] = useState(false);
   const [searchResults, setSearchResults] = useState([]);
   const [foodModal, setFoodModal] = useState({ visible: false, food: null, detail: null });
+  const [foodModalSaving, setFoodModalSaving] = useState(false);
   const [swapState, setSwapState] = useState({ loading: false, options: [], context: null });
+  const [swapSearch, setSwapSearch] = useState('');
   const [addFoodState, setAddFoodState] = useState({ visible: false, food: null, loadingSlotKey: null });
   const [loggingKey, setLoggingKey] = useState('');
 
@@ -321,9 +410,18 @@ export default function SmartDietPlanView() {
         const identity = await getDietIdentity();
         const nextProfile = await fetchHealthProfile(identity.leadId);
         setProfile(nextProfile);
-        const nextPlan = params.planId
+        let nextPlan = params.planId
           ? await fetchPlanById(params.planId)
           : getLatestActivePlan(await fetchPlansByLead(identity.leadId));
+
+        if (nextPlan && (hasDuplicateCoreMealFoods(nextPlan) || hasInsufficientSuggestedCalories(nextPlan))) {
+          nextPlan = await generateDietPlan({
+            leadId: identity.leadId,
+            generatedBy: 'app-user',
+            createdBy: 'app-user',
+            archivePrevious: true,
+          });
+        }
 
         if (!nextPlan) {
           router.replace('/diet/pending');
@@ -340,21 +438,24 @@ export default function SmartDietPlanView() {
   }, [params.planId, router]);
 
   const selectedDay = useMemo(() => plan?.planDays?.[selectedDayIndex] || null, [plan, selectedDayIndex]);
+  const canLogSelectedDay = useMemo(() => isCurrentPlanDay(selectedDay?.dayIndex), [selectedDay?.dayIndex]);
   const totals = useMemo(() => getDailyTotals(selectedDay), [selectedDay]);
+  const dayTargetCalories = useMemo(() => getSuggestedDayCalories(selectedDay), [selectedDay]);
   const weekMeta = useMemo(() => getWeekMeta(plan?.planDays || []), [plan?.planDays]);
   const targetMacros = useMemo(
-    () => ({
-      carbs: Math.round((Number(plan?.calorieTarget || 0) * 0.5) / 4),
-      protein: Math.round((Number(plan?.calorieTarget || 0) * 0.25) / 4),
-      fat: Math.round((Number(plan?.calorieTarget || 0) * 0.25) / 9),
-    }),
-    [plan?.calorieTarget]
+    () => calculateMacroPreview(plan?.calorieTarget || 0, plan?.healthProfileSnapshot?.goal),
+    [plan?.calorieTarget, plan?.healthProfileSnapshot?.goal]
   );
 
   const filteredSlots = useMemo(
     () => (selectedDay?.slots || []).filter((slot) => slot.isActive).map((slot) => ({ ...slot })),
     [selectedDay]
   );
+  const filteredSwapOptions = useMemo(() => {
+    const query = swapSearch.trim().toLowerCase();
+    if (!query) return swapState.options || [];
+    return (swapState.options || []).filter((item) => String(item.name || '').toLowerCase().includes(query));
+  }, [swapSearch, swapState.options]);
 
   const hasSearchMode = Boolean(searchQuery.trim());
   const isCompact = width < 390;
@@ -363,18 +464,45 @@ export default function SmartDietPlanView() {
   const horizontalPad = isCompact ? 8 : 12;
   const scrollBottomPad = Math.max(28, insets.bottom + 18);
 
-  const openFoodDetail = async (food) => {
-    setFoodModal({ visible: true, food, detail: null });
+  const openFoodDetail = async (food, slot, dayIndex, canLog) => {
+    setFoodModal({ visible: true, food, detail: null, slotIndex: slot?.slotIndex, dayIndex, canLog });
     try {
       const detail = await fetchFoodDetail(food.foodId, food.source);
-      setFoodModal({ visible: true, food, detail });
+      setFoodModal((current) => ({ ...current, food, detail, slotIndex: slot?.slotIndex, dayIndex, canLog }));
     } catch {
       setFoodModal((current) => ({ ...current }));
     }
   };
 
+  const handleDetailFoodUpdate = async ({ quantity, isConsumed }) => {
+    if (!plan?._id || !foodModal?.food || foodModal?.slotIndex == null || foodModal?.dayIndex == null) return;
+    try {
+      setFoodModalSaving(true);
+      const updated = await updateFoodInPlan(plan._id, {
+        dayIndex: foodModal.dayIndex,
+        slotIndex: foodModal.slotIndex,
+        foodId: foodModal.food.foodId,
+        source: foodModal.food.source,
+        quantity,
+        isConsumed,
+      });
+      setPlan(updated);
+      const updatedDay = updated?.planDays?.find((day) => day.dayIndex === foodModal.dayIndex);
+      const updatedSlot = updatedDay?.slots?.find((slot) => slot.slotIndex === foodModal.slotIndex);
+      const updatedFood = updatedSlot?.foods?.find(
+        (item) => String(item.foodId) === String(foodModal.food.foodId) && String(item.source) === String(foodModal.food.source)
+      );
+      if (updatedFood) {
+        setFoodModal((current) => ({ ...current, food: updatedFood }));
+      }
+    } finally {
+      setFoodModalSaving(false);
+    }
+  };
+
   const openSwap = async (slotIndex, food, dayIndex) => {
     setSwapState({ loading: true, options: [], context: { slotIndex, food, dayIndex } });
+    setSwapSearch('');
     try {
       const response = await fetchSwapOptions(slotIndex, food.foodId, food.source);
       setSwapState({ loading: false, options: response.items || [], context: { slotIndex, food, dayIndex } });
@@ -505,7 +633,14 @@ export default function SmartDietPlanView() {
         ]}
       >
         <View style={[styles.shell, { width: shellWidth }]}>
-          <SummaryHero profile={profile} plan={plan} totals={totals} targetMacros={targetMacros} compact={isCompact} onBack={() => router.back()} />
+          <SummaryHero
+            profile={profile}
+            dayTargetCalories={dayTargetCalories || plan?.calorieTarget || 0}
+            totals={totals}
+            targetMacros={targetMacros}
+            compact={isCompact}
+            onBack={() => router.back()}
+          />
 
           <DayStrip weekMeta={weekMeta} selectedDayIndex={selectedDayIndex} onSelect={setSelectedDayIndex} compact={isCompact} />
 
@@ -532,13 +667,6 @@ export default function SmartDietPlanView() {
               onAdd={(food) => setAddFoodState({ visible: true, food, loadingSlotKey: null })}
             />
 
-            {!!plan.validationWarnings?.length && !hasSearchMode ? (
-              <View style={styles.notesBanner}>
-                <Text style={styles.notesTitle}>Plan notes</Text>
-                <Text style={styles.notesText}>{plan.validationWarnings[0]}</Text>
-              </View>
-            ) : null}
-
             <View style={[styles.timelineWrap, hasSearchMode && styles.timelineWrapDimmed]}>
               {filteredSlots.map((slot) => (
                 <MealSection
@@ -551,6 +679,7 @@ export default function SmartDietPlanView() {
                   onOpenSwap={openSwap}
                   onOpenDetail={openFoodDetail}
                   compact={isVerySmall}
+                  canLog={canLogSelectedDay}
                 />
               ))}
 
@@ -566,7 +695,10 @@ export default function SmartDietPlanView() {
         food={foodModal.food}
         rawDetail={foodModal.detail}
         foodGlyph={foodModal.food ? getFoodGlyph(foodModal.food) : '🥕'}
-        onClose={() => setFoodModal({ visible: false, food: null, detail: null })}
+        canLog={Boolean(foodModal.canLog)}
+        saving={foodModalSaving}
+        onApply={handleDetailFoodUpdate}
+        onClose={() => setFoodModal({ visible: false, food: null, detail: null, slotIndex: null, dayIndex: null, canLog: false })}
       />
 
       <Modal visible={addFoodState.visible} animationType="slide" transparent onRequestClose={() => setAddFoodState({ visible: false, food: null, loadingSlotKey: null })}>
@@ -609,41 +741,70 @@ export default function SmartDietPlanView() {
         </View>
       </Modal>
 
-      <Modal visible={Boolean(swapState.context)} animationType="slide" transparent onRequestClose={() => setSwapState({ loading: false, options: [], context: null })}>
+      <Modal
+        visible={Boolean(swapState.context)}
+        animationType="slide"
+        transparent
+        onRequestClose={() => {
+          setSwapSearch('');
+          setSwapState({ loading: false, options: [], context: null });
+        }}
+      >
         <View style={styles.modalOverlay}>
-          <View style={[styles.addSheet, styles.swapHalfSheet, { paddingBottom: Math.max(24, insets.bottom + 16) }]}>
-            <View style={styles.addSheetHeader}>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.addSheetTitle}>Swap Food</Text>
-                <Text style={styles.addSheetCopy}>
-                  Choose an option for <Text style={styles.addSheetName}>{swapState.context?.food?.name}</Text>
-                </Text>
-              </View>
-              <TouchableOpacity style={styles.addSheetClose} onPress={() => setSwapState({ loading: false, options: [], context: null })}>
-                <Text style={styles.addSheetCloseText}>×</Text>
+          <View style={[styles.alternativeSheet, { paddingBottom: Math.max(24, insets.bottom + 16) }]}>
+            <View style={styles.alternativeHeaderRow}>
+              <TouchableOpacity
+                style={styles.alternativeBackButton}
+                onPress={() => {
+                  setSwapSearch('');
+                  setSwapState({ loading: false, options: [], context: null });
+                }}
+              >
+                <Text style={styles.alternativeBackIcon}>←</Text>
+              </TouchableOpacity>
+              <Text numberOfLines={1} style={styles.alternativeHeaderTitle}>
+                Alternatives for "{swapState.context?.food?.name || ''}"
+              </Text>
+              <TouchableOpacity
+                style={styles.alternativeCloseButton}
+                onPress={() => {
+                  setSwapSearch('');
+                  setSwapState({ loading: false, options: [], context: null });
+                }}
+              >
+                <Text style={styles.alternativeCloseIcon}>×</Text>
               </TouchableOpacity>
             </View>
 
-            {swapState.loading ? <ActivityIndicator color="#6f6ee8" style={{ marginTop: 16 }} /> : null}
+            <View style={styles.alternativeSearchWrap}>
+              <Text style={styles.alternativeSearchIcon}>⌕</Text>
+              <TextInput
+                value={swapSearch}
+                onChangeText={setSwapSearch}
+                placeholder="Search in Alternatives"
+                placeholderTextColor="#a0a0a0"
+                style={styles.alternativeSearchInput}
+              />
+            </View>
+
+            {!swapState.loading ? (
+              <Text style={styles.alternativeCountText}>{filteredSwapOptions.length} Alternatives available</Text>
+            ) : null}
+
+            {swapState.loading ? <ActivityIndicator color="#f15b7b" style={{ marginTop: 16 }} /> : null}
 
             <ScrollView
               showsVerticalScrollIndicator={false}
-              contentContainerStyle={styles.addSheetList}
+              contentContainerStyle={styles.alternativeGrid}
               style={styles.swapSheetScroll}
             >
-              {(swapState.options || []).map((item) => (
-                <TouchableOpacity key={`${item.source}-${item.foodId}`} style={styles.swapSheetRow} onPress={() => handleSwap(item)}>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.swapOptionName}>{item.name}</Text>
-                    <Text style={styles.swapOptionMeta}>{Math.round(item.calories || 0)} kcal · P {Math.round(item.protein || 0)}g · C {Math.round(item.carbs || 0)}g</Text>
-                  </View>
-                  <View style={styles.swapUsePill}>
-                    <Text style={styles.swapUsePillText}>Use</Text>
-                  </View>
-                </TouchableOpacity>
-              ))}
+              <View style={styles.alternativeGridRow}>
+                {filteredSwapOptions.map((item) => (
+                  <AlternativeCard key={`${item.source}-${item.foodId}`} food={item} onSelect={handleSwap} />
+                ))}
+              </View>
 
-              {!swapState.loading && !swapState.options.length ? (
+              {!swapState.loading && !filteredSwapOptions.length ? (
                 <Text style={styles.emptyText}>No swap options available for this food right now.</Text>
               ) : null}
             </ScrollView>
@@ -703,12 +864,13 @@ const styles = StyleSheet.create({
   macroFill: { height: 6, borderRadius: 999, backgroundColor: '#b8c0d4' },
   macroValue: { color: '#475467', fontSize: 12, fontWeight: '700', marginTop: 8 },
 
-  dayStrip: { paddingVertical: 16, gap: 12 },
-  dayStripCompact: { gap: 10 },
+  dayStrip: { paddingVertical: 16, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
+  dayStripCompact: {},
   dayPill: {
     alignItems: 'center',
-    minWidth: 58,
-    paddingHorizontal: 8,
+    flex: 1,
+    minWidth: 0,
+    paddingHorizontal: 2,
     paddingVertical: 6,
     borderRadius: 20,
   },
@@ -775,56 +937,74 @@ const styles = StyleSheet.create({
   notesTitle: { color: '#1d2939', fontSize: 13, fontWeight: '900' },
   notesText: { color: '#667085', fontSize: 13, marginTop: 4, lineHeight: 18 },
 
-  timelineWrap: { gap: 16 },
+  timelineWrap: { gap: 18 },
   timelineWrapDimmed: { opacity: 0.38 },
-  mealSection: { position: 'relative', paddingLeft: 16 },
-  mealRail: { position: 'absolute', left: 0, top: 8, bottom: 8, width: 3, borderRadius: 999, backgroundColor: '#e4e8f1' },
-  mealHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 },
-  mealTitle: { color: '#1d2939', fontSize: 17, fontWeight: '900' },
-  mealTime: { color: '#8a93a3', fontSize: 13, marginTop: 3 },
-  mealCalories: { color: '#6f6ee8', fontSize: 15, fontWeight: '900' },
-  mealSmart: { color: '#8a93a3', fontSize: 12, marginTop: 3 },
-  mealFoodStack: { gap: 10 },
+  mealSectionShell: { backgroundColor: '#fff', borderRadius: 18, borderWidth: 1, borderColor: '#e8e8ef', overflow: 'hidden', shadowColor: '#0f172a', shadowOpacity: 0.08, shadowRadius: 8, shadowOffset: { width: 0, height: 2 }, elevation: 3 },
+  mealSectionHeader: { paddingHorizontal: 14, paddingVertical: 10, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  mealSectionHeaderTitle: { color: '#5b616a', fontSize: 15, fontWeight: '800' },
+  mealStatusPill: { borderWidth: 1, borderColor: '#7c7cff', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 5, backgroundColor: '#f7f5ff' },
+  mealStatusText: { color: '#6b63ff', fontSize: 13, fontWeight: '700' },
+  mealSectionBody: { backgroundColor: '#fff' },
+  mealFoodRowWrap: { paddingHorizontal: 12, paddingVertical: 12 },
+  mealFoodRowBorder: { borderTopWidth: 1, borderTopColor: '#efeff3' },
+  emptySlotState: { padding: 14 },
 
-  foodCard: { backgroundColor: '#fff', borderRadius: 20, borderWidth: 1, borderColor: '#eceff5', padding: 12, flexDirection: 'row', gap: 12 },
-  foodCardLogged: { borderColor: '#c9efd4', backgroundColor: '#fbfffc' },
-  foodThumbWrap: { paddingTop: 2 },
-  foodThumbShell: { width: 58, height: 58, borderRadius: 14, backgroundColor: '#f7f0eb', overflow: 'hidden', alignItems: 'center', justifyContent: 'center' },
+  foodCard: { backgroundColor: '#fff' },
+  foodCardLogged: {},
+  foodCardTop: { flexDirection: 'row', gap: 10, alignItems: 'flex-start' },
+  foodThumbWrap: { width: 62 },
+  foodThumbShell: { width: 60, height: 60, borderRadius: 8, backgroundColor: '#f7f0eb', overflow: 'hidden', alignItems: 'center', justifyContent: 'center' },
   foodThumbImage: { width: '100%', height: '100%' },
   foodThumbFallback: { fontSize: 28 },
+  qualityBadge: { marginTop: 4, backgroundColor: '#34a853', borderRadius: 4, paddingVertical: 3, paddingHorizontal: 4 },
+  qualityBadgeText: { color: '#fff', fontSize: 9, fontWeight: '700', textAlign: 'center' },
   foodBody: { flex: 1, minWidth: 0 },
-  foodTopMeta: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 10 },
-  foodTopMetaCompact: { flexWrap: 'wrap' },
-  foodBadgeWrap: { flexDirection: 'row', gap: 8, flexWrap: 'wrap' },
-  recommendBadge: { backgroundColor: '#def7e6', borderRadius: 999, paddingHorizontal: 9, paddingVertical: 5 },
-  recommendBadgeText: { color: '#1f9d55', fontSize: 11, fontWeight: '800' },
-  dietPill: { backgroundColor: '#f3fff6', borderWidth: 1, borderColor: '#bfecc8', borderRadius: 999, paddingHorizontal: 9, paddingVertical: 5 },
-  dietPillText: { color: '#1f9d55', fontSize: 11, fontWeight: '800' },
-  foodName: { color: '#1d2939', fontSize: 16, fontWeight: '900', marginTop: 8 },
-  foodCopy: { color: '#8a93a3', fontSize: 13, lineHeight: 19, marginTop: 4 },
-  cardActions: { flexDirection: 'row', gap: 8, marginTop: 12, alignItems: 'center' },
+  foodInfoTopRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  foodVegMarker: { width: 14, height: 14, borderWidth: 1.5, borderColor: '#1f9d55', alignItems: 'center', justifyContent: 'center' },
+  foodVegMarkerDot: { width: 7, height: 7, borderRadius: 4, backgroundColor: '#1f9d55' },
+  foodVegMarkerNonVeg: { borderColor: '#e53935' },
+  foodVegMarkerDotNonVeg: { backgroundColor: '#e53935' },
+  foodName: { color: '#4f535b', fontSize: 16, fontWeight: '700', flex: 1 },
+  foodArrowButton: { width: 26, alignItems: 'center', justifyContent: 'center' },
+  foodArrowText: { color: '#ff5d7c', fontSize: 26, lineHeight: 24, fontWeight: '700' },
+  foodCopy: { color: '#717680', fontSize: 13, lineHeight: 18, marginTop: 6 },
+  cardActions: { flexDirection: 'row', gap: 8, marginTop: 12, marginLeft: 72, alignItems: 'center' },
   cardActionsCompact: { flexWrap: 'wrap' },
-  primaryAction: { flex: 1, minWidth: 0, backgroundColor: '#f15b7b', borderRadius: 12, paddingVertical: 10, alignItems: 'center' },
+  primaryAction: { flex: 1, minWidth: 0, backgroundColor: '#ff4f73', borderRadius: 6, paddingVertical: 9, alignItems: 'center' },
   primaryActionLogged: { backgroundColor: '#16a34a' },
   primaryActionText: { color: '#fff', fontSize: 14, fontWeight: '900' },
-  secondaryAction: { flex: 1, minWidth: 0, borderWidth: 1, borderColor: '#e6e9f0', backgroundColor: '#fff', borderRadius: 12, paddingVertical: 10, alignItems: 'center' },
-  secondaryActionText: { color: '#344054', fontSize: 14, fontWeight: '800' },
-  tertiaryAction: { width: 40, minWidth: 40, borderWidth: 1, borderColor: '#eceff5', backgroundColor: '#fff', borderRadius: 12, alignItems: 'center', justifyContent: 'center', alignSelf: 'stretch' },
-  tertiaryActionText: { color: '#f15b7b', fontSize: 21, fontWeight: '900' },
+  secondaryAction: { flex: 1, minWidth: 0, borderWidth: 1, borderColor: '#4f535b', backgroundColor: '#fff', borderRadius: 6, paddingVertical: 9, alignItems: 'center' },
+  secondaryActionText: { color: '#4f535b', fontSize: 14, fontWeight: '500' },
   actionDisabled: { opacity: 0.65 },
 
   emptyText: { color: '#8a93a3', textAlign: 'center', marginTop: 14, fontSize: 14 },
 
-  swapOptionName: { color: '#1d2939', fontWeight: '800', fontSize: 14 },
-  swapOptionMeta: { color: '#8a93a3', fontSize: 13, marginTop: 4 },
-  swapSheetRow: { backgroundColor: '#fff', borderWidth: 1, borderColor: '#eceff5', borderRadius: 18, padding: 14, flexDirection: 'row', alignItems: 'center', gap: 12 },
-  swapUsePill: { backgroundColor: '#eef1ff', borderRadius: 999, paddingHorizontal: 14, paddingVertical: 8 },
-  swapUsePillText: { color: '#4f46e5', fontWeight: '900', fontSize: 13 },
-
   modalOverlay: { flex: 1, backgroundColor: 'rgba(15, 23, 42, 0.24)', justifyContent: 'flex-end' },
   addSheet: { backgroundColor: '#fff', borderTopLeftRadius: 26, borderTopRightRadius: 26, padding: 16 },
-  swapHalfSheet: { maxHeight: '52%' },
+  alternativeSheet: { backgroundColor: '#fff', borderTopLeftRadius: 26, borderTopRightRadius: 26, paddingHorizontal: 16, paddingTop: 14, maxHeight: '68%' },
+  alternativeHeaderRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  alternativeBackButton: { width: 28, height: 28, alignItems: 'center', justifyContent: 'center' },
+  alternativeBackIcon: { color: '#f15b7b', fontSize: 24, fontWeight: '700' },
+  alternativeHeaderTitle: { flex: 1, color: '#2a2b2f', fontSize: 16, fontWeight: '700' },
+  alternativeCloseButton: { width: 28, height: 28, alignItems: 'center', justifyContent: 'center' },
+  alternativeCloseIcon: { color: '#2a2b2f', fontSize: 26, lineHeight: 26 },
+  alternativeSearchWrap: { marginTop: 18, flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: '#ff5d7c', borderRadius: 999, paddingHorizontal: 14, paddingVertical: 10, gap: 10 },
+  alternativeSearchIcon: { color: '#8a8f98', fontSize: 20 },
+  alternativeSearchInput: { flex: 1, color: '#20232a', fontSize: 15 },
+  alternativeCountText: { marginTop: 14, color: '#2a2b2f', fontSize: 14, fontWeight: '600' },
   swapSheetScroll: { marginTop: 4 },
+  alternativeGrid: { paddingTop: 14, paddingBottom: 6 },
+  alternativeGridRow: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', gap: 12 },
+  alternativeCard: { width: '48%', backgroundColor: '#fff', borderRadius: 14, borderWidth: 1, borderColor: '#e6e6e6', padding: 8, flexDirection: 'row', gap: 8, shadowColor: '#111827', shadowOpacity: 0.06, shadowRadius: 6, shadowOffset: { width: 0, height: 2 }, elevation: 2 },
+  alternativeImageShell: { width: 58, height: 58, borderRadius: 12, overflow: 'hidden', backgroundColor: '#f6f0ea', alignItems: 'center', justifyContent: 'center' },
+  alternativeBody: { flex: 1, minWidth: 0 },
+  alternativeName: { color: '#5f636d', fontSize: 14, fontWeight: '600', lineHeight: 17 },
+  alternativeKcal: { color: '#3b4049', fontSize: 13, marginTop: 12 },
+  alternativeFooter: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 4, gap: 8 },
+  alternativeKcalBarTrack: { flex: 1, height: 4, borderRadius: 999, backgroundColor: '#ebecef', overflow: 'hidden' },
+  alternativeKcalBarFill: { height: 4, borderRadius: 999, backgroundColor: '#e3c622' },
+  alternativeAddCircle: { width: 22, height: 22, borderRadius: 11, borderWidth: 1, borderColor: '#b8bcc4', alignItems: 'center', justifyContent: 'center' },
+  alternativeAddPlus: { color: '#8f949d', fontSize: 16, fontWeight: '700', lineHeight: 16 },
   addSheetHeader: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
   addSheetTitle: { color: '#1d2939', fontSize: 24, fontWeight: '900' },
   addSheetCopy: { color: '#8a93a3', fontSize: 15, marginTop: 4, lineHeight: 21 },
