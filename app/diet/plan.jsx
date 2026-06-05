@@ -28,6 +28,7 @@ import {
   getLatestActivePlan,
   hasDuplicateCoreMealFoods,
   hasInsufficientSuggestedCalories,
+  logSlotFoods,
   searchFoods,
   swapFood,
   toggleFoodLogged,
@@ -346,15 +347,34 @@ function FoodCard({ food, slot, dayIndex, profileDietType, loggingKey, onToggleL
   );
 }
 
-function MealSection({ slot, dayIndex, profileDietType, loggingKey, onToggleLogged, onOpenSwap, onOpenDetail, compact, canLog }) {
+function MealSection({
+  slot,
+  dayIndex,
+  profileDietType,
+  loggingKey,
+  slotLoggingKey,
+  onToggleLogged,
+  onLogSlot,
+  onOpenSwap,
+  onOpenDetail,
+  compact,
+  canLog,
+}) {
   const status = canLog ? getSlotStatus(slot) : 'Upcoming';
+  const slotKey = `${dayIndex}-${slot.slotIndex}`;
+  const slotLogging = slotLoggingKey === slotKey;
+  const canLogSlot = canLog && (slot.foods || []).length > 0 && !slot.foods.every((food) => food.isConsumed);
   return (
     <View style={styles.mealSectionShell}>
       <View style={[styles.mealSectionHeader, { backgroundColor: getSlotAccent(slot.slotIndex) }]}>
         <Text style={styles.mealSectionHeaderTitle}>{slot.slotName}</Text>
-        <View style={styles.mealStatusPill}>
-          <Text style={styles.mealStatusText}>{status}</Text>
-        </View>
+        <TouchableOpacity
+          style={[styles.mealStatusPill, (!canLogSlot || slotLogging) && styles.mealStatusPillDisabled]}
+          disabled={!canLogSlot || slotLogging}
+          onPress={() => onLogSlot(slot.slotIndex)}
+        >
+          <Text style={styles.mealStatusText}>{slotLogging ? 'Saving…' : status}</Text>
+        </TouchableOpacity>
       </View>
 
       <View style={styles.mealSectionBody}>
@@ -403,6 +423,7 @@ export default function SmartDietPlanView() {
   const [swapSearch, setSwapSearch] = useState('');
   const [addFoodState, setAddFoodState] = useState({ visible: false, food: null, loadingSlotKey: null });
   const [loggingKey, setLoggingKey] = useState('');
+  const [slotLoggingKey, setSlotLoggingKey] = useState('');
 
   useEffect(() => {
     const load = async () => {
@@ -603,6 +624,25 @@ export default function SmartDietPlanView() {
     }
   };
 
+  const handleLogSlot = async (slotIndex) => {
+    if (!plan?._id || !selectedDay) return;
+    const slot = selectedDay.slots?.find((item) => item.slotIndex === Number(slotIndex));
+    if (!slot?.foods?.length || slot.foods.every((food) => food.isConsumed)) return;
+    const key = `${selectedDay.dayIndex}-${slotIndex}`;
+
+    try {
+      setSlotLoggingKey(key);
+      const updated = await logSlotFoods(plan._id, {
+        dayIndex: selectedDay.dayIndex,
+        slotIndex,
+        isConsumed: true,
+      });
+      setPlan(updated);
+    } finally {
+      setSlotLoggingKey('');
+    }
+  };
+
   if (loading) {
     return (
       <SafeAreaView style={styles.center}>
@@ -675,7 +715,9 @@ export default function SmartDietPlanView() {
                   dayIndex={selectedDay.dayIndex}
                   profileDietType={profile?.dietType}
                   loggingKey={loggingKey}
+                  slotLoggingKey={slotLoggingKey}
                   onToggleLogged={handleToggleLogged}
+                  onLogSlot={handleLogSlot}
                   onOpenSwap={openSwap}
                   onOpenDetail={openFoodDetail}
                   compact={isVerySmall}
@@ -943,6 +985,7 @@ const styles = StyleSheet.create({
   mealSectionHeader: { paddingHorizontal: 14, paddingVertical: 10, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   mealSectionHeaderTitle: { color: '#5b616a', fontSize: 15, fontWeight: '800' },
   mealStatusPill: { borderWidth: 1, borderColor: '#7c7cff', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 5, backgroundColor: '#f7f5ff' },
+  mealStatusPillDisabled: { opacity: 0.6 },
   mealStatusText: { color: '#6b63ff', fontSize: 13, fontWeight: '700' },
   mealSectionBody: { backgroundColor: '#fff' },
   mealFoodRowWrap: { paddingHorizontal: 12, paddingVertical: 12 },

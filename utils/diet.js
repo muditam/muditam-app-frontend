@@ -253,6 +253,13 @@ export async function toggleFoodLogged(planId, payload) {
   });
 }
 
+export async function logSlotFoods(planId, payload) {
+  return request(`/api/smart-diet-plan/${planId}/log-slot`, {
+    method: 'PUT',
+    body: JSON.stringify(payload),
+  });
+}
+
 export async function updateFoodInPlan(planId, payload) {
   return request(`/api/smart-diet-plan/${planId}/update-food`, {
     method: 'PUT',
